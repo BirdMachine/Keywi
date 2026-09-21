@@ -11,6 +11,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.outlined.HelpCenter
 import androidx.compose.material.icons.outlined.AppRegistration
 import androidx.compose.material.icons.outlined.AutoAwesome
+import androidx.compose.material.icons.outlined.BatteryChargingFull
 import androidx.compose.material.icons.outlined.Build
 import androidx.compose.material.icons.outlined.ContentPaste
 import androidx.compose.material.icons.outlined.Info
@@ -175,6 +176,17 @@ fun SettingsScreen(
                             )
                         },
                         onClick = { navController.navigate("advancedInput") },
+                    )
+                    Preference(
+                        title = { Text("Advanced Power Options") },
+                        summary = { Text("Balance Keywi's motion, effects, and refresh rate against battery use") },
+                        icon = {
+                            Icon(
+                                imageVector = Icons.Outlined.BatteryChargingFull,
+                                contentDescription = null,
+                            )
+                        },
+                        onClick = { navController.navigate("advancedPowerOptions") },
                     )
                     Preference(
                         title = { Text(stringResource(R.string.clipboard_history)) },
