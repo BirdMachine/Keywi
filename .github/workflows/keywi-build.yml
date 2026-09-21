@@ -76,9 +76,22 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
+          set -euo pipefail
           TAG="keywi-build-${GITHUB_RUN_NUMBER}"
           gh release create "$TAG" release/Keywi-latest.apk \
             --repo "$GITHUB_REPOSITORY" \
             --target "$GITHUB_SHA" \
             --title "Keywi build ${GITHUB_RUN_NUMBER}" \
             --notes "Automated Keywi debug build from main at ${GITHUB_SHA}. Signed with Keywi's stable update key and a monotonic version code so compatible Keywi builds can update in place."
+
+      - name: Verify GitHub Release
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          TAG="keywi-build-${GITHUB_RUN_NUMBER}"
+          gh release view "$TAG" --repo "$GITHUB_REPOSITORY" --json tagName,url >/tmp/keywi-release.json
+          test "$(jq -r '.tagName' /tmp/keywi-release.json)" = "$TAG"
+          gh release view "$TAG" --repo "$GITHUB_REPOSITORY" --json assets --jq '.assets[].name' | grep -Fx 'Keywi-latest.apk'
+          echo "Verified $TAG and Keywi-latest.apk"
