@@ -1,0 +1,1 @@
+Upstream sync integration in progress. Dependency/toolchain bundle: Android Gradle Plugin 9.4.1, Kotlin 2.4.20, KSP 2.3.12, Compose BOM 2026.09.00, runtime-livedata 1.12.1, Navigation 2.10.1, Room 2.8.5, FreeDroidWarn V1.14, compile/target SDK 37. Keywi application ID, version lineage, and signing configuration remain authoritative.
