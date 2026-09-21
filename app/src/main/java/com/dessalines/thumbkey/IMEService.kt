@@ -22,6 +22,7 @@ import com.dessalines.thumbkey.db.DEFAULT_CLIPBOARD_HISTORY_ENABLED
 import com.dessalines.thumbkey.db.DEFAULT_DISABLE_FULLSCREEN_EDITOR
 import com.dessalines.thumbkey.db.DEFAULT_SHOW_ON_SCREEN_KEYBOARD
 import com.dessalines.thumbkey.db.DEFAULT_USE_PRIVATE_CLIPBOARD
+import com.dessalines.thumbkey.inputcontext.ContextEnginePreferences
 import com.dessalines.thumbkey.inputcontext.InputContext
 import com.dessalines.thumbkey.inputcontext.SelectionContext
 import com.dessalines.thumbkey.ui.components.keyboard.PaletteSearchCapture
@@ -105,8 +106,22 @@ class IMEService :
         super.onStartInput(attribute, restarting)
         PaletteSearchCapture.release(clear = true)
         inputContext = InputContext.fromEditorInfo(attribute)
+        applySmartEnterPolicy(attribute)
         val view = this.setupView()
         this.setInputView(view)
+    }
+
+    /**
+     * In multiline editors, Smart Enter normalizes Android's IME action to a real newline.
+     */
+    private fun applySmartEnterPolicy(attribute: EditorInfo?) {
+        if (attribute == null) return
+
+        val settings = ContextEnginePreferences.load(this)
+        if (!settings.adaptToField || !settings.smartEnter || !inputContext.isMultiLine) return
+
+        attribute.imeOptions =
+            (attribute.imeOptions and EditorInfo.IME_MASK_ACTION.inv()) or EditorInfo.IME_ACTION_NONE
     }
 
     // Lifecycle Methods
