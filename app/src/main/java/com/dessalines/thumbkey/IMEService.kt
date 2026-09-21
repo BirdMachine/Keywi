@@ -2,8 +2,11 @@ package com.dessalines.thumbkey
 
 import android.inputmethodservice.InputMethodService
 import android.util.Log
+import android.view.KeyEvent
 import android.view.inputmethod.CursorAnchorInfo
 import android.view.inputmethod.EditorInfo
+import android.view.inputmethod.InputConnection
+import android.view.inputmethod.InputConnectionWrapper
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.LifecycleRegistry
@@ -19,8 +22,10 @@ import com.dessalines.thumbkey.db.DEFAULT_CLIPBOARD_HISTORY_ENABLED
 import com.dessalines.thumbkey.db.DEFAULT_DISABLE_FULLSCREEN_EDITOR
 import com.dessalines.thumbkey.db.DEFAULT_SHOW_ON_SCREEN_KEYBOARD
 import com.dessalines.thumbkey.db.DEFAULT_USE_PRIVATE_CLIPBOARD
+import com.dessalines.thumbkey.inputcontext.ContextEnginePreferences
 import com.dessalines.thumbkey.inputcontext.InputContext
 import com.dessalines.thumbkey.inputcontext.SelectionContext
+import com.dessalines.thumbkey.ui.components.keyboard.PaletteSearchCapture
 import com.dessalines.thumbkey.utils.KeyboardDefinition
 import com.dessalines.thumbkey.utils.KeyboardLayout
 import com.dessalines.thumbkey.utils.TAG
@@ -62,6 +67,35 @@ class IMEService :
     private var clipboardManager: ThumbKeyClipboardManager? = null
 
     /**
+     * During Palette search, expose a lightweight proxy that turns ordinary Keywi commits and
+     * deletes into edits of the Palette query. Everything else still reaches the host editor.
+     *
+     * Keep the override non-null because the rest of Keywi intentionally treats an active IME
+     * session's currentInputConnection as non-null.
+     */
+    override fun getCurrentInputConnection(): InputConnection {
+        val target = checkNotNull(super.getCurrentInputConnection()) { "No active input connection" }
+        return if (PaletteSearchCapture.shouldCapture()) PaletteSearchInputConnection(target) else target
+    }
+
+    private class PaletteSearchInputConnection(
+        target: InputConnection,
+    ) : InputConnectionWrapper(target, false) {
+        override fun commitText(text: CharSequence?, newCursorPosition: Int): Boolean =
+            if (PaletteSearchCapture.consumeCommitText(text)) true else super.commitText(text, newCursorPosition)
+
+        override fun sendKeyEvent(event: KeyEvent): Boolean =
+            if (PaletteSearchCapture.consumeKeyEvent(event)) true else super.sendKeyEvent(event)
+
+        override fun deleteSurroundingText(beforeLength: Int, afterLength: Int): Boolean =
+            if (PaletteSearchCapture.consumeDeleteBeforeCursor(beforeLength)) {
+                true
+            } else {
+                super.deleteSurroundingText(beforeLength, afterLength)
+            }
+    }
+
+    /**
      * This is called every time the keyboard is brought up.
      * You can't use onCreate, because that can't pick up new numeric inputs
      */
@@ -70,9 +104,24 @@ class IMEService :
         restarting: Boolean,
     ) {
         super.onStartInput(attribute, restarting)
+        PaletteSearchCapture.release(clear = true)
         inputContext = InputContext.fromEditorInfo(attribute)
+        applySmartEnterPolicy(attribute)
         val view = this.setupView()
         this.setInputView(view)
+    }
+
+    /**
+     * In multiline editors, Smart Enter normalizes Android's IME action to a real newline.
+     */
+    private fun applySmartEnterPolicy(attribute: EditorInfo?) {
+        if (attribute == null) return
+
+        val settings = ContextEnginePreferences.load(this)
+        if (!settings.adaptToField || !settings.smartEnter || !inputContext.isMultiLine) return
+
+        attribute.imeOptions =
+            (attribute.imeOptions and EditorInfo.IME_MASK_ACTION.inv()) or EditorInfo.IME_ACTION_NONE
     }
 
     // Lifecycle Methods
@@ -168,6 +217,7 @@ class IMEService :
     }
 
     override fun onWindowHidden() {
+        PaletteSearchCapture.release(clear = true)
         currentKeyboardDefinition?.settings?.textProcessor?.handleFinishInput(this)
         super.onWindowHidden()
     }

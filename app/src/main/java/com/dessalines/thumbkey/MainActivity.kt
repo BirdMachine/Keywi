@@ -37,6 +37,7 @@ import com.dessalines.thumbkey.ui.components.settings.lookandfeel.LookAndFeelScr
 import com.dessalines.thumbkey.ui.components.settings.modifykeys.AdvancedKeyWordSelectionScreen
 import com.dessalines.thumbkey.ui.components.settings.modifykeys.ModifyKeysScreen
 import com.dessalines.thumbkey.ui.components.settings.other.OtherSettingsScreen
+import com.dessalines.thumbkey.ui.components.settings.power.AdvancedPowerOptionsScreen
 import com.dessalines.thumbkey.ui.components.setup.SetupScreen
 import com.dessalines.thumbkey.ui.theme.ThumbkeyTheme
 import com.dessalines.thumbkey.utils.ANIMATION_SPEED
@@ -175,6 +176,9 @@ class MainActivity : AppCompatActivity() {
                     }
                     composable(route = "advancedCharacters") {
                         AdvancedCharactersScreen()
+                    }
+                    composable(route = "advancedPowerOptions") {
+                        AdvancedPowerOptionsScreen(navController = navController)
                     }
                     composable(route = "clipboardSettings") {
                         ClipboardSettingsScreen(
