@@ -111,6 +111,7 @@ android {
 }
 
 dependencies {
+    implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.9.0")
     testImplementation("junit:junit:4.13.2")
 
     implementation("com.github.woheller69:FreeDroidWarn:V1.14")
