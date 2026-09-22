@@ -1,6 +1,9 @@
 package com.dessalines.thumbkey.ui.components.keyboard
 
 import android.content.Context
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.setValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.ui.graphics.Color
 
 enum class KeySurfaceStyle { GRADIENT, SOLID, NONE }
@@ -22,7 +25,7 @@ data class KeyThemeState(
 object KeyThemePreferences {
     private const val PREFS = "key_theme_preferences"
 
-    var current: KeyThemeState = KeyThemeState()
+    var current: KeyThemeState by mutableStateOf(KeyThemeState())
         private set
 
     fun load(context: Context): KeyThemeState {

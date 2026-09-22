@@ -18,6 +18,7 @@ import androidx.compose.foundation.layout.safeDrawingPadding
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.livedata.observeAsState
@@ -106,6 +107,7 @@ fun KeyboardScreen(
     onChangePosition: ((old: KeyboardPosition) -> KeyboardPosition) -> Unit,
     onToggleHideLetters: () -> Unit,
     onGoToClipboardSettings: () -> Unit,
+    onTyped: () -> Unit = {},
 ) {
     val ctx = LocalContext.current as IMEService
 
@@ -115,14 +117,19 @@ fun KeyboardScreen(
                 ?: DEFAULT_KEYBOARD_LAYOUT,
         ]
 
+    val boards = rememberCustomBoards().filter { it.enabled }
+    var boardId by remember { mutableStateOf<String?>(null) }
+    val activeBoard = boards.firstOrNull { it.id == boardId }
     val keyMods = settings?.keyModifications
-    val keyboardDefinition =
+    val baseDefinition = remember(layout, keyMods) {
         if (!keyMods.isNullOrEmpty()) {
             getModifiedKeyboardDefinition(layout, keyMods)
                 ?: layout.keyboardDefinition
         } else {
             layout.keyboardDefinition
         }
+    }
+    val keyboardDefinition = remember(baseDefinition, activeBoard) { activeBoard?.definition() ?: baseDefinition }
 
     var mode by remember {
         val startMode =
@@ -143,7 +150,7 @@ fun KeyboardScreen(
 
     val clipboardItems by clipboardRepository.allClipboardItems.observeAsState(initial = emptyList())
 
-    val keyboard =
+    val baseKeyboard =
         when (mode) {
             KeyboardMode.MAIN -> {
                 keyboardDefinition.modes.main
@@ -182,20 +189,46 @@ fun KeyboardScreen(
             }
         }
 
+    SideEffect { ctx.currentKeyboardDefinition = keyboardDefinition }
+    LaunchedEffect(boardId, activeBoard?.id) {
+        if (boardId != null && activeBoard == null) { boardId = null; mode = KeyboardMode.MAIN; capsLock = false }
+    }
+    val keyboard = remember(baseKeyboard, boards.isNotEmpty()) {
+        if (boards.isNotEmpty()) baseKeyboard.withBoardPaging() else baseKeyboard
+    }
+    fun boardEvent(action: KeyAction) {
+        when (action) {
+            KeyAction.CycleBoard -> {
+                val index = boards.indexOfFirst { it.id == boardId }
+                boardId = boards.getOrNull(index + 1)?.id
+                mode = KeyboardMode.MAIN
+                capsLock = false
+                lastAction.value = null
+                Toast.makeText(ctx, boards.firstOrNull { it.id == boardId }?.name ?: "ABC", Toast.LENGTH_SHORT).show()
+            }
+            KeyAction.BoardHome -> { boardId = null; mode = KeyboardMode.MAIN; capsLock = false; lastAction.value = null }
+            is KeyAction.CommitText -> {
+                if (action.text.isNotEmpty()) onTyped()
+                if (activeBoard?.returnAfterInput == true) { boardId = null; mode = KeyboardMode.MAIN; capsLock = false }
+            }
+            else -> Unit
+        }
+    }
+
     val position = KeyboardPosition.entries[settings?.position ?: DEFAULT_POSITION]
     val positionPadding = settings?.positionPadding ?: DEFAULT_POSITION_PADDING
     val pushupSizeDp = (settings?.pushupSize ?: DEFAULT_PUSHUP_SIZE).dp
     val ignoreBottomPadding = (settings?.ignoreBottomPadding ?: DEFAULT_IGNORE_BOTTOM_PADDING).toBool()
-    val autoCapitalize = (settings?.autoCapitalize ?: DEFAULT_AUTO_CAPITALIZE).toBool()
-    val spacebarMultiTaps = (settings?.spacebarMultiTaps ?: DEFAULT_SPACEBAR_MULTITAPS).toBool()
+    val autoCapitalize = activeBoard == null && (settings?.autoCapitalize ?: DEFAULT_AUTO_CAPITALIZE).toBool()
+    val spacebarMultiTaps = activeBoard == null && (settings?.spacebarMultiTaps ?: DEFAULT_SPACEBAR_MULTITAPS).toBool()
     val switchToLettersAfterSpace = (settings?.switchToLettersAfterSpace ?: DEFAULT_SWITCH_TO_LETTERS_AFTER_SPACE).toBool()
     val slideEnabled = (settings?.slideEnabled ?: DEFAULT_SLIDE_ENABLED).toBool()
     val slideCursorMovementMode = settings?.slideCursorMovementMode ?: DEFAULT_SLIDE_CURSOR_MOVEMENT_MODE
     val slideSpacebarDeadzoneEnabled = (settings?.slideSpacebarDeadzoneEnabled ?: DEFAULT_SLIDE_SPACEBAR_DEADZONE_ENABLED).toBool()
     val slideBackspaceDeadzoneEnabled = (settings?.slideBackspaceDeadzoneEnabled ?: DEFAULT_SLIDE_BACKSPACE_DEADZONE_ENABLED).toBool()
     val keyBorderWidth = settings?.keyBorderWidth ?: DEFAULT_KEY_BORDER_WIDTH
-    val vibrateOnTap = (settings?.vibrateOnTap ?: DEFAULT_VIBRATE_ON_TAP).toBool()
-    val vibrateOnSlide = (settings?.vibrateOnSlide ?: DEFAULT_VIBRATE_ON_SLIDE).toBool()
+    val vibrateOnTap = activeBoard?.haptics != false && (settings?.vibrateOnTap ?: DEFAULT_VIBRATE_ON_TAP).toBool()
+    val vibrateOnSlide = activeBoard?.haptics != false && (settings?.vibrateOnSlide ?: DEFAULT_VIBRATE_ON_SLIDE).toBool()
     val soundOnTap = (settings?.soundOnTap ?: DEFAULT_SOUND_ON_TAP).toBool()
     val hideLetters = (settings?.hideLetters ?: DEFAULT_HIDE_LETTERS).toBool()
     val hideSymbols = (settings?.hideSymbols ?: DEFAULT_HIDE_SYMBOLS).toBool()
@@ -208,7 +241,10 @@ fun KeyboardScreen(
     val autoSizeKeys = (settings?.autoSizeKeys ?: DEFAULT_AUTO_SIZE_KEYS).toBool()
     val nonSquareKeys = (settings?.nonSquareKeys ?: DEFAULT_NON_SQUARE_KEYS).toBool()
     val legendWidth =
-        if (autoSizeKeys) {
+        if (autoSizeKeys && activeBoard != null) {
+            val available = ctx.resources.configuration.screenWidthDp
+            ((available - kotlin.math.abs(positionPadding)) / 3).coerceAtLeast(24)
+        } else if (autoSizeKeys) {
             val keyboardLayout = settings?.keyboardLayout ?: DEFAULT_KEYBOARD_LAYOUT
             getAutoKeyWidth(keyboardLayout, keyPadding, position, ctx)
         } else {
@@ -299,6 +335,7 @@ fun KeyboardScreen(
                                         if (vibrateOnTap) view.performHapticFeedback(HapticFeedbackConstants.KEYBOARD_TAP)
                                         if (soundOnTap) audioManager.playSoundEffect(AudioManager.FX_KEY_CLICK, .1f)
                                         ctx.currentInputConnection.commitText(it.emoji, 1)
+                                        onTyped()
                                     }
                                 }
                             },
@@ -327,6 +364,7 @@ fun KeyboardScreen(
                                     soundOnTap = soundOnTap,
                                     hideLetters = hideLetters,
                                     hideSymbols = hideSymbols,
+                                    hideSwipeHints = activeBoard?.showHints == false,
                                     capsLock = capsLock,
                                     animationSpeed = settings?.animationSpeed ?: DEFAULT_ANIMATION_SPEED,
                                     animationHelperSpeed = settings?.animationHelperSpeed ?: DEFAULT_ANIMATION_HELPER_SPEED,
@@ -364,7 +402,7 @@ fun KeyboardScreen(
                                     },
                                     onToggleHideLetters = onToggleHideLetters,
                                     onAutoCapitalize = { enable ->
-                                        if (mode !==
+                                        if (activeBoard == null && mode !==
                                             KeyboardMode.NUMERIC
                                         ) {
                                             mode =
@@ -383,6 +421,7 @@ fun KeyboardScreen(
                                     },
                                     onChangePosition = onChangePosition,
                                     onKeyEvent = { action ->
+                                        boardEvent(action)
                                         when (mode) {
                                             KeyboardMode.CTRLED, KeyboardMode.ALTED -> {
                                                 if (action is KeyAction.SendEvent) {
@@ -392,7 +431,7 @@ fun KeyboardScreen(
                                             }
 
                                             KeyboardMode.NUMERIC -> {
-                                                if (switchToLettersAfterSpace && action is KeyAction.CommitText &&
+                                                if (activeBoard == null && switchToLettersAfterSpace && action is KeyAction.CommitText &&
                                                     action.text == " "
                                                 ) {
                                                     capsLock = false
@@ -453,6 +492,7 @@ fun KeyboardScreen(
                                         if (vibrateOnTap) view.performHapticFeedback(HapticFeedbackConstants.KEYBOARD_TAP)
                                         if (soundOnTap) audioManager.playSoundEffect(AudioManager.FX_KEY_CLICK, .1f)
                                         ctx.currentInputConnection.commitText(it.emoji, 1)
+                                        onTyped()
                                     }
                                 }
                             },
@@ -480,6 +520,7 @@ fun KeyboardScreen(
                                     soundOnTap = soundOnTap,
                                     hideLetters = hideLetters,
                                     hideSymbols = hideSymbols,
+                                    hideSwipeHints = activeBoard?.showHints == false,
                                     capsLock = capsLock,
                                     animationSpeed = settings?.animationSpeed ?: DEFAULT_ANIMATION_SPEED,
                                     animationHelperSpeed = settings?.animationHelperSpeed ?: DEFAULT_ANIMATION_HELPER_SPEED,
@@ -517,7 +558,7 @@ fun KeyboardScreen(
                                     },
                                     onToggleHideLetters = onToggleHideLetters,
                                     onAutoCapitalize = { enable ->
-                                        if (mode !==
+                                        if (activeBoard == null && mode !==
                                             KeyboardMode.NUMERIC
                                         ) {
                                             mode =
@@ -536,6 +577,7 @@ fun KeyboardScreen(
                                     },
                                     onChangePosition = onChangePosition,
                                     onKeyEvent = { action ->
+                                        boardEvent(action)
                                         when (mode) {
                                             KeyboardMode.CTRLED, KeyboardMode.ALTED -> {
                                                 if (action is KeyAction.SendEvent) {
@@ -545,7 +587,7 @@ fun KeyboardScreen(
                                             }
 
                                             KeyboardMode.NUMERIC -> {
-                                                if (switchToLettersAfterSpace && action is KeyAction.CommitText &&
+                                                if (activeBoard == null && switchToLettersAfterSpace && action is KeyAction.CommitText &&
                                                     action.text == " "
                                                 ) {
                                                     capsLock = false
@@ -659,16 +701,19 @@ fun KeyboardScreen(
             }
         }
     } else {
-        if (ctx.currentInputConnection.requestCursorUpdates(CURSOR_UPDATE_MONITOR)) {
-            Log.d(TAG, "request for cursor updates succeeded, cursor updates will be provided")
-        } else {
-            Log.d(TAG, "request for cursor updates failed, cursor updates will not be provided")
+        LaunchedEffect(ctx) {
+            if (ctx.currentInputConnection.requestCursorUpdates(CURSOR_UPDATE_MONITOR)) {
+                Log.d(TAG, "request for cursor updates succeeded, cursor updates will be provided")
+            } else {
+                Log.d(TAG, "request for cursor updates failed, cursor updates will not be provided")
+            }
         }
 
         val gradientCanvasWidth =
             keyboard.arr.maxOfOrNull { row -> row.sumOf { key -> (key.widthMultiplier * keyWidth).toDouble() }.toFloat() } ?: keyWidth
         val gradientCanvasHeight = keyboard.arr.size * keyHeight
-        val keyGradient = if (keywiEnabled) BIRDIE_KEY_GRADIENT else null
+        val keyTheme = KeyThemePreferences.current
+        val keyGradient = if (keywiEnabled && keyTheme.surfaceStyle == KeySurfaceStyle.GRADIENT) keyTheme.surfaceGradient else null
 
         val drawKeyboard = @Composable { alignment: Alignment, drawBackdrop: Boolean, positionPaddingValue: Int ->
             val modifierPositionPadding =
@@ -715,7 +760,7 @@ fun KeyboardScreen(
                                 val gradientOffsetY = i * keyHeight
                                 Column {
                                     val ghostKey =
-                                        if (ghostKeysEnabled) {
+                                        if (ghostKeysEnabled && activeBoard == null) {
                                             when (mode) {
                                                 KeyboardMode.MAIN, KeyboardMode.SHIFTED, KeyboardMode.CTRLED, KeyboardMode.ALTED -> {
                                                     keyboardDefinition.modes.numeric
@@ -747,6 +792,7 @@ fun KeyboardScreen(
                                         soundOnTap = soundOnTap,
                                         hideLetters = hideLetters,
                                         hideSymbols = hideSymbols,
+                                    hideSwipeHints = activeBoard?.showHints == false,
                                         capsLock = capsLock,
                                         animationSpeed = settings?.animationSpeed ?: DEFAULT_ANIMATION_SPEED,
                                         animationHelperSpeed = settings?.animationHelperSpeed ?: DEFAULT_ANIMATION_HELPER_SPEED,
@@ -786,6 +832,7 @@ fun KeyboardScreen(
                                         },
                                         onToggleHideLetters = onToggleHideLetters,
                                         onKeyEvent = { action ->
+                                            boardEvent(action)
                                             when (mode) {
                                                 KeyboardMode.CTRLED, KeyboardMode.ALTED -> {
                                                     if (action is KeyAction.SendEvent) {
@@ -795,7 +842,7 @@ fun KeyboardScreen(
                                                 }
 
                                                 KeyboardMode.NUMERIC -> {
-                                                    if (switchToLettersAfterSpace && action is KeyAction.CommitText &&
+                                                    if (activeBoard == null && switchToLettersAfterSpace && action is KeyAction.CommitText &&
                                                         action.text == " "
                                                     ) {
                                                         capsLock = false
@@ -807,7 +854,7 @@ fun KeyboardScreen(
                                             }
                                         },
                                         onAutoCapitalize = { enable ->
-                                            if (mode !==
+                                            if (activeBoard == null && mode !==
                                                 KeyboardMode.NUMERIC
                                             ) {
                                                 mode =

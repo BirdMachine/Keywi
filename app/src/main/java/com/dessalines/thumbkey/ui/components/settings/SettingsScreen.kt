@@ -144,6 +144,16 @@ fun SettingsScreen(
                         onClick = { navController.navigate("advancedLookAndFeel") },
                     )
                     Preference(
+                        title = { Text("Advanced Board Management") },
+                        summary = { Text("Custom rooms, A/B sides, key assignments, and room options") },
+                        onClick = { navController.navigate("advancedBoards") },
+                    )
+                    Preference(
+                        title = { Text("On-type GIF / PNG overlay") },
+                        summary = { Text("Play an image over the keyboard while typing") },
+                        onClick = { navController.navigate("typingOverlay") },
+                    )
+                    Preference(
                         title = { Text("Advanced Key & Word Selection") },
                         summary = {
                             Text("Matrix remapper, unfinished-word chip, and personal dictionary")

@@ -153,6 +153,12 @@ class MainActivity : AppCompatActivity() {
                             appSettingsViewModel = appSettingsViewModel,
                         )
                     }
+                    composable(route = "advancedBoards") {
+                        com.dessalines.thumbkey.ui.components.settings.boards.AdvancedBoardManagementScreen(navController)
+                    }
+                    composable(route = "typingOverlay") {
+                        com.dessalines.thumbkey.ui.components.settings.boards.TypingOverlaySettingsScreen(navController)
+                    }
                     composable(route = "advancedLookAndFeel") {
                         AdvancedLookAndFeelScreen(navController = navController)
                     }

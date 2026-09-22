@@ -111,6 +111,8 @@ android {
 }
 
 dependencies {
+    testImplementation("junit:junit:4.13.2")
+
     implementation("com.github.woheller69:FreeDroidWarn:V1.14")
     implementation("com.github.dessalines:room-db-export-import:0.1.1")
 
