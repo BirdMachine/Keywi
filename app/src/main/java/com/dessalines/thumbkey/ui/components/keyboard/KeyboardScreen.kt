@@ -431,7 +431,9 @@ fun KeyboardScreen(
                                             }
 
                                             KeyboardMode.NUMERIC -> {
-                                                if (activeBoard == null && switchToLettersAfterSpace && action is KeyAction.CommitText &&
+                                                if (activeBoard == null &&
+                                                        switchToLettersAfterSpace &&
+                                                        action is KeyAction.CommitText &&
                                                     action.text == " "
                                                 ) {
                                                     capsLock = false
