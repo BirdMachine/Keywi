@@ -98,6 +98,66 @@ fun SettingsScreen(
                         )
                     }
 
+                    Preference(
+                        title = { Text("Advanced Board Management") },
+                        summary = { Text("Custom rooms, A/B sides, key assignments, and room options") },
+                        onClick = { navController.navigate("advancedBoards") },
+                    )
+                    Preference(
+                        title = { Text("Advanced Key & Word Selection") },
+                        summary = {
+                            Text("Matrix remapper, unfinished-word chip, and personal dictionary")
+                        },
+                        icon = {
+                            Icon(
+                                imageVector = Icons.Outlined.KeyboardAlt,
+                                contentDescription = null,
+                            )
+                        },
+                        onClick = { navController.navigate("advancedKeyWordSelection") },
+                    )
+                    Preference(
+                        title = { Text(stringResource(R.string.advanced_input)) },
+                        summary = { Text(stringResource(R.string.advanced_input_description)) },
+                        icon = {
+                            Icon(
+                                imageVector = Icons.Outlined.AutoAwesome,
+                                contentDescription = null,
+                            )
+                        },
+                        onClick = { navController.navigate("advancedInput") },
+                    )
+                    Preference(
+                        title = { Text("Advanced look & feel") },
+                        summary = {
+                            Text("Backdrops, toolbar, keys, borders, fonts, and effects")
+                        },
+                        icon = {
+                            Icon(
+                                imageVector = Icons.Outlined.AutoAwesome,
+                                contentDescription = null,
+                            )
+                        },
+                        onClick = { navController.navigate("advancedLookAndFeel") },
+                    )
+                    Preference(
+                        title = { Text("On-type GIF / PNG overlay") },
+                        summary = { Text("Play an image over the keyboard while typing") },
+                        onClick = { navController.navigate("typingOverlay") },
+                    )
+                    Preference(
+                        title = { Text("Advanced Power Options") },
+                        summary = { Text("Balance Keywi's motion, effects, and refresh rate against battery use") },
+                        icon = {
+                            Icon(
+                                imageVector = Icons.Outlined.BatteryChargingFull,
+                                contentDescription = null,
+                            )
+                        },
+                        onClick = { navController.navigate("advancedPowerOptions") },
+                    )
+                    SettingsDivider()
+
                     MultiSelectListPreference(
                         value = layoutsState,
                         values = KeyboardLayout.entries.sortedBy { it.keyboardDefinition.title },
@@ -131,42 +191,6 @@ fun SettingsScreen(
                         onClick = { navController.navigate("lookAndFeel") },
                     )
                     Preference(
-                        title = { Text("Advanced look & feel") },
-                        summary = {
-                            Text("Backdrops, toolbar, keys, borders, fonts, and effects")
-                        },
-                        icon = {
-                            Icon(
-                                imageVector = Icons.Outlined.AutoAwesome,
-                                contentDescription = null,
-                            )
-                        },
-                        onClick = { navController.navigate("advancedLookAndFeel") },
-                    )
-                    Preference(
-                        title = { Text("Advanced Board Management") },
-                        summary = { Text("Custom rooms, A/B sides, key assignments, and room options") },
-                        onClick = { navController.navigate("advancedBoards") },
-                    )
-                    Preference(
-                        title = { Text("On-type GIF / PNG overlay") },
-                        summary = { Text("Play an image over the keyboard while typing") },
-                        onClick = { navController.navigate("typingOverlay") },
-                    )
-                    Preference(
-                        title = { Text("Advanced Key & Word Selection") },
-                        summary = {
-                            Text("Matrix remapper, unfinished-word chip, and personal dictionary")
-                        },
-                        icon = {
-                            Icon(
-                                imageVector = Icons.Outlined.KeyboardAlt,
-                                contentDescription = null,
-                            )
-                        },
-                        onClick = { navController.navigate("advancedKeyWordSelection") },
-                    )
-                    Preference(
                         title = { Text(stringResource(R.string.behavior)) },
                         icon = {
                             Icon(
@@ -175,28 +199,6 @@ fun SettingsScreen(
                             )
                         },
                         onClick = { navController.navigate("behavior") },
-                    )
-                    Preference(
-                        title = { Text(stringResource(R.string.advanced_input)) },
-                        summary = { Text(stringResource(R.string.advanced_input_description)) },
-                        icon = {
-                            Icon(
-                                imageVector = Icons.Outlined.AutoAwesome,
-                                contentDescription = null,
-                            )
-                        },
-                        onClick = { navController.navigate("advancedInput") },
-                    )
-                    Preference(
-                        title = { Text("Advanced Power Options") },
-                        summary = { Text("Balance Keywi's motion, effects, and refresh rate against battery use") },
-                        icon = {
-                            Icon(
-                                imageVector = Icons.Outlined.BatteryChargingFull,
-                                contentDescription = null,
-                            )
-                        },
-                        onClick = { navController.navigate("advancedPowerOptions") },
                     )
                     Preference(
                         title = { Text(stringResource(R.string.clipboard_history)) },
