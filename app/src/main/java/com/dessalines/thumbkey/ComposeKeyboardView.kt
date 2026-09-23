@@ -76,6 +76,8 @@ class ComposeKeyboardView(
             val toolbarBackdrop = ToolbarThemePreferences.load(ctx)
             val keyboardColorScheme = if (keywiEnabled) MaterialTheme.colorScheme.copy(background = Color.Transparent) else MaterialTheme.colorScheme
             val density = LocalDensity.current
+            val typingPulse = remember { androidx.compose.runtime.mutableLongStateOf(0L) }
+            remember(ctx) { com.dessalines.thumbkey.ui.components.keyboard.TypingOverlayPreferences.load(ctx) }
             var keyboardHeightPx by remember { mutableIntStateOf(0) }
             var activePalette by remember { mutableStateOf<InputPalette?>(null) }
 
@@ -117,6 +119,7 @@ class ComposeKeyboardView(
                             Box(Modifier.align(Alignment.BottomCenter).onSizeChanged { if (it.height != keyboardHeightPx) keyboardHeightPx = it.height }) {
                                 KeyboardScreen(
                                     settings = keyboardSettings,
+                                    onTyped = { typingPulse.longValue++ },
                                     clipboardRepository = clipboardRepo,
                                     onSwitchLanguage = {
                                         ctx.lifecycleScope.launch {
@@ -141,6 +144,11 @@ class ComposeKeyboardView(
                                     },
                                 )
                             }
+                            com.dessalines.thumbkey.ui.components.keyboard.TypingOverlayLayer(
+                                typingPulse,
+                                com.dessalines.thumbkey.ui.components.keyboard.TypingOverlayPreferences.current,
+                                Modifier.matchParentSize().zIndex(4f),
+                            )
                             activePalette?.let { palette ->
                                 ExpandedInputPaletteHost(
                                     palette, ctx,

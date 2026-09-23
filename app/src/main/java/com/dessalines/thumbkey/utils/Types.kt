@@ -172,6 +172,10 @@ sealed class KeyDisplay {
 }
 
 sealed class KeyAction {
+    data object CycleBoard : KeyAction()
+
+    data object BoardHome : KeyAction()
+
     class CommitText(
         val text: String,
     ) : KeyAction()

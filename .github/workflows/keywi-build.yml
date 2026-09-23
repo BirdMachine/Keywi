@@ -53,6 +53,9 @@ jobs:
       - name: Check Kotlin formatting
         run: ./gradlew lintKotlin
 
+      - name: Test custom board behavior
+        run: ./gradlew testDebugUnitTest
+
       - name: Run Android lint
         run: ./gradlew lint
 

@@ -40,6 +40,7 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
@@ -117,6 +118,7 @@ fun KeyboardKey(
     soundOnTap: Boolean,
     hideLetters: Boolean,
     hideSymbols: Boolean,
+    hideSwipeHints: Boolean = false,
     capsLock: Boolean,
     legendHeight: Int,
     legendWidth: Int,
@@ -203,14 +205,26 @@ fun KeyboardKey(
     var slideHoldTickCount by remember { mutableIntStateOf(0) }
     var slideHoldRepeatJob by remember { mutableStateOf<kotlinx.coroutines.Job?>(null) }
 
+    val appearanceEnabled = KeywiAppearancePreferences.currentEnabled
+    val keyTheme = KeyThemePreferences.current
+    val idleGradient = if (appearanceEnabled && keyTheme.surfaceStyle == KeySurfaceStyle.GRADIENT) keyTheme.surfaceGradient else keyGradient
+    val activeBorderGradient = if (appearanceEnabled) {
+        if (keyTheme.borderStyle == KeyBorderStyle.GRADIENT) keyTheme.borderGradient else null
+    } else keyBorderGradient
+    val drawBorder = !appearanceEnabled || keyTheme.borderStyle == KeyBorderStyle.GRADIENT || keyTheme.borderStyle == KeyBorderStyle.SOLID
     val backgroundColor =
         if (!(isDragged.value || isPressed)) {
-            colorVariantToColor(colorVariant = key.backgroundColor)
+            if (appearanceEnabled) {
+                when (keyTheme.surfaceStyle) {
+                    KeySurfaceStyle.SOLID -> keyTheme.surfaceColor
+                    KeySurfaceStyle.GRADIENT, KeySurfaceStyle.NONE -> Color.Transparent
+                }
+            } else colorVariantToColor(colorVariant = key.backgroundColor)
         } else {
             MaterialTheme.colorScheme.inversePrimary
         }
 
-    val keyBorderColour = MaterialTheme.colorScheme.outline
+    val keyBorderColour = if (appearanceEnabled) keyTheme.borderColor else MaterialTheme.colorScheme.outline
     val keySize = (keyHeight + keyWidth) / 2.0
     val view = LocalView.current
     val audioManager = ctx.getSystemService(Context.AUDIO_SERVICE) as AudioManager
@@ -387,11 +401,18 @@ fun KeyboardKey(
             .height(keyHeight.dp)
             .width(keyWidth.dp * key.widthMultiplier)
             .padding(keyPadding.dp)
+            .then(
+                if (appearanceEnabled && keyTheme.borderStyle == KeyBorderStyle.SHADOW) {
+                    Modifier.shadow(keyTheme.shadowElevation.dp, RoundedCornerShape(keyRadius.dp), clip = false,
+                        ambientColor = keyTheme.shadowColor.copy(alpha = keyTheme.shadowAlpha),
+                        spotColor = keyTheme.shadowColor.copy(alpha = keyTheme.shadowAlpha))
+                } else Modifier,
+            )
             .clip(RoundedCornerShape(keyRadius.dp))
             .then(
-                if (!(isDragged.value || isPressed) && keyGradient != null) {
+                if (!(isDragged.value || isPressed) && idleGradient != null) {
                     Modifier.keyboardGradientSlice(
-                        backdrop = keyGradient,
+                        backdrop = idleGradient,
                         canvasWidth = keyGradientCanvasWidth,
                         canvasHeight = keyGradientCanvasHeight,
                         offsetX = keyGradientOffsetX,
@@ -401,10 +422,10 @@ fun KeyboardKey(
                     Modifier.background(color = backgroundColor)
                 },
             ).then(
-                if (keyBorderWidth > 0.0) {
-                    if (keyBorderGradient != null) {
+                if (drawBorder && keyBorderWidth > 0.0) {
+                    if (activeBorderGradient != null) {
                         Modifier.keyboardGradientBorder(
-                            backdrop = keyBorderGradient,
+                            backdrop = activeBorderGradient,
                             width = keyBorderWidth.dp,
                             radius = keyRadius.dp,
                         )
@@ -895,7 +916,7 @@ fun KeyboardKey(
                         vertical = diagonalYPadding,
                     ),
         ) {
-            key.getSwipe(SwipeDirection.TOP_LEFT)?.let {
+            key.getSwipe(SwipeDirection.TOP_LEFT)?.takeUnless { hideSwipeHints }?.let {
                 KeyText(it, (keySize - keyBorderWidth).dp, hideLetters, hideSymbols, capsLock)
             }
         }
@@ -906,7 +927,7 @@ fun KeyboardKey(
                     .fillMaxSize()
                     .padding(vertical = yPadding),
         ) {
-            key.getSwipe(SwipeDirection.TOP)?.let {
+            key.getSwipe(SwipeDirection.TOP)?.takeUnless { hideSwipeHints }?.let {
                 KeyText(it, (keySize - keyBorderWidth).dp, hideLetters, hideSymbols, capsLock)
             }
         }
@@ -920,7 +941,7 @@ fun KeyboardKey(
                         vertical = diagonalYPadding,
                     ),
         ) {
-            key.getSwipe(SwipeDirection.TOP_RIGHT)?.let {
+            key.getSwipe(SwipeDirection.TOP_RIGHT)?.takeUnless { hideSwipeHints }?.let {
                 KeyText(it, (keySize - keyBorderWidth).dp, hideLetters, hideSymbols, capsLock)
             }
         }
@@ -931,7 +952,7 @@ fun KeyboardKey(
                     .fillMaxSize()
                     .padding(horizontal = xPadding),
         ) {
-            key.getSwipe(SwipeDirection.LEFT)?.let {
+            key.getSwipe(SwipeDirection.LEFT)?.takeUnless { hideSwipeHints }?.let {
                 KeyText(it, (keySize - keyBorderWidth).dp, hideLetters, hideSymbols, capsLock)
             }
         }
@@ -951,7 +972,7 @@ fun KeyboardKey(
                     .fillMaxSize()
                     .padding(horizontal = xPadding),
         ) {
-            key.getSwipe(SwipeDirection.RIGHT)?.let {
+            key.getSwipe(SwipeDirection.RIGHT)?.takeUnless { hideSwipeHints }?.let {
                 KeyText(it, (keySize - keyBorderWidth).dp, hideLetters, hideSymbols, capsLock)
             }
         }
@@ -965,7 +986,7 @@ fun KeyboardKey(
                         vertical = diagonalYPadding,
                     ),
         ) {
-            key.getSwipe(SwipeDirection.BOTTOM_LEFT)?.let {
+            key.getSwipe(SwipeDirection.BOTTOM_LEFT)?.takeUnless { hideSwipeHints }?.let {
                 KeyText(it, (keySize - keyBorderWidth).dp, hideLetters, hideSymbols, capsLock)
             }
         }
@@ -976,7 +997,7 @@ fun KeyboardKey(
                     .fillMaxSize()
                     .padding(vertical = yPadding),
         ) {
-            key.getSwipe(SwipeDirection.BOTTOM)?.let {
+            key.getSwipe(SwipeDirection.BOTTOM)?.takeUnless { hideSwipeHints }?.let {
                 KeyText(it, (keySize - keyBorderWidth).dp, hideLetters, hideSymbols, capsLock)
             }
         }
@@ -990,7 +1011,7 @@ fun KeyboardKey(
                         vertical = diagonalYPadding,
                     ),
         ) {
-            key.getSwipe(SwipeDirection.BOTTOM_RIGHT)?.let {
+            key.getSwipe(SwipeDirection.BOTTOM_RIGHT)?.takeUnless { hideSwipeHints }?.let {
                 KeyText(it, (keySize - keyBorderWidth).dp, hideLetters, hideSymbols, capsLock)
             }
         }
