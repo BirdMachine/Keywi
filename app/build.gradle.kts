@@ -24,9 +24,9 @@ val keywiIconSource = rootProject.file("assets/file_000000003e3481f5acdf9449f620
 val generatedKeywiIconResDir = layout.buildDirectory.dir("generated/keywiIcon/res")
 
 val generateKeywiLauncherIcon by tasks.registering(Copy::class) {
-    from(keywiIconSource)
     into(generatedKeywiIconResDir.map { it.dir("mipmap-nodpi") })
-    rename { "keywi_launcher.png" }
+    from(keywiIconSource) { rename { "keywi_launcher.png" } }
+    from(keywiIconSource) { rename { "keywi_launcher_art.png" } }
 }
 
 android {
