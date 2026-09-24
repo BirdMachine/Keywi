@@ -4,9 +4,9 @@
     <application
         android:name=".ThumbkeyApplication"
         android:allowBackup="true"
-        android:icon="@mipmap/ic_launcher"
+        android:icon="@mipmap/keywi_launcher"
         android:label="Keywi"
-        android:roundIcon="@mipmap/ic_launcher_round"
+        android:roundIcon="@mipmap/keywi_launcher"
         android:supportsRtl="true"
         android:localeConfig="@xml/locales_config"
         android:theme="@style/Theme.AppCompat.NoActionBar"
