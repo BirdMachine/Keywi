@@ -59,7 +59,6 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import com.dessalines.thumbkey.ui.components.keyboard.BOARD_ACTIONS
-import com.dessalines.thumbkey.ui.components.keyboard.BOARD_SLOTS
 import com.dessalines.thumbkey.ui.components.keyboard.BoardBinding
 import com.dessalines.thumbkey.ui.components.keyboard.BoardCell
 import com.dessalines.thumbkey.ui.components.keyboard.CustomBoard
@@ -237,10 +236,16 @@ fun AdvancedBoardManagementScreen(navController: NavController) {
                                     }
                                 }
                                 if (tab == 1) {
-                                    val slots = BOARD_SLOTS.filter { it != "center" && it != "hold" }
+                                    val slots = listOf("topLeft", "top", "topRight", "left", null, "right", "bottomLeft", "bottom", "bottomRight")
                                     slots.chunked(3).forEach { chunk ->
                                         Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-                                            chunk.forEach { slot -> FilterChip(gesture == slot, { gesture = slot }, label = { Text(slotLabel(slot)) }) }
+                                            chunk.forEach { slot ->
+                                                if (slot == null) {
+                                                    Spacer(Modifier.weight(1f).height(48.dp))
+                                                } else {
+                                                    FilterChip(gesture == slot, { gesture = slot }, label = { Text(slotLabel(slot)) }, modifier = Modifier.weight(1f))
+                                                }
+                                            }
                                         }
                                     }
                                 }

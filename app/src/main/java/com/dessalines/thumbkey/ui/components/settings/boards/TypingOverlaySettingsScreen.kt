@@ -65,7 +65,7 @@ fun TypingOverlaySettingsScreen(navController: NavController) {
     }
     Scaffold(topBar = { SimpleTopAppBar("On-type GIF / PNG overlay", navController) }) { padding ->
         Column(Modifier.padding(padding).padding(16.dp).verticalScroll(rememberScrollState()), verticalArrangement = Arrangement.spacedBy(12.dp)) {
-            Text("A touch-through image over the keyboard. Each typed key restarts one overlay; rapid typing never stacks copies. PNGs flash and fade; GIFs play once.")
+            Text("A touch-through image over the keyboard. Typed keys trigger one overlay. Keys during the cooldown are skipped, never queued. PNGs flash and fade; GIFs play once.")
             Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
                 Text("Enable typing overlay", Modifier.weight(1f).padding(top = 12.dp))
                 Switch(state.enabled, { save(state.copy(enabled = it)) }, enabled = state.uri != null)
@@ -73,6 +73,9 @@ fun TypingOverlaySettingsScreen(navController: NavController) {
             Button(enabled = !loading, onClick = { picker.launch(arrayOf("image/gif", "image/png")) }) { Text(if (loading) "Checking image…" else "Choose GIF / PNG") }
             Text("Up to 8 MB and 2048 × 2048 pixels. Small transparent images work best. Restricted power mode disables overlays.", style = MaterialTheme.typography.bodySmall)
             error?.let { Text(it, color = MaterialTheme.colorScheme.error) }
+            Text(if (state.cooldownMs == 0) "Trigger cooldown: off (every key)" else "Trigger cooldown: ${state.cooldownMs} ms")
+            Slider(state.cooldownMs.toFloat(), { save(state.copy(cooldownMs = (it / 50).toInt() * 50)) }, valueRange = 0f..3000f, steps = 59)
+            Text("Minimum time between animation starts. Increase this if fast typing feels slow. 0 triggers on every key.", style = MaterialTheme.typography.bodySmall)
             Text("Display duration: ${state.durationMs} ms")
             Slider(state.durationMs.toFloat(), { save(state.copy(durationMs = it.toInt())) }, valueRange = 100f..3000f)
             Text("Opacity: ${(state.opacity * 100).toInt()}%")

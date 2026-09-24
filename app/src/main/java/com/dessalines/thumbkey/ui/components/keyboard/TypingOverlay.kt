@@ -29,6 +29,7 @@ data class TypingOverlayState(
     val enabled: Boolean = false,
     val uri: String? = null,
     val durationMs: Int = 650,
+    val cooldownMs: Int = 650,
     val opacity: Float = 0.8f,
     val size: Float = 0.65f,
 )
@@ -41,6 +42,7 @@ object TypingOverlayPreferences {
         current = TypingOverlayState(
             enabled = prefs.getBoolean("enabled", false), uri = prefs.getString("uri", null),
             durationMs = prefs.getInt("duration", 650).coerceIn(100, 3000),
+            cooldownMs = prefs.getInt("cooldown", 650).coerceIn(0, 3000),
             opacity = prefs.getFloat("opacity", 0.8f).coerceIn(0f, 1f),
             size = prefs.getFloat("size", 0.65f).coerceIn(0.1f, 1f),
         )
@@ -49,6 +51,7 @@ object TypingOverlayPreferences {
     fun save(context: Context, state: TypingOverlayState) {
         context.getSharedPreferences(OVERLAY_PREFS, Context.MODE_PRIVATE).edit()
             .putBoolean("enabled", state.enabled).putString("uri", state.uri).putInt("duration", state.durationMs)
+            .putInt("cooldown", state.cooldownMs.coerceIn(0, 3000))
             .putFloat("opacity", state.opacity).putFloat("size", state.size).apply()
         current = state
     }
@@ -90,11 +93,16 @@ suspend fun loadTypingOverlayMedia(context: Context, uri: String): TypingOverlay
 @Suppress("DEPRECATION")
 private class TypingOverlayView(context: Context) : View(context) {
     var media: TypingOverlayMedia? = null
+        set(value) {
+            if (value == null || value !== failedMedia) field = value
+        }
+    private var failedMedia: TypingOverlayMedia? = null
     var options = TypingOverlayState()
     var frameMillis = 33L
     private val paint = Paint(Paint.ANTI_ALIAS_FLAG or Paint.FILTER_BITMAP_FLAG)
     private var started = -1L
     private var lastPulse = 0L
+    private val triggerGate = OverlayTriggerGate()
     init {
         // Movie's GIF renderer requires a software canvas on some Android versions.
         setLayerType(LAYER_TYPE_SOFTWARE, null)
@@ -105,8 +113,11 @@ private class TypingOverlayView(context: Context) : View(context) {
     fun pulse(value: Long) {
         if (value != lastPulse) {
             lastPulse = value
-            started = SystemClock.uptimeMillis()
-            invalidate()
+            val now = SystemClock.uptimeMillis()
+            if (media != null && triggerGate.accept(now, options.cooldownMs)) {
+                started = now
+                invalidate()
+            }
         }
     }
     fun stop() { started = -1L; invalidate() }
@@ -121,7 +132,8 @@ private class TypingOverlayView(context: Context) : View(context) {
         val scale = min(width.toFloat() / image.width, height.toFloat() / image.height) * options.size
         val fade = min(1f, (options.durationMs - elapsed) / 120f)
         paint.alpha = (255 * options.opacity * fade).toInt()
-        canvas.save()
+        val checkpoint = canvas.save()
+        try {
         canvas.translate((width - image.width * scale) / 2f, (height - image.height * scale) / 2f)
         canvas.scale(scale, scale)
         image.bitmap?.let { canvas.drawBitmap(it, 0f, 0f, paint) }
@@ -130,8 +142,21 @@ private class TypingOverlayView(context: Context) : View(context) {
             it.setTime(elapsed.coerceAtMost((it.duration().takeIf { n -> n > 0 } ?: 1000) - 1L).toInt())
             it.draw(canvas, 0f, 0f, paint)
         }
-        canvas.restore()
-        postInvalidateDelayed(frameMillis)
+        } catch (failure: RuntimeException) {
+            // A broken optional effect must not close the keyboard.
+            android.util.Log.e("KeywiOverlay", "Overlay drawing failed; disabling this media instance", failure)
+            failedMedia = image
+            media = null
+            started = -1L
+            return
+        } finally {
+            canvas.restoreToCount(checkpoint)
+        }
+        // Static PNGs need no redraw until their fade begins.
+        val delay = if (image.bitmap != null && elapsed < options.durationMs - 120) {
+            options.durationMs - 120L - elapsed
+        } else frameMillis
+        postInvalidateDelayed(delay)
     }
 }
 
