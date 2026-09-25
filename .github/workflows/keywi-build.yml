@@ -28,6 +28,8 @@ jobs:
     steps:
       - name: Check out repository
         uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
 
       - name: Restore stable Keywi debug signing key
         run: |
@@ -67,6 +69,67 @@ jobs:
           mkdir -p release
           cp app/build/outputs/apk/debug/app-debug.apk release/Keywi-latest.apk
 
+      - name: Build release notes
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+
+          TAG="keywi-build-${GITHUB_RUN_NUMBER}"
+          NOTES_FILE="release/RELEASE_NOTES.md"
+          PREVIOUS_TAG="$(
+            gh release list \
+              --repo "$GITHUB_REPOSITORY" \
+              --limit 100 \
+              --json tagName,isDraft \
+              --jq '[.[] | select(.isDraft == false) | .tagName | select(startswith("keywi-build-"))][0] // ""'
+          )"
+
+          if [[ -n "$PREVIOUS_TAG" ]] && git rev-parse --verify "${PREVIOUS_TAG}^{commit}" >/dev/null 2>&1; then
+            RANGE="${PREVIOUS_TAG}..${GITHUB_SHA}"
+          else
+            RANGE="${GITHUB_SHA}^..${GITHUB_SHA}"
+          fi
+
+          {
+            echo "# 🥝 Keywi build ${GITHUB_RUN_NUMBER}"
+            echo
+            echo "Fresh signed Keywi APK from \`main\`, ready for an in-place update over compatible Keywi builds."
+            echo
+            echo "## ✨ Changes in this build"
+            echo
+
+            CHANGE_COUNT="$(git rev-list --count "$RANGE")"
+            if [[ "$CHANGE_COUNT" -gt 0 ]]; then
+              git log "$RANGE" \
+                --first-parent \
+                --pretty=format:'- %s ([`%h`](https://github.com/'"$GITHUB_REPOSITORY"'/commit/%H))'
+              echo
+            else
+              echo "- No user-visible source changes were detected since the previous Keywi release."
+            fi
+
+            echo
+            echo "## 📦 Install / update"
+            echo
+            echo "- Download **Keywi-latest.apk** from the Assets section below."
+            echo "- It is signed with Keywi's stable update key, so compatible existing installs can update in place."
+            echo "- Android version code for this build: \`$((300000 + GITHUB_RUN_NUMBER))\`."
+            echo "- Built from commit [\`${GITHUB_SHA:0:7}\`](https://github.com/${GITHUB_REPOSITORY}/commit/${GITHUB_SHA})."
+            echo
+            echo "## 🔎 Full changelog"
+            echo
+
+            if [[ -n "$PREVIOUS_TAG" ]]; then
+              echo "[Compare ${PREVIOUS_TAG} → ${TAG}](https://github.com/${GITHUB_REPOSITORY}/compare/${PREVIOUS_TAG}...${GITHUB_SHA})"
+            else
+              echo "This is the first release found by the automated changelog generator."
+            fi
+          } > "$NOTES_FILE"
+
+          cat "$NOTES_FILE"
+
       - name: Upload workflow artifact
         uses: actions/upload-artifact@v6
         with:
@@ -85,7 +148,7 @@ jobs:
             --repo "$GITHUB_REPOSITORY" \
             --target "$GITHUB_SHA" \
             --title "Keywi build ${GITHUB_RUN_NUMBER}" \
-            --notes "Automated Keywi debug build from main at ${GITHUB_SHA}. Signed with Keywi's stable update key and a monotonic version code so compatible Keywi builds can update in place."
+            --notes-file release/RELEASE_NOTES.md
 
       - name: Verify GitHub Release
         if: github.event_name == 'push' && github.ref == 'refs/heads/main'
