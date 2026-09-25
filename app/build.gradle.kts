@@ -20,13 +20,13 @@ val keywiDebugKeyAlias = providers.environmentVariable("KEYWI_DEBUG_KEY_ALIAS").
 val keywiDebugKeyPassword = providers.environmentVariable("KEYWI_DEBUG_KEY_PASSWORD").orNull
 val keywiCiVersionCode = providers.environmentVariable("KEYWI_VERSION_CODE").orNull?.toIntOrNull()
 
-val keywiIconSource = rootProject.file("assets/file_000000003e3481f5acdf9449f6204a26.png")
+val keywiIconSource = rootProject.file("assets/keywi-mascot-20260925.jpg")
 val generatedKeywiIconResDir = layout.buildDirectory.dir("generated/keywiIcon/res")
 
 val generateKeywiLauncherIcon by tasks.registering(Copy::class) {
     into(generatedKeywiIconResDir.map { it.dir("mipmap-nodpi") })
-    from(keywiIconSource) { rename { "keywi_launcher.png" } }
-    from(keywiIconSource) { rename { "keywi_launcher_art.png" } }
+    from(keywiIconSource) { rename { "keywi_launcher.jpg" } }
+    from(keywiIconSource) { rename { "keywi_launcher_art.jpg" } }
 }
 
 android {
