@@ -116,7 +116,10 @@ android {
         compose = true
         buildConfig = true
     }
-    sourceSets["main"].res.srcDir(generatedKeywiIconResDir)
+    // AGP 9+ rejects Provider values passed directly through the legacy SourceSet API.
+    // preBuild already depends on generateKeywiLauncherIcon, so registering the resolved
+    // build-directory path here keeps task ordering explicit without the unsupported Provider.
+    sourceSets["main"].res.srcDir(generatedKeywiIconResDir.get().asFile)
     namespace = "com.dessalines.thumbkey"
 }
 
