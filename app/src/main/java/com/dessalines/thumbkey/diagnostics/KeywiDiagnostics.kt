@@ -178,6 +178,9 @@ object KeywiDiagnostics {
             ApplicationExitInfo.REASON_SIGNALED -> "SIGNAL"
             ApplicationExitInfo.REASON_INITIALIZATION_FAILURE -> "INIT FAILURE"
             ApplicationExitInfo.REASON_PERMISSION_CHANGE -> "PERMISSION CHANGE"
+            ApplicationExitInfo.REASON_PACKAGE_STATE_CHANGE -> "PACKAGE STATE CHANGE"
+            ApplicationExitInfo.REASON_PACKAGE_UPDATED -> "PACKAGE UPDATED"
+            ApplicationExitInfo.REASON_DEPENDENCY_DIED -> "DEPENDENCY DIED"
             ApplicationExitInfo.REASON_OTHER -> "OTHER"
             else -> "reason=$reason"
         }
