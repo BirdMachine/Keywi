@@ -4,6 +4,7 @@ import android.app.ActivityManager
 import android.app.ApplicationExitInfo
 import android.content.Context
 import android.os.Build
+import android.os.SystemClock
 import android.util.Log
 import com.dessalines.thumbkey.BuildConfig
 import java.io.File
@@ -11,31 +12,28 @@ import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
 
-/**
- * Privacy-first, local-only diagnostics for Keywi.
- *
- * IMPORTANT: callers must log actions/state, never text entered by the user.
- */
+/** Privacy-first, local-only diagnostics. Callers must never log typed text. */
 object KeywiDiagnostics {
     private const val TAG = "KeywiDiag"
     private const val DIR = "diagnostics"
     private const val LOG = "keywi.log"
     private const val MAX_LOG_BYTES = 2L * 1024L * 1024L
     private const val KEEP_CRASHES = 20
+    private const val INPUT_SAMPLE_SIZE = 25
     private val lock = Any()
     private var appContext: Context? = null
     private var previousHandler: Thread.UncaughtExceptionHandler? = null
+    private var inputCount = 0
+    private var inputWindowStarted = 0L
+    private var lastInputAt = 0L
+    private var maxInputGap = 0L
 
     fun install(context: Context) {
         if (appContext != null) return
         appContext = context.applicationContext
         previousHandler = Thread.getDefaultUncaughtExceptionHandler()
         Thread.setDefaultUncaughtExceptionHandler { thread, throwable ->
-            try {
-                recordCrash(thread, throwable)
-            } catch (_: Throwable) {
-                // A crash recorder must never mask the original crash.
-            } finally {
+            try { recordCrash(thread, throwable) } catch (_: Throwable) { } finally {
                 previousHandler?.uncaughtException(thread, throwable)
             }
         }
@@ -45,6 +43,33 @@ object KeywiDiagnostics {
     fun event(category: String, message: String) = write("I", category, message, null)
     fun warning(category: String, message: String) = write("W", category, message, null)
     fun error(category: String, message: String, throwable: Throwable? = null) = write("E", category, message, throwable)
+
+    /**
+     * Records aggregate input timing without recording keys or text. Deliberately writes only once
+     * per sample window so diagnostics do not themselves create per-keystroke I/O or stutter.
+     */
+    fun inputPulse() {
+        val now = SystemClock.uptimeMillis()
+        var summary: String? = null
+        synchronized(lock) {
+            if (inputWindowStarted == 0L) inputWindowStarted = now
+            if (lastInputAt != 0L) maxInputGap = maxOf(maxInputGap, now - lastInputAt)
+            lastInputAt = now
+            inputCount++
+            if (inputCount >= INPUT_SAMPLE_SIZE) {
+                val elapsed = (now - inputWindowStarted).coerceAtLeast(1L)
+                summary = "25 input actions in ${elapsed}ms; max inter-action gap=${maxInputGap}ms"
+                inputCount = 0
+                inputWindowStarted = now
+                maxInputGap = 0L
+            }
+        }
+        summary?.let { event("PERF_INPUT", it) }
+    }
+
+    fun performance(category: String, operation: String, elapsedMs: Long, warnAtMs: Long = 32L) {
+        if (elapsedMs >= warnAtMs) warning(category, "$operation took ${elapsedMs}ms")
+    }
 
     private fun write(level: String, category: String, message: String, throwable: Throwable?) {
         val context = appContext ?: return
@@ -69,8 +94,7 @@ object KeywiDiagnostics {
 
     private fun recordCrash(thread: Thread, throwable: Throwable) {
         val context = appContext ?: return
-        val dir = diagnosticDir(context)
-        val file = File(dir, "crash-${System.currentTimeMillis()}.txt")
+        val file = File(diagnosticDir(context), "crash-${System.currentTimeMillis()}.txt")
         file.writeText(buildString {
             appendLine("Keywi crash report")
             appendLine("Time: ${timestamp()}")
@@ -90,13 +114,10 @@ object KeywiDiagnostics {
 
     fun crashReports(context: Context): List<File> =
         diagnosticDir(context).listFiles { file -> file.name.startsWith("crash-") && file.extension == "txt" }
-            ?.sortedByDescending(File::lastModified)
-            .orEmpty()
+            ?.sortedByDescending(File::lastModified).orEmpty()
 
     fun clear(context: Context) {
-        synchronized(lock) {
-            diagnosticDir(context).listFiles()?.forEach { it.delete() }
-        }
+        synchronized(lock) { diagnosticDir(context).listFiles()?.forEach { it.delete() } }
         event("APP", "diagnostic history cleared")
     }
 
@@ -129,7 +150,7 @@ object KeywiDiagnostics {
         appendLine("=== KEYWI EVENT LOG ===")
         append(readLog(context))
         appendLine()
-        appendLine("Privacy note: Keywi diagnostics are designed to record app actions/state, not typed text.")
+        appendLine("Privacy note: Keywi diagnostics record app actions/timing, never typed text.")
     }
 
     private fun diagnosticDir(context: Context) = File(context.filesDir, DIR).apply { mkdirs() }
@@ -142,10 +163,7 @@ object KeywiDiagnostics {
         }
     }
 
-    private fun trimCrashReports(context: Context) {
-        crashReports(context).drop(KEEP_CRASHES).forEach { it.delete() }
-    }
-
+    private fun trimCrashReports(context: Context) { crashReports(context).drop(KEEP_CRASHES).forEach { it.delete() } }
     private fun timestamp() = SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSS", Locale.US).format(Date())
     private fun formatTime(value: Long) = SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.US).format(Date(value))
 
