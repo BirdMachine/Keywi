@@ -370,7 +370,7 @@ fun SuggestionBarV2(ime: IMEService) {
             showCurrentWord = AdvancedKeyWordPreferences.showCurrentWord(ime)
             longPressAddWord = AdvancedKeyWordPreferences.longPressAddWord(ime)
             newWordHighlightColor = AdvancedKeyWordPreferences.newWordHighlightColor(ime)
-            val connection = ime.currentInputConnection
+            val connection = ime.activeInputConnectionOrNull()
             if (connection == null) {
                 if (!connectionWasMissing) {
                     KeywiDiagnostics.event("IME", "suggestion polling paused: no active input connection")
@@ -474,7 +474,7 @@ fun SuggestionBarV2(ime: IMEService) {
                             onSuggestionClick = { suggestion ->
                                 val replacementLength = if (isCurrentWord) currentToken.length else prefix.length
                                 if (replacementLength > 0) {
-                                    val connection = ime.currentInputConnection
+                                    val connection = ime.activeInputConnectionOrNull()
                                     connection?.deleteSurroundingText(replacementLength, 0)
                                     connection?.commitText("$suggestion ", 1)
                                     currentToken = ""
