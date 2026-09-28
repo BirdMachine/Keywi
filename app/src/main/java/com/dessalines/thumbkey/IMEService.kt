@@ -70,11 +70,15 @@ class IMEService :
      * During Palette search, expose a lightweight proxy that turns ordinary Keywi commits and
      * deletes into edits of the Palette query. Everything else still reaches the host editor.
      *
-     * Android may briefly expose no active connection while the IME view/coroutines are still alive
-     * (for example while focus is moving between fields). Preserve that nullable contract instead of
-     * turning the normal lifecycle gap into an app crash.
+     * Most of Keywi's synchronous key-processing code expects a live connection, so retain the
+     * historical non-null override there. Async/lifecycle-sensitive code must use
+     * [activeInputConnectionOrNull] instead.
      */
-    override fun getCurrentInputConnection(): InputConnection? {
+    override fun getCurrentInputConnection(): InputConnection {
+        return checkNotNull(activeInputConnectionOrNull()) { "No active input connection" }
+    }
+
+    fun activeInputConnectionOrNull(): InputConnection? {
         val target = super.getCurrentInputConnection() ?: return null
         return if (PaletteSearchCapture.shouldCapture()) PaletteSearchInputConnection(target) else target
     }
