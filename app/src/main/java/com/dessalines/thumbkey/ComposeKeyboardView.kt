@@ -39,6 +39,7 @@ import com.dessalines.thumbkey.db.AppSettingsRepository
 import com.dessalines.thumbkey.db.ClipboardRepository
 import com.dessalines.thumbkey.db.DEFAULT_SOUND_ON_TAP
 import com.dessalines.thumbkey.db.DEFAULT_VIBRATE_ON_TAP
+import com.dessalines.thumbkey.diagnostics.KeywiDiagnostics
 import com.dessalines.thumbkey.ui.components.keyboard.BackdropMode
 import com.dessalines.thumbkey.ui.components.keyboard.BackdropThemePreferences
 import com.dessalines.thumbkey.ui.components.keyboard.BackdropVisualLayer
@@ -121,6 +122,7 @@ class ComposeKeyboardView(
                                 KeyboardScreen(
                                     settings = keyboardSettings,
                                     onTyped = {
+                                        KeywiDiagnostics.inputPulse()
                                         val overlay = com.dessalines.thumbkey.ui.components.keyboard.TypingOverlayPreferences.current
                                         if (overlay.enabled && overlay.uri != null && overlayTriggerGate.accept(android.os.SystemClock.uptimeMillis(), overlay.cooldownMs)) {
                                             typingPulse.longValue++
