@@ -8,6 +8,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.outlined.BugReport
 import androidx.compose.material.icons.outlined.Keyboard
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
@@ -31,73 +32,50 @@ import com.dessalines.thumbkey.utils.SimpleTopAppBar
 import com.dessalines.thumbkey.utils.TAG
 import com.dessalines.thumbkey.utils.toBool
 import com.dessalines.thumbkey.utils.toInt
+import me.zhanghai.compose.preference.Preference
 import me.zhanghai.compose.preference.ProvidePreferenceTheme
 import me.zhanghai.compose.preference.SwitchPreference
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun OtherSettingsScreen(
-    navController: NavController,
-    appSettingsViewModel: AppSettingsViewModel,
-) {
+fun OtherSettingsScreen(navController: NavController, appSettingsViewModel: AppSettingsViewModel) {
     Log.d(TAG, "Got to 'other' settings activity")
-
     val settings by appSettingsViewModel.appSettings.observeAsState()
-
-    var showOnScreenKeyboardState =
-        (settings?.showOnScreenKeyboard ?: DEFAULT_SHOW_ON_SCREEN_KEYBOARD).toBool()
-
+    var showOnScreenKeyboardState = (settings?.showOnScreenKeyboard ?: DEFAULT_SHOW_ON_SCREEN_KEYBOARD).toBool()
     val snackbarHostState = remember { SnackbarHostState() }
     val scrollState = rememberScrollState()
 
     fun updateOtherSettings() {
         appSettingsViewModel.updateOtherSettings(
-            OtherSettingsUpdate(
-                id = 1,
-                showOnScreenKeyboard = showOnScreenKeyboardState.toInt(),
-            ),
+            OtherSettingsUpdate(id = 1, showOnScreenKeyboard = showOnScreenKeyboardState.toInt()),
         )
     }
 
     Scaffold(
         snackbarHost = { SnackbarHost(snackbarHostState) },
-        topBar = {
-            SimpleTopAppBar(
-                text = stringResource(R.string.other),
-                navController = navController,
-            )
-        },
-        content = { padding ->
-            Column(
-                modifier =
-                    Modifier
-                        .padding(padding)
-                        .verticalScroll(scrollState)
-                        .background(color = MaterialTheme.colorScheme.surface)
-                        .imePadding(),
-            ) {
-                ProvidePreferenceTheme {
-                    SwitchPreference(
-                        value = showOnScreenKeyboardState,
-                        onValueChange = {
-                            showOnScreenKeyboardState = it
-                            updateOtherSettings()
-                        },
-                        title = {
-                            Text(stringResource(R.string.show_on_screen_keyboard))
-                        },
-                        summary = {
-                            Text(stringResource(R.string.show_on_screen_keyboard_description))
-                        },
-                        icon = {
-                            Icon(
-                                imageVector = Icons.Outlined.Keyboard,
-                                contentDescription = null,
-                            )
-                        },
-                    )
-                }
+        topBar = { SimpleTopAppBar(text = stringResource(R.string.other), navController = navController) },
+    ) { padding ->
+        Column(
+            modifier = Modifier.padding(padding).verticalScroll(scrollState).background(MaterialTheme.colorScheme.surface).imePadding(),
+        ) {
+            ProvidePreferenceTheme {
+                Preference(
+                    title = { Text("Advanced Debug & Diagnostics") },
+                    summary = { Text("Keywi logs, crash reports, Android process exits, and diagnostic export") },
+                    icon = { Icon(Icons.Outlined.BugReport, contentDescription = null) },
+                    onClick = { navController.navigate("advancedDebug") },
+                )
+                SwitchPreference(
+                    value = showOnScreenKeyboardState,
+                    onValueChange = {
+                        showOnScreenKeyboardState = it
+                        updateOtherSettings()
+                    },
+                    title = { Text(stringResource(R.string.show_on_screen_keyboard)) },
+                    summary = { Text(stringResource(R.string.show_on_screen_keyboard_description)) },
+                    icon = { Icon(Icons.Outlined.Keyboard, contentDescription = null) },
+                )
             }
-        },
-    )
+        }
+    }
 }
