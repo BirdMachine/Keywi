@@ -17,6 +17,7 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.runtime.mutableIntStateOf
@@ -40,6 +41,8 @@ import com.dessalines.thumbkey.db.ClipboardRepository
 import com.dessalines.thumbkey.db.DEFAULT_SOUND_ON_TAP
 import com.dessalines.thumbkey.db.DEFAULT_VIBRATE_ON_TAP
 import com.dessalines.thumbkey.diagnostics.KeywiDiagnostics
+import com.dessalines.thumbkey.sound.AdvancedSoundEngine
+import com.dessalines.thumbkey.sound.SoundEvent
 import com.dessalines.thumbkey.ui.components.keyboard.BackdropMode
 import com.dessalines.thumbkey.ui.components.keyboard.BackdropThemePreferences
 import com.dessalines.thumbkey.ui.components.keyboard.BackdropVisualLayer
@@ -79,6 +82,8 @@ class ComposeKeyboardView(
             val density = LocalDensity.current
             val typingPulse = remember { androidx.compose.runtime.mutableLongStateOf(0L) }
             val overlayTriggerGate = remember { com.dessalines.thumbkey.ui.components.keyboard.OverlayTriggerGate() }
+            val soundEngine = remember(ctx) { AdvancedSoundEngine(ctx) }
+            DisposableEffect(soundEngine) { onDispose { soundEngine.release() } }
             remember(ctx) { com.dessalines.thumbkey.ui.components.keyboard.TypingOverlayPreferences.load(ctx) }
             var keyboardHeightPx by remember { mutableIntStateOf(0) }
             var activePalette by remember { mutableStateOf<InputPalette?>(null) }
@@ -123,10 +128,9 @@ class ComposeKeyboardView(
                                     settings = keyboardSettings,
                                     onTyped = {
                                         KeywiDiagnostics.inputPulse()
+                                        soundEngine.play(SoundEvent())
                                         val overlay = com.dessalines.thumbkey.ui.components.keyboard.TypingOverlayPreferences.current
-                                        if (overlay.enabled && overlay.uri != null && overlayTriggerGate.accept(android.os.SystemClock.uptimeMillis(), overlay.cooldownMs)) {
-                                            typingPulse.longValue++
-                                        }
+                                        if (overlay.enabled && overlay.uri != null && overlayTriggerGate.accept(android.os.SystemClock.uptimeMillis(), overlay.cooldownMs)) typingPulse.longValue++
                                     },
                                     clipboardRepository = clipboardRepo,
                                     onSwitchLanguage = {
@@ -147,25 +151,12 @@ class ComposeKeyboardView(
                                     },
                                     onChangePosition = { f -> ctx.lifecycleScope.launch { settingsState.value?.let { settingsRepo.update(it.copy(position = f(KeyboardPosition.entries[it.position]).ordinal)) } } },
                                     onToggleHideLetters = { ctx.lifecycleScope.launch { settingsState.value?.let { settingsRepo.update(it.copy(hideLetters = (!it.hideLetters.toBool()).toInt())) } } },
-                                    onGoToClipboardSettings = {
-                                        context.startActivity(Intent(context, MainActivity::class.java).apply { putExtra("startRoute", "clipboardSettings"); addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK) })
-                                    },
+                                    onGoToClipboardSettings = { context.startActivity(Intent(context, MainActivity::class.java).apply { putExtra("startRoute", "clipboardSettings"); addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK) }) },
                                 )
                             }
-                            com.dessalines.thumbkey.ui.components.keyboard.TypingOverlayLayer(
-                                typingPulse,
-                                com.dessalines.thumbkey.ui.components.keyboard.TypingOverlayPreferences.current,
-                                Modifier.matchParentSize().zIndex(4f),
-                            )
+                            com.dessalines.thumbkey.ui.components.keyboard.TypingOverlayLayer(typingPulse, com.dessalines.thumbkey.ui.components.keyboard.TypingOverlayPreferences.current, Modifier.matchParentSize().zIndex(4f))
                             activePalette?.let { palette ->
-                                ExpandedInputPaletteHost(
-                                    palette, ctx,
-                                    (settings?.vibrateOnTap ?: DEFAULT_VIBRATE_ON_TAP).toBool(),
-                                    (settings?.soundOnTap ?: DEFAULT_SOUND_ON_TAP).toBool(),
-                                    { PaletteSearchCapture.release(clear = true); activePalette = null },
-                                    with(density) { keyboardHeightPx.toDp() },
-                                    Modifier.align(Alignment.BottomCenter).zIndex(5f),
-                                )
+                                ExpandedInputPaletteHost(palette, ctx, (settings?.vibrateOnTap ?: DEFAULT_VIBRATE_ON_TAP).toBool(), (settings?.soundOnTap ?: DEFAULT_SOUND_ON_TAP).toBool(), { PaletteSearchCapture.release(clear = true); activePalette = null }, with(density) { keyboardHeightPx.toDp() }, Modifier.align(Alignment.BottomCenter).zIndex(5f))
                             }
                         }
                     }
