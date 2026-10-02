@@ -43,6 +43,8 @@ fun ThemeManagerSection(onThemeApplied: () -> Unit) {
 
     fun active(): ThemeDocument = ThemeEngine.loadActive(context)
     fun themes(): List<ThemeDocument> = ThemeEngine.listThemes(context)
+    fun snapshotCustom(): ThemeDocument =
+        ThemeEngine.captureCurrent(context, "Custom", CUSTOM_THEME_ID).also { ThemeEngine.saveCustom(context, it) }
     fun changed(text: String? = null) {
         refresh++
         message = text
@@ -83,7 +85,6 @@ fun ThemeManagerSection(onThemeApplied: () -> Unit) {
         pendingExport = null
     }
 
-    // refresh is intentionally read here so mutations rebuild the menu/header.
     @Suppress("UNUSED_VARIABLE") val refreshToken = refresh
     val current = active()
 
@@ -142,9 +143,9 @@ fun ThemeManagerSection(onThemeApplied: () -> Unit) {
             ) { Text("Import") }
             OutlinedButton(
                 onClick = {
-                    val exportTheme = ThemeEngine.snapshotForExport(context)
+                    val exportTheme = if (current.id == CUSTOM_THEME_ID) snapshotCustom() else current
                     pendingExport = exportTheme
-                    exportLauncher.launch("${ThemeEngine.safeFileName(exportTheme.name)}.keywi-theme.json")
+                    exportLauncher.launch("${safeThemeFileName(exportTheme.name)}.keywi-theme.json")
                 },
                 modifier = Modifier.weight(1f),
             ) { Text("Export") }
@@ -174,6 +175,7 @@ fun ThemeManagerSection(onThemeApplied: () -> Unit) {
                 TextButton(
                     enabled = name.isNotBlank(),
                     onClick = {
+                        snapshotCustom()
                         val saved = ThemeEngine.saveCustomAs(context, name)
                         name = ""
                         naming = false
@@ -185,3 +187,6 @@ fun ThemeManagerSection(onThemeApplied: () -> Unit) {
         )
     }
 }
+
+private fun safeThemeFileName(name: String): String =
+    name.trim().ifBlank { "keywi-theme" }.replace(Regex("[^A-Za-z0-9._-]+"), "-").trim('-')
