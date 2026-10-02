@@ -3,6 +3,7 @@ package com.dessalines.thumbkey.ui.components.keyboard
 import android.content.Context
 import android.provider.UserDictionary
 import android.text.InputType
+import android.os.SystemClock
 import android.widget.Toast
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.ContentTransform
@@ -47,6 +48,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.dessalines.thumbkey.IMEService
+import com.dessalines.thumbkey.diagnostics.KeywiDiagnostics
 import kotlinx.coroutines.delay
 import java.util.Locale
 
@@ -347,6 +349,7 @@ fun SuggestionBarV2(ime: IMEService) {
     val lozengeTheme = SuggestionLozengeThemePreferences.load(ime)
     var newWordHighlightColor by remember { mutableStateOf(AdvancedKeyWordPreferences.newWordHighlightColor(ime)) }
     var justAddedWord by remember { mutableStateOf<String?>(null) }
+    var connectionWasMissing by remember { mutableStateOf(false) }
 
     val inputType = ime.currentInputEditorInfo?.inputType ?: 0
     val variation = inputType and InputType.TYPE_MASK_VARIATION
@@ -367,17 +370,43 @@ fun SuggestionBarV2(ime: IMEService) {
             showCurrentWord = AdvancedKeyWordPreferences.showCurrentWord(ime)
             longPressAddWord = AdvancedKeyWordPreferences.longPressAddWord(ime)
             newWordHighlightColor = AdvancedKeyWordPreferences.newWordHighlightColor(ime)
+            val connection = ime.activeInputConnectionOrNull()
+            if (connection == null) {
+                if (!connectionWasMissing) {
+                    KeywiDiagnostics.event("IME", "suggestion polling paused: no active input connection")
+                    connectionWasMissing = true
+                }
+                delay(80)
+                continue
+            } else if (connectionWasMissing) {
+                KeywiDiagnostics.event("IME", "suggestion polling resumed: input connection available")
+                connectionWasMissing = false
+            }
+
+            val cursorReadStarted = SystemClock.uptimeMillis()
             val beforeCursor =
-                ime.currentInputConnection
-                    ?.getTextBeforeCursor(64, 0)
+                connection
+                    .getTextBeforeCursor(64, 0)
                     ?.toString()
                     .orEmpty()
+            KeywiDiagnostics.performance(
+                "PERF_INPUT",
+                "read text-before-cursor",
+                SystemClock.uptimeMillis() - cursorReadStarted,
+            )
+
             val nextToken = TOKEN_PATTERN_V2.find(beforeCursor)?.value.orEmpty()
             val nextPrefix = SUGGESTION_PREFIX_PATTERN_V2.find(nextToken)?.value.orEmpty()
             if (nextToken != currentToken || nextPrefix != prefix) {
                 currentToken = nextToken
                 prefix = nextPrefix
+                val suggestStarted = SystemClock.uptimeMillis()
                 suggestions = KeywiSuggestionEngine.suggest(ime, nextToken, nextPrefix, MAX_VISIBLE_SUGGESTIONS)
+                KeywiDiagnostics.performance(
+                    "PERF_INPUT",
+                    "suggestion lookup",
+                    SystemClock.uptimeMillis() - suggestStarted,
+                )
             }
             delay(80)
         }
@@ -445,8 +474,9 @@ fun SuggestionBarV2(ime: IMEService) {
                             onSuggestionClick = { suggestion ->
                                 val replacementLength = if (isCurrentWord) currentToken.length else prefix.length
                                 if (replacementLength > 0) {
-                                    ime.currentInputConnection?.deleteSurroundingText(replacementLength, 0)
-                                    ime.currentInputConnection?.commitText("$suggestion ", 1)
+                                    val connection = ime.activeInputConnectionOrNull()
+                                    connection?.deleteSurroundingText(replacementLength, 0)
+                                    connection?.commitText("$suggestion ", 1)
                                     currentToken = ""
                                     prefix = ""
                                     suggestions = emptyList()

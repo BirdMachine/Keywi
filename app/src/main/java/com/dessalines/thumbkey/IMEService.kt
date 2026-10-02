@@ -70,11 +70,16 @@ class IMEService :
      * During Palette search, expose a lightweight proxy that turns ordinary Keywi commits and
      * deletes into edits of the Palette query. Everything else still reaches the host editor.
      *
-     * Keep the override non-null because the rest of Keywi intentionally treats an active IME
-     * session's currentInputConnection as non-null.
+     * Most of Keywi's synchronous key-processing code expects a live connection, so retain the
+     * historical non-null override there. Async/lifecycle-sensitive code must use
+     * [activeInputConnectionOrNull] instead.
      */
     override fun getCurrentInputConnection(): InputConnection {
-        val target = checkNotNull(super.getCurrentInputConnection()) { "No active input connection" }
+        return checkNotNull(activeInputConnectionOrNull()) { "No active input connection" }
+    }
+
+    fun activeInputConnectionOrNull(): InputConnection? {
+        val target = super.getCurrentInputConnection() ?: return null
         return if (PaletteSearchCapture.shouldCapture()) PaletteSearchInputConnection(target) else target
     }
 
