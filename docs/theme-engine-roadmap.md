@@ -1,14 +1,33 @@
-# Theme engine roadmap
+# Keywi appearance & geometry roadmap
 
-## Theme vocabulary
+This document is the durable design reference for the customization architecture. Keep structural decisions here rather than relying on chat history.
 
-- **Theme**: complete visual appearance of Keywi.
+## Vocabulary
+
+- **Theme**: complete visual appearance of Keywi. Themes are geometry-independent: the same theme/effects should render across every Facet.
 - **ThemeDocument**: versioned serialized representation used for local persistence/import/export.
 - **Custom**: permanent scratch theme. Editing a saved theme first forks it into Custom so the source is never accidentally mutated.
-- **Cut** *(later)*: physical key geometry/topology, independent from the symbols assigned to it.
-- **Layout** *(later)*: symbols/actions assigned to a Cut.
+- **Facet**: the complete physical key geometry/topology of a keyboard surface. A Facet is bigger than a symbol layout and may have structural regions/features unique to that geometry.
+- **Layout**: symbols/actions/layers assigned within a Facet. Layout content should not redefine the Facet's geometry.
+- **Layer** *(later)*: alternate assignments on the same Facet/geometry. Do not block today's work on generalized layering.
 
-This lets QWERTY and Dvorak share a Classic/staggered Cut, while T9 and the current MessageEase-like surface can be distinct Cuts. Working name for the current gem-like geometry: **Facet Cut**.
+### Important boundary: ME-Like
+
+The current MessageEase-inspired geometry is the **ME-Like Facet**. Its persistent surrounding controls and its central 3×3 customizable surface are all part of the ME-Like Facet.
+
+Within ME-Like, Alpha, Numeric, and Custom Boards should swap the **central 3×3 surface only**. They are not separate Facets. The surrounding ME-Like control geometry stays in place so Custom behaves like the existing ABC/# surfaces. Space/split-space belongs to the persistent ME-Like structure and can become configurable separately.
+
+Do not generalize the 3×3 assumption into the Facet API: other Facets may have no analogous central surface.
+
+### Planned Facets
+
+- **ME-Like** — current MessageEase-inspired geometry, including its persistent control region and swappable 3×3 surface.
+- **Machine Cut** — dense desktop/power-user geometry inspired by Hacker's Keyboard: number row, staggered/desktop-style alpha rows, modifiers/navigation/function controls, while retaining Keywi's theme, effects, settings, and eventual layer system.
+- **T9** — phone keypad geometry.
+- **Typewriter / staggered** — conventional QWERTY/Dvorak-like geometry; QWERTY and Dvorak are layouts on this Facet, not separate Facets.
+- Further columnar/split geometries can be introduced without assuming ME-Like structure.
+
+`Machine Cut` is the working product name; implementation identifiers should stay descriptive enough that a rename is cheap.
 
 ## Theme manager behavior
 
@@ -36,11 +55,47 @@ Move Advanced Look & Feel toward the compact Control Console / Layered Workspace
 
 Add a quick shortcut to **Advanced Key & Word Selection** near the keyboard itself, tentatively down-right of the top-right key. It should be discoverable without stealing a normal key gesture; finalize hit target/gesture after the Theme Manager work is stable.
 
-## Implementation sequence
+## Ordered implementation plan
 
-1. ThemeDocument + ThemeEngine persistence/application layer.
-2. Theme Manager UI and Custom lifecycle.
-3. Import/export document picker and share flow.
-4. Compact Advanced Look & Feel redesign on top of ThemeEngine.
-5. Theme documentation/wiki and shareable asset bundles.
-6. Cut/Layout model exploration (Facet, Classic, T9, Columnar/Split, etc.).
+### Phase 1 — finish the theme engine
+
+1. Complete ThemeDocument coverage for Advanced Look & Feel state.
+2. Finish Theme Manager UI and Custom lifecycle.
+3. Finish Android import/export document picker/share flow.
+4. Wire theme selection/editing cleanly into Advanced Look & Feel and keyboard rendering.
+5. Compact the Advanced Look & Feel UI after persistence is stable.
+6. Keep themes independent from keyboard geometry so one ThemeDocument applies to ME-Like, Machine Cut, T9, and later Facets.
+
+### Phase 2 — ME-Like customizable surface
+
+1. Refactor ME-Like rendering so its persistent surrounding controls are shared by Alpha, Numeric, and Custom Boards.
+2. Make a Custom Board provide the same central 3×3 surface contract used by Alpha/Numeric rather than constructing a whole keyboard of its own.
+3. Preserve the persistent right/bottom controls, sizing, one-handed placement, theme/effects, and keyboard settings when a Custom Board is active.
+4. Make board traversal visibly discoverable using the existing ME-Like control area; gestures may remain accelerators but must not be the only path.
+5. Preserve active board/surface state across rotation/configuration recreation.
+6. Consider optional split-space once the shared ME-Like chassis/surface boundary is stable.
+
+### Phase 3 — Facet architecture
+
+1. Introduce an explicit Facet model for complete keyboard geometry, without baking in ME-Like's 3×3 assumptions.
+2. Separate geometry (Facet) from symbol/action assignment (Layout) and appearance (Theme).
+3. Route common effects/settings/theme rendering through Facet-independent primitives where possible.
+4. Keep Facet-specific structural controls inside each Facet implementation.
+5. Add a Facet selector/management path without disrupting existing users/migrations.
+
+### Phase 4 — Machine Cut
+
+1. Implement **Machine Cut** as the first new Facet to prove the abstraction.
+2. Use a Hacker's Keyboard-inspired dense desktop geometry as the interaction reference, not as a pixel-for-pixel copy.
+3. Include the expected desktop/power-user regions: number row, alpha rows, modifiers, navigation/function controls, space, Backspace, and Enter.
+4. Apply the same Keywi ThemeDocument, key effects, backgrounds, typography, borders, and applicable behavior settings.
+5. Use the same Layout/Layer concepts so alternate mappings do not require a second theming system.
+
+## Guardrails
+
+- Finish Phase 1 before changing Custom Board geometry.
+- Finish the ME-Like shared-surface work before introducing generalized Facets.
+- Do not call Alpha/Numeric/Custom separate Facets inside ME-Like.
+- Do not force future Facets into a 3×3-plus-controls model.
+- Theme is orthogonal to Facet and Layout: appearance should survive geometry changes.
+- Prefer migrations/adapters over destructive preference changes; preserve existing user appearance and board data.
