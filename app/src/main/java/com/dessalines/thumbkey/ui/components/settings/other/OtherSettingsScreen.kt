@@ -36,68 +36,38 @@ import me.zhanghai.compose.preference.SwitchPreference
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun OtherSettingsScreen(
-    navController: NavController,
-    appSettingsViewModel: AppSettingsViewModel,
-) {
+fun OtherSettingsScreen(navController: NavController, appSettingsViewModel: AppSettingsViewModel) {
     Log.d(TAG, "Got to 'other' settings activity")
-
     val settings by appSettingsViewModel.appSettings.observeAsState()
-
-    var showOnScreenKeyboardState =
-        (settings?.showOnScreenKeyboard ?: DEFAULT_SHOW_ON_SCREEN_KEYBOARD).toBool()
-
+    var showOnScreenKeyboardState = (settings?.showOnScreenKeyboard ?: DEFAULT_SHOW_ON_SCREEN_KEYBOARD).toBool()
     val snackbarHostState = remember { SnackbarHostState() }
     val scrollState = rememberScrollState()
 
     fun updateOtherSettings() {
         appSettingsViewModel.updateOtherSettings(
-            OtherSettingsUpdate(
-                id = 1,
-                showOnScreenKeyboard = showOnScreenKeyboardState.toInt(),
-            ),
+            OtherSettingsUpdate(id = 1, showOnScreenKeyboard = showOnScreenKeyboardState.toInt()),
         )
     }
 
     Scaffold(
         snackbarHost = { SnackbarHost(snackbarHostState) },
-        topBar = {
-            SimpleTopAppBar(
-                text = stringResource(R.string.other),
-                navController = navController,
-            )
-        },
-        content = { padding ->
-            Column(
-                modifier =
-                    Modifier
-                        .padding(padding)
-                        .verticalScroll(scrollState)
-                        .background(color = MaterialTheme.colorScheme.surface)
-                        .imePadding(),
-            ) {
-                ProvidePreferenceTheme {
-                    SwitchPreference(
-                        value = showOnScreenKeyboardState,
-                        onValueChange = {
-                            showOnScreenKeyboardState = it
-                            updateOtherSettings()
-                        },
-                        title = {
-                            Text(stringResource(R.string.show_on_screen_keyboard))
-                        },
-                        summary = {
-                            Text(stringResource(R.string.show_on_screen_keyboard_description))
-                        },
-                        icon = {
-                            Icon(
-                                imageVector = Icons.Outlined.Keyboard,
-                                contentDescription = null,
-                            )
-                        },
-                    )
-                }
+        topBar = { SimpleTopAppBar(text = stringResource(R.string.other), navController = navController) },
+    ) { padding ->
+        Column(
+            modifier = Modifier.padding(padding).verticalScroll(scrollState).background(MaterialTheme.colorScheme.surface).imePadding(),
+        ) {
+            ProvidePreferenceTheme {
+                SwitchPreference(
+                    value = showOnScreenKeyboardState,
+                    onValueChange = {
+                        showOnScreenKeyboardState = it
+                        updateOtherSettings()
+                    },
+                    title = { Text(stringResource(R.string.show_on_screen_keyboard)) },
+                    summary = { Text(stringResource(R.string.show_on_screen_keyboard_description)) },
+                    icon = { Icon(Icons.Outlined.Keyboard, contentDescription = null) },
+                )
             }
-        },
-    )
+        }
+    }
 }
