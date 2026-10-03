@@ -14,8 +14,11 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
+import com.dessalines.thumbkey.ui.components.keyboard.CUSTOM_THEME_ID
+import com.dessalines.thumbkey.ui.components.keyboard.ThemeEngine
 import com.dessalines.thumbkey.utils.SimpleTopAppBar
 
 /**
@@ -27,6 +30,8 @@ import com.dessalines.thumbkey.utils.SimpleTopAppBar
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ThemeManagerScreen(navController: NavController) {
+    val context = LocalContext.current
+
     Scaffold(
         topBar = {
             SimpleTopAppBar(text = "Theme manager", navController = navController)
@@ -52,7 +57,13 @@ fun ThemeManagerScreen(navController: NavController) {
                     style = MaterialTheme.typography.bodySmall,
                 )
                 Button(
-                    onClick = { navController.navigate("advancedLookAndFeelEditor") },
+                    onClick = {
+                        val active = ThemeEngine.loadActive(context)
+                        if (active.id != CUSTOM_THEME_ID) {
+                            ThemeEngine.beginEditing(context, active)
+                        }
+                        navController.navigate("advancedLookAndFeelEditor")
+                    },
                     modifier = Modifier.fillMaxWidth(),
                 ) {
                     Text("Edit active theme")
