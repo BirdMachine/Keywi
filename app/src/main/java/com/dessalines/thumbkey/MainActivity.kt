@@ -36,6 +36,7 @@ import com.dessalines.thumbkey.ui.components.settings.clipboard.ClipboardSetting
 import com.dessalines.thumbkey.ui.components.settings.debug.AdvancedDebugScreen
 import com.dessalines.thumbkey.ui.components.settings.lookandfeel.AdvancedLookAndFeelScreen
 import com.dessalines.thumbkey.ui.components.settings.lookandfeel.LookAndFeelScreen
+import com.dessalines.thumbkey.ui.components.settings.lookandfeel.ThemeManagerScreen
 import com.dessalines.thumbkey.ui.components.settings.modifykeys.AdvancedKeyWordSelectionScreen
 import com.dessalines.thumbkey.ui.components.settings.modifykeys.ModifyKeysScreen
 import com.dessalines.thumbkey.ui.components.settings.other.OtherSettingsScreen
@@ -100,7 +101,8 @@ class MainActivity : AppCompatActivity() {
                     composable("lookAndFeel") { LookAndFeelScreen(navController, appSettingsViewModel) }
                     composable("advancedBoards") { com.dessalines.thumbkey.ui.components.settings.boards.AdvancedBoardManagementScreen(navController) }
                     composable("typingOverlay") { com.dessalines.thumbkey.ui.components.settings.boards.TypingOverlaySettingsScreen(navController) }
-                    composable("advancedLookAndFeel") { AdvancedLookAndFeelScreen(navController) }
+                    composable("advancedLookAndFeel") { ThemeManagerScreen(navController) }
+                    composable("advancedLookAndFeelEditor") { AdvancedLookAndFeelScreen(navController) }
                     composable("advancedKeyWordSelection") { AdvancedKeyWordSelectionScreen(navController, appSettingsViewModel) }
                     composable("behavior") { BehaviorScreen(navController, appSettingsViewModel) }
                     composable("advancedInput") { AdvancedInputScreen(navController) }
