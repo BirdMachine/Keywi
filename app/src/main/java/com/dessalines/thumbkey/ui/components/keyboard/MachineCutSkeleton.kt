@@ -21,52 +21,39 @@ import androidx.compose.ui.unit.dp
 
 /**
  * First visible Machine Cut proof-of-geometry.
- *
- * This intentionally uses MaterialTheme colors instead of defining its own
- * palette. The active Keywi Theme remains outside the facet and therefore
- * paints this skeleton through the same theme machinery as ME-Like.
- *
- * It is not yet an input surface: wiring KeyAction / layers comes after the
- * topology boundary is proven without regressing ME-Like.
+ * Appearance comes only from the ambient Keywi/Material theme; geometry and
+ * content come from a MachineCutLayout.
  */
 @Composable
 fun MachineCutSkeleton(
     modifier: Modifier = Modifier,
+    layout: MachineCutLayout = MachineCutLayouts.qwertySkeleton,
 ) {
-    val rows = listOf(
-        listOf("Esc", "1", "2", "3", "4", "5", "6", "7", "8", "9", "0", "−", "=", "⌫"),
-        listOf("↹", "Q", "W", "E", "R", "T", "Y", "U", "I", "O", "P", "[", "]", "\\"),
-        listOf("Ctrl", "A", "S", "D", "F", "G", "H", "J", "K", "L", ";", "'", "↵"),
-        listOf("⇧", "Z", "X", "C", "V", "B", "N", "M", ",", ".", "/", "△", "⇧"),
-        listOf("Esc", "◉", "Alt", "◆", "Space", "Fn", "○", "◁", "▽", "▷"),
-    )
-
     Column(
         modifier = modifier.fillMaxWidth().padding(3.dp),
         verticalArrangement = Arrangement.spacedBy(3.dp),
     ) {
-        rows.forEachIndexed { rowIndex, row ->
+        layout.rows.forEachIndexed { rowIndex, row ->
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.spacedBy(3.dp),
             ) {
-                row.forEach { label ->
-                    val weight = when {
-                        label == "Space" -> 4.4f
-                        label in setOf("Ctrl", "Alt", "Fn", "Esc") -> 1.35f
-                        label in setOf("↹", "⌫", "↵", "⇧") -> 1.5f
+                row.forEach { cell ->
+                    val width = if (cell.width != 1f) cell.width else when (cell.label) {
+                        "↹", "⌫", "↵", "⇧" -> 1.5f
+                        "Ctrl", "Alt", "Fn", "Esc" -> 1.35f
                         else -> 1f
                     }
                     Box(
                         modifier = Modifier
-                            .weight(weight)
-                            .height(if (rowIndex == 4) 46.dp else 48.dp)
+                            .weight(width)
+                            .height(if (rowIndex == layout.rows.lastIndex) 46.dp else 48.dp)
                             .clip(RoundedCornerShape(5.dp))
                             .background(MaterialTheme.colorScheme.surface.copy(alpha = 0.86f))
                             .border(1.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.72f), RoundedCornerShape(5.dp)),
                         contentAlignment = Alignment.Center,
                     ) {
-                        Text(label, color = MaterialTheme.colorScheme.onSurface)
+                        Text(cell.label, color = MaterialTheme.colorScheme.onSurface)
                     }
                 }
             }
