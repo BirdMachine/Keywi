@@ -30,12 +30,7 @@ import com.dessalines.thumbkey.ui.components.keyboard.CUSTOM_THEME_ID
 import com.dessalines.thumbkey.ui.components.keyboard.ThemeEngine
 import com.dessalines.thumbkey.utils.SimpleTopAppBar
 
-/**
- * Visible front door for Keywi themes.
- *
- * Keep the legacy detailed appearance editor reachable while the compact redesign is in progress,
- * but make theme selection/import/export the first thing users see when entering Advanced look & feel.
- */
+/** Visible front door for Keywi themes. */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ThemeManagerScreen(navController: NavController) {
@@ -43,8 +38,6 @@ fun ThemeManagerScreen(navController: NavController) {
     val lifecycleOwner = LocalLifecycleOwner.current
     var managerRefresh by remember { mutableIntStateOf(0) }
 
-    // The editor lives on a separate navigation destination. Refresh the manager when it
-    // becomes visible again so a named theme that was forked into Custom is labelled correctly.
     DisposableEffect(lifecycleOwner) {
         val observer = LifecycleEventObserver { _, event ->
             if (event == Lifecycle.Event.ON_RESUME) managerRefresh++
@@ -53,22 +46,17 @@ fun ThemeManagerScreen(navController: NavController) {
         onDispose { lifecycleOwner.lifecycle.removeObserver(observer) }
     }
 
-    Scaffold(
-        topBar = {
-            SimpleTopAppBar(text = "Theme manager", navController = navController)
-        },
-    ) { padding ->
+    Scaffold(topBar = { SimpleTopAppBar(text = "Theme manager", navController = navController) }) { padding ->
         Column(
-            modifier =
-                Modifier
-                    .fillMaxSize()
-                    .padding(padding)
-                    .verticalScroll(rememberScrollState()),
+            modifier = Modifier.fillMaxSize().padding(padding).verticalScroll(rememberScrollState()),
             verticalArrangement = Arrangement.spacedBy(8.dp),
         ) {
             key(managerRefresh) {
                 ThemeManagerSection(onThemeApplied = { managerRefresh++ })
             }
+
+            // Keep a real editor next to theme selection so a theme can be auditioned immediately.
+            KeywiThemeTestBench()
 
             Column(
                 modifier = Modifier.fillMaxWidth().padding(horizontal = 14.dp, vertical = 6.dp),
@@ -82,9 +70,7 @@ fun ThemeManagerScreen(navController: NavController) {
                 Button(
                     onClick = {
                         val active = ThemeEngine.loadActive(context)
-                        if (active.id != CUSTOM_THEME_ID) {
-                            ThemeEngine.beginEditing(context, active)
-                        }
+                        if (active.id != CUSTOM_THEME_ID) ThemeEngine.beginEditing(context, active)
                         navController.navigate("advancedLookAndFeelEditor")
                     },
                     modifier = Modifier.fillMaxWidth(),
