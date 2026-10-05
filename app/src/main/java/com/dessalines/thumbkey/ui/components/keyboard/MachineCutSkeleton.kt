@@ -6,10 +6,10 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.weight
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -44,19 +44,24 @@ fun MachineCutSkeleton(
                         "Ctrl", "Alt", "Fn", "Esc" -> 1.35f
                         else -> 1f
                     }
-                    Box(
-                        modifier = Modifier
-                            .weight(width)
-                            .height(if (rowIndex == layout.rows.lastIndex) 46.dp else 48.dp)
-                            .clip(RoundedCornerShape(5.dp))
-                            .background(MaterialTheme.colorScheme.surface.copy(alpha = 0.86f))
-                            .border(1.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.72f), RoundedCornerShape(5.dp)),
-                        contentAlignment = Alignment.Center,
-                    ) {
-                        Text(cell.label, color = MaterialTheme.colorScheme.onSurface)
-                    }
+                    MachineCutCell(cell.label, width, rowIndex == layout.rows.lastIndex)
                 }
             }
         }
+    }
+}
+
+@Composable
+private fun RowScope.MachineCutCell(label: String, width: Float, bottomRow: Boolean) {
+    Box(
+        modifier = Modifier
+            .weight(width)
+            .height(if (bottomRow) 46.dp else 48.dp)
+            .clip(RoundedCornerShape(5.dp))
+            .background(MaterialTheme.colorScheme.surface.copy(alpha = 0.86f))
+            .border(1.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.72f), RoundedCornerShape(5.dp)),
+        contentAlignment = Alignment.Center,
+    ) {
+        Text(label, color = MaterialTheme.colorScheme.onSurface)
     }
 }
