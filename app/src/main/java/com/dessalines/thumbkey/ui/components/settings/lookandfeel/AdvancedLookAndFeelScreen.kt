@@ -146,7 +146,7 @@ private fun ManagedGradientEditor(title: String, gradient: KeyboardBackdrop, onG
         Row(Modifier.fillMaxWidth(), Arrangement.SpaceBetween, Alignment.CenterVertically) { Text(title, style = MaterialTheme.typography.titleSmall); Text(if (expanded) "Hide details  ▲" else "Edit gradient  ▼", style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.primary, modifier = Modifier.clickable { expanded = !expanded }.padding(6.dp)) }
         Box { Button(onClick = { menuOpen = true }, modifier = Modifier.fillMaxWidth()) { Text(selectedName, fontSize = 13.sp) }; DropdownMenu(menuOpen, { menuOpen = false }) {
             gradients.forEach { saved -> DropdownMenuItem({ Text(saved.name) }, { selectedName = saved.name; menuOpen = false; onGradientChange(saved.toBackdrop()) }) }
-            DropdownMenuItem({ Text("＋ New gradient") }, { selectedName = "New gradient"; menuOpen = false; expanded = true; onGradientChange(KeyboardBackdrop(0f, listOf(KeyboardGradientStop(0f, Color(0xFF151A2C)), KeyboardGradientStop(1f, Color(0xFFB5D8FF))))) })
+            DropdownMenuItem({ Text("＋ New gradient") }, { selectedName = "New gradient"; menuOpen = false; expanded = true; onGradientChange(KeyboardBackdrop(listOf(KeyboardGradientStop(0f, Color(0xFF151A2C)), KeyboardGradientStop(1f, Color(0xFFB5D8FF))), 0f)) })
         } }
         Box(Modifier.fillMaxWidth().height(24.dp).clip(RoundedCornerShape(12.dp)).keyboardGradientBackground(gradient))
         if (expanded) Column(Modifier.fillMaxWidth().background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.22f), RoundedCornerShape(12.dp)).padding(10.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
