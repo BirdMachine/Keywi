@@ -71,16 +71,16 @@ object ThemeEngine {
     private fun defaultCustom() = ThemeDocument(id = CUSTOM_THEME_ID, name = "Custom", backdrop = BackdropThemePreferences.stateForPreset(BackdropPreset.BIRDIE_RAINBOW), toolbar = BackdropThemePreferences.stateForPreset(BackdropPreset.BIRDIE_RAINBOW), toolbarBorderWidth = 1f, toolbarBorderColor = Color(0xFFFFC247), toolbarKeyboardGap = 0f, keys = KeyThemeState(), suggestionLozenges = SuggestionLozengeThemeState())
 
     private fun neonAviaryTheme(): ThemeDocument {
-        val night = KeyboardBackdrop(132f, listOf(KeyboardGradientStop(0f, Color(0xFF090818)), KeyboardGradientStop(.46f, Color(0xFF19113A)), KeyboardGradientStop(1f, Color(0xFF052B35))))
-        val keys = KeyboardBackdrop(118f, listOf(KeyboardGradientStop(0f, Color(0xFF24104A)), KeyboardGradientStop(.5f, Color(0xFF8D1E78)), KeyboardGradientStop(1f, Color(0xFF087B82))))
-        val neon = KeyboardBackdrop(28f, listOf(KeyboardGradientStop(0f, Color(0xFFFF4FCB)), KeyboardGradientStop(.48f, Color(0xFFFFD85A)), KeyboardGradientStop(1f, Color(0xFF45F6E8))))
+        val night = KeyboardBackdrop(listOf(KeyboardGradientStop(0f, Color(0xFF090818)), KeyboardGradientStop(.46f, Color(0xFF19113A)), KeyboardGradientStop(1f, Color(0xFF052B35))), 132f)
+        val keys = KeyboardBackdrop(listOf(KeyboardGradientStop(0f, Color(0xFF24104A)), KeyboardGradientStop(.5f, Color(0xFF8D1E78)), KeyboardGradientStop(1f, Color(0xFF087B82))), 118f)
+        val neon = KeyboardBackdrop(listOf(KeyboardGradientStop(0f, Color(0xFFFF4FCB)), KeyboardGradientStop(.48f, Color(0xFFFFD85A)), KeyboardGradientStop(1f, Color(0xFF45F6E8))), 28f)
         return ThemeDocument(
             id = NEON_AVIARY_THEME_ID, name = "Neon Aviary",
             backdrop = BackdropThemeState(BackdropPreset.CUSTOM, night.angleDegrees, night.stops, BackdropMode.COLORFUL, 1f, null),
             toolbar = BackdropThemeState(BackdropPreset.CUSTOM, 105f, listOf(KeyboardGradientStop(0f, Color(0xE61A0C35)), KeyboardGradientStop(1f, Color(0xE6053540))), BackdropMode.COLORFUL, .96f, null),
             toolbarBorderWidth = 1.4f, toolbarBorderColor = Color(0xFFFF67D4), toolbarKeyboardGap = 3f,
             keys = KeyThemeState(surfaceStyle = KeySurfaceStyle.GRADIENT, surfaceGradient = keys, surfaceColor = Color(0xFF24104A), borderStyle = KeyBorderStyle.GRADIENT, borderGradient = neon, borderColor = Color(0xFFFFD85A), shadowColor = Color(0xFF000000), shadowAlpha = .62f, shadowElevation = 5f),
-            suggestionLozenges = SuggestionLozengeThemeState(surfaceStyle = SuggestionLozengeSurfaceStyle.GRADIENT, surfaceGradient = KeyboardBackdrop(90f, listOf(KeyboardGradientStop(0f, Color(0xCC4A155E)), KeyboardGradientStop(1f, Color(0xCC07535C)))), surfaceColor = Color(0xCC28113F), borderStyle = SuggestionLozengeBorderStyle.GRADIENT, borderGradient = neon, borderColor = Color(0xFFFF67D4), borderWidth = 1.2f),
+            suggestionLozenges = SuggestionLozengeThemeState(surfaceStyle = SuggestionLozengeSurfaceStyle.GRADIENT, surfaceGradient = KeyboardBackdrop(listOf(KeyboardGradientStop(0f, Color(0xCC4A155E)), KeyboardGradientStop(1f, Color(0xCC07535C))), 90f), surfaceColor = Color(0xCC28113F), borderStyle = SuggestionLozengeBorderStyle.GRADIENT, borderGradient = neon, borderColor = Color(0xFFFF67D4), borderWidth = 1.2f),
         )
     }
 
