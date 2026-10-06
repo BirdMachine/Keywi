@@ -12,19 +12,19 @@ class GemCutArchitectureTest {
     }
 
     @Test
-    fun machineCutIsASeparateFacet() {
-        assertEquals(FacetId.MACHINE_CUT, KeywiFacets.machineCut.id)
-        assertTrue(KeywiFacets.machineCut.supportsLayers)
+    fun hkLikeIsASeparateFacet() {
+        assertEquals(FacetId.HK_LIKE, KeywiFacets.hkLike.id)
+        assertTrue(KeywiFacets.hkLike.supportsLayers)
     }
 
     @Test
     fun themeLayoutAndFacetAreIndependentSelectionAxes() {
         val selection = GemCutSelection(
-            facet = FacetId.MACHINE_CUT,
+            facet = FacetId.HK_LIKE,
             layout = LayoutId("en-qwerty"),
             theme = ThemeId("neon-aviary"),
         )
-        assertEquals(FacetId.MACHINE_CUT, selection.facet)
+        assertEquals(FacetId.HK_LIKE, selection.facet)
         assertEquals("en-qwerty", selection.layout.value)
         assertEquals("neon-aviary", selection.theme.value)
     }
