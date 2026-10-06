@@ -14,7 +14,7 @@ import androidx.compose.ui.unit.dp
  * live IME switches away from its safe ME-Like default. */
 @Composable
 fun GemCutPreviewScreen(
-    facet: FacetId = FacetId.MACHINE_CUT,
+    facet: FacetId = FacetId.HK_LIKE,
     modifier: Modifier = Modifier,
 ) {
     val spec = KeywiFacets.all.first { it.id == facet }
