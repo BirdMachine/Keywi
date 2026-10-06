@@ -100,6 +100,7 @@ class MainActivity : AppCompatActivity() {
                     composable("settings") { SettingsScreen(navController, appSettingsViewModel, thumbkeyEnabled, thumbkeySelected) }
                     composable("lookAndFeel") { LookAndFeelScreen(navController, appSettingsViewModel) }
                     composable("advancedBoards") { com.dessalines.thumbkey.ui.components.settings.boards.AdvancedBoardManagementScreen(navController) }
+                    composable("gemCuts") { com.dessalines.thumbkey.ui.components.settings.GemCutSettingsScreen(navController) }
                     composable("typingOverlay") { com.dessalines.thumbkey.ui.components.settings.boards.TypingOverlaySettingsScreen(navController) }
                     composable("advancedLookAndFeel") { ThemeManagerScreen(navController) }
                     composable("advancedLookAndFeelEditor") { AdvancedLookAndFeelScreen(navController) }
