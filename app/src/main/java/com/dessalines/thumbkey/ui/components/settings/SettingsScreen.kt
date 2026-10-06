@@ -97,6 +97,12 @@ fun SettingsScreen(
                     }
 
                     Preference(
+                        title = { Text("Gem cuts") },
+                        summary = { Text("Choose physical keyboard geometry independently from theme and layout") },
+                        icon = { Icon(Icons.Outlined.KeyboardAlt, contentDescription = null) },
+                        onClick = { navController.navigate("gemCuts") },
+                    )
+                    Preference(
                         title = { Text("Advanced Board Management") },
                         summary = { Text("Custom rooms, A/B sides, key assignments, and room options") },
                         icon = { Icon(Icons.Outlined.DashboardCustomize, contentDescription = null) },
