@@ -9,7 +9,7 @@ package com.dessalines.thumbkey.ui.components.keyboard
  * Layout = content/action mapping projected onto a compatible facet.
  *
  * Keeping these types separate is intentional: Neon Aviary should look like
- * Neon Aviary whether it is painted onto ME-Like or Machine Cut, and a layout
+ * Neon Aviary whether it is painted onto ME-Like or HK-Like, and a layout
  * should be reusable without smuggling geometry into its identity.
  */
 @JvmInline
@@ -23,7 +23,7 @@ enum class FacetId {
     ME_LIKE,
 
     /** Dense desktop/power-user geometry inspired by Hacker's Keyboard. */
-    MACHINE_CUT,
+    HK_LIKE,
 }
 
 data class GemCutSelection(
@@ -48,11 +48,11 @@ object KeywiFacets {
         description = "Keywi's MessageEase-like facet: a central 3×3 surface with persistent surrounding controls.",
     )
 
-    val machineCut = FacetSpec(
-        id = FacetId.MACHINE_CUT,
-        displayName = "Machine Cut",
+    val hkLike = FacetSpec(
+        id = FacetId.HK_LIKE,
+        displayName = "HK-Like",
         description = "Dense Hacker's Keyboard-inspired power-user facet with desktop-like rows and controls.",
     )
 
-    val all = listOf(meLike, machineCut)
+    val all = listOf(meLike, hkLike)
 }
