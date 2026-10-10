@@ -55,6 +55,7 @@ import com.dessalines.thumbkey.ui.components.keyboard.SuggestionBarV2
 import com.dessalines.thumbkey.ui.components.keyboard.ToolbarBorderPreferences
 import com.dessalines.thumbkey.ui.components.keyboard.ToolbarLayoutPreferences
 import com.dessalines.thumbkey.ui.components.keyboard.ToolbarThemePreferences
+import com.dessalines.thumbkey.ui.components.keyboard.TypingOverlayPreferences
 import com.dessalines.thumbkey.ui.theme.ThumbkeyTheme
 import com.dessalines.thumbkey.utils.KeyboardPosition
 import com.dessalines.thumbkey.utils.keyboardLayoutsSetFromDbIndexString
@@ -82,7 +83,7 @@ class ComposeKeyboardView(
             val density = LocalDensity.current
             val typingPulse = remember { androidx.compose.runtime.mutableLongStateOf(0L) }
             val overlayTriggerGate = remember { com.dessalines.thumbkey.ui.components.keyboard.OverlayTriggerGate() }
-            remember(ctx) { com.dessalines.thumbkey.ui.components.keyboard.TypingOverlayPreferences.load(ctx) }
+            remember(ctx) { TypingOverlayPreferences.load(ctx) }
             var keyboardHeightPx by remember { mutableIntStateOf(0) }
             var activePalette by remember { mutableStateOf<InputPalette?>(null) }
 
@@ -128,7 +129,7 @@ class ComposeKeyboardView(
                                     settings = keyboardSettings,
                                     onTyped = {
                                         KeywiDiagnostics.inputPulse()
-                                        val overlay = com.dessalines.thumbkey.ui.components.keyboard.TypingOverlayPreferences.current
+                                        val overlay = TypingOverlayPreferences.current
                                         if (overlay.enabled && overlay.uri != null && overlayTriggerGate.accept(android.os.SystemClock.uptimeMillis(), overlay.cooldownMs)) {
                                             typingPulse.longValue++
                                         }
@@ -142,15 +143,9 @@ class ComposeKeyboardView(
                                                 val nextIndex = (index + 1).mod(layouts.size)
                                                 layouts.getOrNull(nextIndex)?.let { layout ->
                                                     settingsRepo.update(s.copy(keyboardLayout = layout.ordinal))
-                                                    ctx.currentKeyboardDefinition
-                                                        ?.settings
-                                                        ?.textProcessor
-                                                        ?.handleFinishInput(ctx)
+                                                    ctx.currentKeyboardDefinition?.settings?.textProcessor?.handleFinishInput(ctx)
                                                     ctx.currentKeyboardDefinition = layouts[nextIndex].keyboardDefinition
-                                                    ctx.currentKeyboardDefinition
-                                                        ?.settings
-                                                        ?.textProcessor
-                                                        ?.updateCursorPosition(ctx)
+                                                    ctx.currentKeyboardDefinition?.settings?.textProcessor?.updateCursorPosition(ctx)
                                                     if (s.showToastOnLayoutSwitch.toBool()) Toast.makeText(context, layout.keyboardDefinition.title, Toast.LENGTH_SHORT).show()
                                                 }
                                             }
@@ -166,7 +161,7 @@ class ComposeKeyboardView(
                             }
                             com.dessalines.thumbkey.ui.components.keyboard.TypingOverlayLayer(
                                 typingPulse,
-                                com.dessalines.thumbkey.ui.components.keyboard.TypingOverlayPreferences.current,
+                                TypingOverlayPreferences.current,
                                 Modifier.matchParentSize().zIndex(4f),
                             )
                             activePalette?.let { palette ->
