@@ -142,7 +142,10 @@ class ComposeKeyboardView(
                                                 val nextIndex = (index + 1).mod(layouts.size)
                                                 layouts.getOrNull(nextIndex)?.let { layout ->
                                                     settingsRepo.update(s.copy(keyboardLayout = layout.ordinal))
-                                                    ctx.currentKeyboardDefinition?.settings?.textProcessor?.handleFinishInput(ctx)
+                                                    ctx.currentKeyboardDefinition
+                                                        ?.settings
+                                                        ?.textProcessor
+                                                        ?.handleFinishInput(ctx)
                                                     ctx.currentKeyboardDefinition = layouts[nextIndex].keyboardDefinition
                                                     ctx.currentKeyboardDefinition
                                                         ?.settings
