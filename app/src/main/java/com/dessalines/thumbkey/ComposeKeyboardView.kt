@@ -144,7 +144,10 @@ class ComposeKeyboardView(
                                                     settingsRepo.update(s.copy(keyboardLayout = layout.ordinal))
                                                     ctx.currentKeyboardDefinition?.settings?.textProcessor?.handleFinishInput(ctx)
                                                     ctx.currentKeyboardDefinition = layouts[nextIndex].keyboardDefinition
-                                                    ctx.currentKeyboardDefinition?.settings?.textProcessor?.updateCursorPosition(ctx)
+                                                    ctx.currentKeyboardDefinition
+                                                        ?.settings
+                                                        ?.textProcessor
+                                                        ?.updateCursorPosition(ctx)
                                                     if (s.showToastOnLayoutSwitch.toBool()) Toast.makeText(context, layout.keyboardDefinition.title, Toast.LENGTH_SHORT).show()
                                                 }
                                             }
