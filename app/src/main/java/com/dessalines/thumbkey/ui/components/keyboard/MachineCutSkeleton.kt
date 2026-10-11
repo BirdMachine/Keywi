@@ -37,7 +37,7 @@ fun MachineCutSkeleton(
     modifier: Modifier = Modifier,
     layout: MachineCutLayout = MachineCutLayouts.qwertySkeleton,
 ) {
-    val ime = LocalContext.current as IMEService
+    val ime = LocalContext.current as? IMEService
     var advanced by remember { mutableStateOf(false) }
     var shifted by remember { mutableStateOf(false) }
     var symbols by remember { mutableStateOf(false) }
@@ -69,7 +69,7 @@ fun MachineCutSkeleton(
     val rows = if (advanced || momentaryAdvanced) advancedRows else if (symbols) symbolRows else basic
 
     fun keyCode(code: Int) {
-        val connection = ime.currentInputConnection ?: return
+        val connection = ime?.currentInputConnection ?: return
         val meta = (if (ctrl) KeyEvent.META_CTRL_ON else 0) or (if (alt) KeyEvent.META_ALT_ON else 0)
         connection.sendKeyEvent(KeyEvent(0L, 0L, KeyEvent.ACTION_DOWN, code, 0, meta))
         connection.sendKeyEvent(KeyEvent(0L, 0L, KeyEvent.ACTION_UP, code, 0, meta))
@@ -100,17 +100,18 @@ fun MachineCutSkeleton(
             "↓" -> keyCode(KeyEvent.KEYCODE_DPAD_DOWN)
             "←" -> keyCode(KeyEvent.KEYCODE_DPAD_LEFT)
             "→" -> keyCode(KeyEvent.KEYCODE_DPAD_RIGHT)
-            "☺" -> { connection.commitText("☺", 1) }
-            "Space" -> connection.commitText(" ", 1)
+            "☺" -> { ime?.currentInputConnection?.commitText("☺", 1) }
+            "Space" -> ime?.currentInputConnection?.commitText(" ", 1)
             else -> {
                 if (label.startsWith("F") && label.drop(1).toIntOrNull() in 1..12) {
                     keyCode(KeyEvent.KEYCODE_F1 + label.drop(1).toInt() - 1)
                 } else {
                     val output = if (shifted) label.uppercase() else label
+                    val connection = ime?.currentInputConnection
                     if (ctrl || alt) {
                         val code = KeyEvent.keyCodeFromString("KEYCODE_${label.uppercase()}")
-                        if (code != KeyEvent.KEYCODE_UNKNOWN) keyCode(code) else connection.commitText(output, 1)
-                    } else connection.commitText(output, 1)
+                        if (code != KeyEvent.KEYCODE_UNKNOWN) keyCode(code) else connection?.commitText(output, 1)
+                    } else connection?.commitText(output, 1)
                     shifted = false
                 }
             }
