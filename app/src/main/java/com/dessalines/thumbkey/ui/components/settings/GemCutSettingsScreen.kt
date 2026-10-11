@@ -59,6 +59,9 @@ fun GemCutSettingsScreen(navController: NavController) {
                 },
                 modifier = Modifier.fillMaxWidth(),
             ) { Text(if (facet == FacetId.HK_LIKE) "✓ HK-Like" else "HK-Like") }
+            Text("Advanced Gemcut Menu")
+            Text("ME-Like specific settings — coming next")
+            Text("HK-Like specific settings — coming next")
             GemCutPreviewScreen(facet = facet)
         }
     }
