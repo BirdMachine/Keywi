@@ -3,7 +3,8 @@ package com.dessalines.thumbkey.ui.components.keyboard
 import android.view.KeyEvent
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
-import androidx.compose.foundation.clickable
+import androidx.compose.foundation.combinedClickable
+import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -42,6 +43,7 @@ fun MachineCutSkeleton(
     var symbols by remember { mutableStateOf(false) }
     var ctrl by remember { mutableStateOf(false) }
     var alt by remember { mutableStateOf(false) }
+    var momentaryAdvanced by remember { mutableStateOf(false) }
 
     val basic = listOf(
         "1234567890".map { it.toString() },
@@ -64,7 +66,7 @@ fun MachineCutSkeleton(
         listOf("⇧") + "qwertyuiop".map { it.toString() },
         listOf("ABC", "☺", "Space", "↵", "⌘"),
     )
-    val rows = if (advanced) advancedRows else if (symbols) symbolRows else basic
+    val rows = if (advanced || momentaryAdvanced) advancedRows else if (symbols) symbolRows else basic
 
     fun keyCode(code: Int) {
         val connection = ime.currentInputConnection ?: return
@@ -77,7 +79,7 @@ fun MachineCutSkeleton(
     fun press(label: String) {
         val connection = ime.currentInputConnection ?: return
         when (label) {
-            "⌘" -> advanced = !advanced
+            "⌘" -> { advanced = !advanced; momentaryAdvanced = false }
             "?123" -> symbols = true
             "ABC" -> { symbols = false; advanced = false }
             "⇧" -> shifted = !shifted
@@ -130,15 +132,18 @@ fun MachineCutSkeleton(
                         "⇧", "⌫", "↵", "⌘", "?123", "ABC" -> 1.5f
                         else -> 1f
                     }
-                    HkKey(label, width, index == rows.lastIndex) { press(label) }
+                    HkKey(label, width, index == rows.lastIndex, { press(label) }) {
+                        if (label == "⌘") momentaryAdvanced = !momentaryAdvanced
+                    }
                 }
             }
         }
     }
 }
 
+@OptIn(ExperimentalFoundationApi::class)
 @Composable
-private fun RowScope.HkKey(label: String, width: Float, bottomRow: Boolean, onClick: () -> Unit) {
+private fun RowScope.HkKey(label: String, width: Float, bottomRow: Boolean, onClick: () -> Unit, onLongClick: () -> Unit) {
     Box(
         modifier = Modifier
             .weight(width)
@@ -146,7 +151,7 @@ private fun RowScope.HkKey(label: String, width: Float, bottomRow: Boolean, onCl
             .clip(RoundedCornerShape(5.dp))
             .background(MaterialTheme.colorScheme.surface.copy(alpha = 0.86f))
             .border(1.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.72f), RoundedCornerShape(5.dp))
-            .clickable(onClick = onClick),
+            .combinedClickable(onClick = onClick, onLongClick = onLongClick),
         contentAlignment = Alignment.Center,
     ) {
         Text(label, color = MaterialTheme.colorScheme.onSurface)
