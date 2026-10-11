@@ -77,7 +77,6 @@ fun MachineCutSkeleton(
         alt = false
     }
     fun press(label: String) {
-        val connection = ime.currentInputConnection ?: return
         when (label) {
             "⌘" -> { advanced = !advanced; momentaryAdvanced = false }
             "?123" -> symbols = true
@@ -133,7 +132,7 @@ fun MachineCutSkeleton(
                         "⇧", "⌫", "↵", "⌘", "?123", "ABC" -> 1.5f
                         else -> 1f
                     }
-                    HkKey(label, width, index == rows.lastIndex, { press(label) }) {
+                    HkKey(if (shifted && label.length == 1 && label[0].isLetter()) label.uppercase() else label, width, index == rows.lastIndex, { press(label) }) {
                         if (label == "⌘") momentaryAdvanced = !momentaryAdvanced
                     }
                 }
