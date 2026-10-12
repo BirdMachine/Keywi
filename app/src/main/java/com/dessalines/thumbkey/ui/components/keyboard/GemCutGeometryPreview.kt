@@ -17,6 +17,10 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -37,6 +41,12 @@ fun GemCutGeometryPreview(
     modifier: Modifier = Modifier,
     compact: Boolean = false,
 ) {
+    val density = LocalDensity.current
+    val context = LocalContext.current
+    val appearance = remember(context) { KeywiAppearancePreferences.load(context) }
+    remember(context) { KeyThemePreferences.load(context) }
+    val theme = KeyThemePreferences.current
+    val backdrop = remember(context) { BackdropThemePreferences.load(context) }
     val rows = if (facet == FacetId.ME_LIKE) {
         keyboard.arr.map { row -> row.map { PreviewCell(it.widthMultiplier.toFloat(), it.center, it) } }
     } else {
@@ -52,16 +62,41 @@ fun GemCutGeometryPreview(
     }) {
         val unit = maxWidth / columns
         val rowHeight = if (facet == FacetId.ME_LIKE) unit else if (compact) 12.dp else 44.dp
+        Box {
+        if (!compact && appearance) BackdropVisualLayer(backdrop, Modifier.matchParentSize())
         Column(verticalArrangement = Arrangement.spacedBy(gap)) {
-            rows.forEach { row ->
+            rows.forEachIndexed { rowIndex, row ->
+                // HK uses per-row weights, while ME uses fixed-size cells across all rows.
+                val rowUnit = if (facet == FacetId.HK_LIKE) maxWidth / row.sumOf { it.width.toDouble() }.toFloat() else unit
                 Row {
-                    row.forEach { cell ->
+                    row.forEachIndexed { index, cell ->
                         val shape = RoundedCornerShape(if (compact) 2.dp else 6.dp)
+                        val appearanceModifier = if (compact || !appearance || facet == FacetId.HK_LIKE) {
+                            Modifier.background(MaterialTheme.colorScheme.surfaceVariant)
+                                .border(1.dp, MaterialTheme.colorScheme.outline.copy(alpha = .65f), shape)
+                        } else {
+                            var visual = Modifier
+                            visual = when (theme.surfaceStyle) {
+                                KeySurfaceStyle.GRADIENT -> visual.keyboardGradientSlice(
+                                    theme.surfaceGradient, with(density) { maxWidth.toPx() }, with(density) { rowHeight.toPx() } * rows.size,
+                                    row.take(index).sumOf { it.width.toDouble() }.toFloat() * with(density) { unit.toPx() },
+                                    rowIndex * with(density) { rowHeight.toPx() },
+                                )
+                                KeySurfaceStyle.SOLID -> visual.background(theme.surfaceColor)
+                                KeySurfaceStyle.NONE -> visual
+                            }
+                            when (theme.borderStyle) {
+                                KeyBorderStyle.GRADIENT -> visual.keyboardGradientBorder(theme.borderGradient, 1.dp, 6.dp)
+                                KeyBorderStyle.SOLID -> visual.border(1.dp, theme.borderColor, shape)
+                                KeyBorderStyle.SHADOW -> visual.shadow(theme.shadowElevation.dp, shape,
+                                    ambientColor = theme.shadowColor.copy(alpha = theme.shadowAlpha),
+                                    spotColor = theme.shadowColor.copy(alpha = theme.shadowAlpha))
+                                KeyBorderStyle.NONE -> visual
+                            }
+                        }
                         Box(
-                            Modifier.width(unit * cell.width).height(rowHeight).padding(gap / 2)
-                                .clip(shape)
-                                .background(MaterialTheme.colorScheme.surfaceVariant)
-                                .border(1.dp, MaterialTheme.colorScheme.outline.copy(alpha = .65f), shape),
+                            Modifier.width(rowUnit * cell.width).height(rowHeight).padding(gap / 2)
+                                .clip(shape).then(appearanceModifier),
                             contentAlignment = Alignment.Center,
                         ) {
                             if (!compact) {
@@ -81,6 +116,7 @@ fun GemCutGeometryPreview(
                     }
                 }
             }
+        }
         }
     }
 }
