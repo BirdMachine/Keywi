@@ -134,7 +134,7 @@ fun SettingsScreen(
                     )
                     Preference(
                         title = { Text("Themes & appearance") },
-                        summary = { Text("Backdrops, toolbar, keys, borders, fonts, and effects") },
+                        summary = { Text("Advanced theme editor: gradients, GIFs, images, keys, toolbar, fonts and saved themes") },
                         icon = { Icon(Icons.Outlined.AutoAwesome, contentDescription = null) },
                         onClick = { navController.navigate("advancedLookAndFeel") },
                     )

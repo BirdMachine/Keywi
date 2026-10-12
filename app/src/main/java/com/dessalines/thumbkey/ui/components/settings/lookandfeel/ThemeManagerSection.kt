@@ -30,9 +30,9 @@ import com.dessalines.thumbkey.ui.components.keyboard.CUSTOM_THEME_ID
 import com.dessalines.thumbkey.ui.components.keyboard.ThemeDocument
 import com.dessalines.thumbkey.ui.components.keyboard.ThemeEngine
 
-/** Compact front door for the theme engine. Detailed controls remain below for now. */
+/** Saved-theme selection and import/export; editing opens the advanced surface editor. */
 @Composable
-fun ThemeManagerSection(onThemeApplied: () -> Unit) {
+fun ThemeManagerSection(onThemeApplied: () -> Unit, onEditTheme: () -> Unit) {
     val context = LocalContext.current
     ThemeEngine.ensureMigrated(context)
 
@@ -96,7 +96,7 @@ fun ThemeManagerSection(onThemeApplied: () -> Unit) {
         Text("✦ Saved themes", style = MaterialTheme.typography.titleMedium)
         Text(
             if (current.id == CUSTOM_THEME_ID) "Custom is your scratch theme — edits are safe here."
-            else "Saved themes stay intact until you choose Edit.",
+            else "Edit works in Custom; your saved theme stays intact.",
             style = MaterialTheme.typography.bodySmall,
         )
 
@@ -132,6 +132,7 @@ fun ThemeManagerSection(onThemeApplied: () -> Unit) {
                     onClick = {
                         ThemeEngine.beginEditing(context, current)
                         changed("Copied ${current.name} into Custom")
+                        onEditTheme()
                     },
                     modifier = Modifier.weight(1f),
                 ) { Text("Edit") }
