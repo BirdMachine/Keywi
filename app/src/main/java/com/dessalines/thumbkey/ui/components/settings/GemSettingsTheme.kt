@@ -195,3 +195,28 @@ fun GemSettingsTopAppBar(
         ),
     )
 }
+
+/** Explicit shapes also cover Material controls whose default is always a pill. */
+@Composable
+fun GemButton(
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier,
+    enabled: Boolean = true,
+    content: @Composable androidx.compose.foundation.layout.RowScope.() -> Unit,
+) {
+    androidx.compose.material3.Button(onClick = onClick, modifier = modifier, enabled = enabled,
+        shape = CutCornerShape(5.dp), content = content)
+}
+
+@Composable
+fun GemOutlinedButton(
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier,
+    enabled: Boolean = true,
+    content: @Composable androidx.compose.foundation.layout.RowScope.() -> Unit,
+) {
+    androidx.compose.material3.OutlinedButton(onClick = onClick, modifier = modifier, enabled = enabled,
+        shape = CutCornerShape(5.dp),
+        border = BorderStroke(1.dp, MaterialTheme.colorScheme.primary.copy(alpha = if (enabled) .7f else .25f)),
+        content = content)
+}

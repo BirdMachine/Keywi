@@ -14,7 +14,7 @@ import androidx.compose.material.icons.outlined.ResetTv
 import androidx.compose.material.icons.outlined.Restore
 import androidx.compose.material.icons.outlined.Save
 import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.Button
+import com.dessalines.thumbkey.ui.components.settings.GemButton as Button
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Scaffold

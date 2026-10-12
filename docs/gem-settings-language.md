@@ -3,6 +3,8 @@
 Extends the October 12 Gem Cuts direction across Keywi settings: navy/violet surfaces,
 magenta selection borders, gem details, compact outlined controls and section headers.
 Light mode uses the same hierarchy with pale violet surfaces and darker accents.
+Shared filled/outlined button wrappers use explicit gem-cut corners so Material pill
+defaults do not reappear in the board or appearance editors.
 
 ## Scope and boundaries
 
