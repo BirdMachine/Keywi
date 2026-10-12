@@ -4,6 +4,9 @@ import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxWithConstraints
+import androidx.compose.foundation.layout.FlowRow
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -17,6 +20,9 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.outlined.ArrowBack
 import androidx.compose.material.icons.outlined.CheckCircle
+import androidx.compose.material.icons.outlined.RadioButtonUnchecked
+import androidx.compose.material.icons.outlined.Diamond
+import androidx.compose.ui.draw.shadow
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -72,10 +78,10 @@ fun GemCutSettingsScreen(navController: NavController, appSettingsViewModel: App
     }
     val dark = MaterialTheme.colorScheme.background.luminance() < .5f
     val colors = if (dark) AdvancedSettingsColors(
-        background = Color(0xFF0B0917), surface = Color(0xFF151125),
-        surfaceRaised = Color(0xFF261A3C), outline = Color(0xFF493563),
+        background = Color(0xFF050E1B), surface = Color(0xFF0B1B2E),
+        surfaceRaised = Color(0xFF251333), outline = Color(0xFF344766),
         text = Color(0xFFF4EDFF), textMuted = Color(0xFFC5B6D9),
-        accent = Color(0xFFBA8AFF), onAccent = Color(0xFF180B2A),
+        accent = Color(0xFFD969FF), onAccent = Color(0xFF180B2A),
     ) else AdvancedSettingsColors(
         background = Color(0xFFFAF7FF), surface = Color(0xFFF1EAFB),
         surfaceRaised = Color(0xFFE4D4FF), outline = Color(0xFFC0AED5),
@@ -88,7 +94,12 @@ fun GemCutSettingsScreen(navController: NavController, appSettingsViewModel: App
             containerColor = colors.background,
             topBar = {
                 TopAppBar(
-                    title = { Text("◇ Gem cuts", fontWeight = FontWeight.SemiBold) },
+                    title = {
+                        Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                            Icon(Icons.Outlined.Diamond, contentDescription = null, tint = colors.accent)
+                            Text("Gem cuts", fontWeight = FontWeight.SemiBold)
+                        }
+                    },
                     navigationIcon = {
                         IconButton(onClick = { navController.popBackStack() }) {
                             Icon(Icons.AutoMirrored.Outlined.ArrowBack, contentDescription = "Back")
@@ -116,17 +127,29 @@ fun GemCutSettingsScreen(navController: NavController, appSettingsViewModel: App
                         }
                     }
                 }
-                Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically) {
-                    Text("✦ Live preview", color = colors.text, style = MaterialTheme.typography.titleMedium)
-                    Text(KeywiFacets.all.first { it.id == facet }.displayName,
-                        color = colors.accent, style = MaterialTheme.typography.labelMedium)
-                }
-                Surface(shape = RoundedCornerShape(8.dp), color = colors.surface,
+                Surface(shape = RoundedCornerShape(12.dp), color = colors.surface,
                     border = BorderStroke(1.dp, colors.outline)) {
-                    // Keep the ambient keyboard palette; settings chrome does not apply a theme.
-                    CompositionLocalProvider(LocalLayoutDirection provides LayoutDirection.Ltr) {
-                        GemCutPreviewScreen(facet, definition, Modifier.padding(10.dp))
+                    Column(Modifier.padding(14.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                        Text("ⓘ About Gem cuts", color = colors.text, style = MaterialTheme.typography.titleSmall)
+                        Text("Cuts change the physical arrangement of keys. Your theme, colors and character assignments stay saved independently.",
+                            color = colors.textMuted, style = MaterialTheme.typography.bodySmall)
+                    }
+                }
+                Surface(shape = RoundedCornerShape(12.dp), color = colors.surface,
+                    border = BorderStroke(1.dp, colors.accent)) {
+                    Column(Modifier.padding(12.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                        Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically) {
+                            Text("✦ Live preview", color = colors.text, style = MaterialTheme.typography.titleMedium)
+                            Text(KeywiFacets.all.first { it.id == facet }.displayName,
+                                color = colors.accent, style = MaterialTheme.typography.labelMedium)
+                        }
+                        Text("Explore the selected cut using your current theme.",
+                            color = colors.textMuted, style = MaterialTheme.typography.bodySmall)
+                        // Keep the ambient keyboard palette; settings chrome does not apply a theme.
+                        CompositionLocalProvider(LocalLayoutDirection provides LayoutDirection.Ltr) {
+                            GemCutPreviewScreen(facet, definition)
+                        }
                     }
                 }
                 Text(if (facet == FacetId.HK_LIKE)
@@ -145,34 +168,53 @@ fun GemCutSettingsScreen(navController: NavController, appSettingsViewModel: App
 @Composable
 private fun GemCutChoice(spec: FacetSpec, selected: Boolean, definition: KeyboardDefinition, onSelect: () -> Unit) {
     val colors = LocalAdvancedSettingsColors.current
-    val shape = RoundedCornerShape(8.dp)
+    val shape = RoundedCornerShape(12.dp)
     Surface(
-        modifier = Modifier.fillMaxWidth().selectable(selected, role = Role.RadioButton, onClick = onSelect),
+        modifier = Modifier.fillMaxWidth()
+            .then(if (selected) Modifier.shadow(7.dp, shape, ambientColor = colors.accent,
+                spotColor = colors.accent) else Modifier)
+            .selectable(selected, role = Role.RadioButton, onClick = onSelect),
         shape = shape, color = colors.surface,
-        border = BorderStroke(if (selected) 1.5.dp else 1.dp, if (selected) colors.accent else colors.outline),
+        border = BorderStroke(if (selected) 2.dp else 1.dp, if (selected) colors.accent else colors.outline),
     ) {
-        Row(
-            Modifier.background(Brush.horizontalGradient(listOf(
-                if (selected) colors.accent.copy(alpha = .18f) else Color.Transparent,
-                Color.Transparent,
-            ))).padding(12.dp),
-            horizontalArrangement = Arrangement.spacedBy(12.dp), verticalAlignment = Alignment.CenterVertically,
-        ) {
-            Box(Modifier.width(92.dp)) {
-                CompositionLocalProvider(LocalLayoutDirection provides LayoutDirection.Ltr) {
-                    GemCutGeometryPreview(spec.id, definition.modes.main, Modifier.fillMaxWidth(), compact = true)
+        BoxWithConstraints {
+            val previewWidth = (maxWidth * .40f).coerceIn(100.dp, 200.dp)
+            Column(
+                Modifier.background(Brush.horizontalGradient(listOf(
+                    if (selected) colors.surfaceRaised else colors.surface,
+                    colors.surface,
+                ))).padding(12.dp),
+                verticalArrangement = Arrangement.spacedBy(10.dp),
+            ) {
+                Row(horizontalArrangement = Arrangement.spacedBy(10.dp), verticalAlignment = Alignment.CenterVertically) {
+                    Icon(if (selected) Icons.Outlined.CheckCircle else Icons.Outlined.RadioButtonUnchecked,
+                        contentDescription = null, tint = colors.accent, modifier = Modifier.size(22.dp))
+                    Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(5.dp)) {
+                        Text(spec.displayName, color = colors.text, style = MaterialTheme.typography.titleMedium,
+                            fontWeight = FontWeight.SemiBold)
+                        Text(if (spec.id == FacetId.ME_LIKE) "A central 3 × 3 swipe surface with persistent surrounding controls."
+                            else "Five compact touch rows, with a desktop control layer.",
+                            color = colors.textMuted, style = MaterialTheme.typography.bodySmall)
+                        if (selected) Text("Selected", color = colors.accent, style = MaterialTheme.typography.labelSmall)
+                    }
+                    Box(Modifier.width(previewWidth)) {
+                        CompositionLocalProvider(LocalLayoutDirection provides LayoutDirection.Ltr) {
+                            GemCutGeometryPreview(spec.id, definition.modes.main, Modifier.fillMaxWidth(), compact = true)
+                        }
+                    }
+                }
+                FlowRow(horizontalArrangement = Arrangement.spacedBy(6.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                    val tags = if (spec.id == FacetId.ME_LIKE) listOf("3×3 core", "Surrounding controls", "Swipe keys")
+                        else listOf("5 touch rows", "Desktop layer", "Experimental")
+                    tags.forEach { tag ->
+                        Surface(shape = RoundedCornerShape(5.dp), color = Color.Transparent,
+                            border = BorderStroke(1.dp, colors.accent.copy(alpha = .45f))) {
+                            Text(tag, Modifier.padding(horizontal = 7.dp, vertical = 3.dp),
+                                color = colors.textMuted, style = MaterialTheme.typography.labelSmall)
+                        }
+                    }
                 }
             }
-            Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(4.dp)) {
-                Text(spec.displayName, color = colors.text, style = MaterialTheme.typography.titleSmall,
-                    fontWeight = FontWeight.SemiBold)
-                Text(if (spec.id == FacetId.ME_LIKE) "Swipe-centered keys with a 3 × 3 core and surrounding controls."
-                    else "Five compact touch rows with a desktop control layer.",
-                    color = colors.textMuted, style = MaterialTheme.typography.bodySmall)
-                Text(if (selected) "Selected" else if (spec.id == FacetId.HK_LIKE) "Experimental" else "Swipe geometry",
-                    color = colors.accent, style = MaterialTheme.typography.labelSmall)
-            }
-            if (selected) Icon(Icons.Outlined.CheckCircle, contentDescription = null, tint = colors.accent)
         }
     }
 }

@@ -13,6 +13,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.shape.CutCornerShape
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -64,13 +65,13 @@ fun GemCutGeometryPreview(
         val rowHeight = if (facet == FacetId.ME_LIKE) unit else if (compact) 12.dp else 44.dp
         Box {
         if (!compact && appearance) BackdropVisualLayer(backdrop, Modifier.matchParentSize())
-        Column(verticalArrangement = Arrangement.spacedBy(gap)) {
+        Column(verticalArrangement = Arrangement.spacedBy(if (facet == FacetId.ME_LIKE) 0.dp else gap)) {
             rows.forEachIndexed { rowIndex, row ->
                 // HK uses per-row weights, while ME uses fixed-size cells across all rows.
                 val rowUnit = if (facet == FacetId.HK_LIKE) maxWidth / row.sumOf { it.width.toDouble() }.toFloat() else unit
                 Row {
                     row.forEachIndexed { index, cell ->
-                        val shape = RoundedCornerShape(if (compact) 2.dp else 6.dp)
+                        val shape = if (compact) CutCornerShape(3.dp) else RoundedCornerShape(6.dp)
                         val appearanceModifier = if (compact || !appearance || facet == FacetId.HK_LIKE) {
                             Modifier.background(MaterialTheme.colorScheme.surfaceVariant)
                                 .border(1.dp, MaterialTheme.colorScheme.outline.copy(alpha = .65f), shape)
@@ -99,8 +100,8 @@ fun GemCutGeometryPreview(
                                 .clip(shape).then(appearanceModifier),
                             contentAlignment = Alignment.Center,
                         ) {
+                            PreviewLegend(cell.center, Modifier.align(Alignment.Center), if (compact) 8 else 18)
                             if (!compact) {
-                                PreviewLegend(cell.center, Modifier.align(Alignment.Center), 18)
                                 cell.key?.let { key ->
                                     listOf(
                                         key.topLeft to Alignment.TopStart, key.top to Alignment.TopCenter,

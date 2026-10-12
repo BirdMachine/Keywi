@@ -1,7 +1,10 @@
 # Gem Cuts settings redesign
 
 The October 12 visual direction uses compact geometry thumbnails alongside descriptions,
-outlined violet selection states, and a larger selection-aware preview. Chrome adapts to
+outlined violet selection states, and a larger selection-aware preview.
+The supplied neon Gem Cuts reference places labeled gem-corner thumbnails to the
+right of the title/description, with compact feature badges and About above the live
+preview. No Glow toggle or new effect preference is introduced. Chrome adapts to
 Keywi's dark/light mode without applying or saving a keyboard theme.
 
 - ME preview projects the selected `KeyboardDefinition`, including `keyModifications`,
