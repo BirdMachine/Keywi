@@ -121,7 +121,6 @@ dependencies {
     testImplementation("androidx.compose.ui:ui-test-junit4")
     debugImplementation("androidx.compose.ui:ui-test-manifest")
 
-    implementation("com.github.woheller69:FreeDroidWarn:V1.14")
     implementation("com.github.dessalines:room-db-export-import:0.1.1")
 
     implementation(platform("androidx.compose:compose-bom:2026.09.00"))

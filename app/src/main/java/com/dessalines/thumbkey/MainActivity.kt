@@ -28,7 +28,6 @@ import com.dessalines.thumbkey.db.AppSettingsViewModelFactory
 import com.dessalines.thumbkey.db.ClipboardDB
 import com.dessalines.thumbkey.db.ClipboardRepository
 import com.dessalines.thumbkey.diagnostics.KeywiDiagnostics
-import com.dessalines.thumbkey.ui.components.common.ShowChangelog
 import com.dessalines.thumbkey.ui.components.settings.SettingsScreen
 import com.dessalines.thumbkey.ui.components.settings.about.AboutScreen
 import com.dessalines.thumbkey.ui.components.settings.advancedinput.AdvancedCharactersScreen
@@ -49,8 +48,6 @@ import com.dessalines.thumbkey.ui.components.setup.SetupScreen
 import com.dessalines.thumbkey.ui.theme.ThumbkeyTheme
 import com.dessalines.thumbkey.utils.ANIMATION_SPEED
 import com.dessalines.thumbkey.utils.getImeNames
-import com.dessalines.thumbkey.utils.getVersionCode
-import org.woheller69.freeDroidWarn.FreeDroidWarn
 import splitties.systemservices.inputMethodManager
 
 class ThumbkeyApplication : Application() {
@@ -74,7 +71,6 @@ class MainActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         KeywiDiagnostics.event("UI", "MainActivity created")
-        FreeDroidWarn.showWarningOnUpgrade(this, getVersionCode())
         enableEdgeToEdge()
         super.onCreate(savedInstanceState)
 
@@ -91,7 +87,6 @@ class MainActivity : AppCompatActivity() {
 
             ThumbkeyTheme(settings = settings) {
                 val navController = rememberNavController()
-                if (startDestination == "settings") ShowChangelog(appSettingsViewModel = appSettingsViewModel)
                 NavHost(
                     navController = navController,
                     startDestination = startDestination,

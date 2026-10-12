@@ -2,6 +2,8 @@ package com.dessalines.thumbkey.ui.components.settings
 
 import com.dessalines.thumbkey.ui.components.settings.gemPreferenceModifier
 import android.util.Log
+import com.dessalines.thumbkey.ui.components.common.SettingsNoticeBanners
+import com.dessalines.thumbkey.utils.getVersionCode
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -98,6 +100,11 @@ fun SettingsScreen(
                         .background(color = MaterialTheme.colorScheme.surface)
                         .imePadding(),
             ) {
+                SettingsNoticeBanners(
+                    versionCode = ctx.getVersionCode(),
+                    lastViewedVersion = settings?.lastVersionCodeViewed,
+                    onWelcomeViewed = { appSettingsViewModel.updateLastVersionCodeViewed(ctx.getVersionCode()) },
+                )
                 ProvidePreferenceTheme {
                     if (!(thumbkeyEnabled || thumbkeySelected)) {
                         Preference(
@@ -183,7 +190,7 @@ fun SettingsScreen(
 
                     GemSettingsGroupLabel("⌘ HELP", "Guides, releases and project links")
                     Preference(
-                        title = { Text(stringResource(R.string.user_guide)) },
+                        title = { Text("Thumb-Key user guide (upstream)") },
                         icon = { Icon(Icons.AutoMirrored.Outlined.HelpCenter, contentDescription = null) },
                         onClick = { openLink(USER_GUIDE_URL, ctx) },
                     )
