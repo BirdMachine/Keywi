@@ -27,6 +27,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.luminance
 import androidx.compose.ui.unit.dp
 import me.zhanghai.compose.preference.Preference
+import me.zhanghai.compose.preference.ProvidePreferenceTheme
 
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -127,10 +128,14 @@ fun GemNavigationPreference(
         { Icon(Icons.AutoMirrored.Outlined.KeyboardArrowRight, contentDescription = null,
             tint = MaterialTheme.colorScheme.primary) }
     } else null
-    Preference(title = title, modifier = modifier.then(gemPreferenceModifier(selected)),
-        enabled = enabled, icon = icon, summary = summary, onClick = onClick,
-        widgetContainer = trailing,
-    )
+    // A navigation row is also used outside preference pages (e.g. Theme Manager).
+    // Own the required provider rather than relying on callers to supply it.
+    ProvidePreferenceTheme {
+        Preference(title = title, modifier = modifier.then(gemPreferenceModifier(selected)),
+            enabled = enabled, icon = icon, summary = summary, onClick = onClick,
+            widgetContainer = trailing,
+        )
+    }
 }
 
 @Composable
