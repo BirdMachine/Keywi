@@ -384,7 +384,91 @@ fun LookAndFeelScreen(
                             updateLookAndFeel()
                         },
                         title = {
-                            …913 tokens truncated…                   keyHeightState = it
+                            Text(stringResource(R.string.disable_fullscreen_editor))
+                        },
+                        icon = {
+                            Icon(
+                                imageVector = Icons.Outlined.WebAssetOff,
+                                contentDescription = null,
+                            )
+                        },
+                    )
+
+                    SwitchPreference(
+
+                        modifier = gemPreferenceModifier(),
+                        value = autoSizeKeysState,
+                        onValueChange = {
+                            autoSizeKeysState = it
+                            updateLookAndFeel()
+                        },
+                        title = {
+                            Text(stringResource(R.string.auto_size_keys))
+                        },
+                        icon = {
+                            Icon(
+                                imageVector = Icons.Outlined.Fullscreen,
+                                contentDescription = null,
+                            )
+                        },
+                    )
+
+                    if (!autoSizeKeysState) {
+                        SliderPreference(
+                            modifier = gemPreferenceModifier(),
+                            value = keyWidthState,
+                            sliderValue = keyWidthSliderState,
+                            onValueChange = {
+                                keyWidthState = it
+                                updateLookAndFeel()
+                            },
+                            onSliderValueChange = {
+                                keyWidthSliderState = it
+                            },
+                            valueRange = 10f..200f,
+                            title = {
+                                val keyHeightStr =
+                                    stringResource(
+                                        if (nonSquareKeysState) R.string.key_width else R.string.key_size,
+                                        keyWidthSliderState.toInt().toString(),
+                                    )
+                                Text(keyHeightStr)
+                            },
+                            icon = {
+                                Icon(
+                                    imageVector = Icons.Outlined.FormatSize,
+                                    contentDescription = null,
+                                )
+                            },
+                        )
+                    }
+
+                    SwitchPreference(
+
+                        modifier = gemPreferenceModifier(),
+                        value = nonSquareKeysState,
+                        onValueChange = {
+                            nonSquareKeysState = it
+                            updateLookAndFeel()
+                        },
+                        title = {
+                            Text(stringResource(R.string.key_non_square))
+                        },
+                        icon = {
+                            Icon(
+                                imageVector = Icons.Outlined.Crop75,
+                                contentDescription = null,
+                            )
+                        },
+                    )
+
+                    if (nonSquareKeysState) {
+                        SliderPreference(
+                            modifier = gemPreferenceModifier(),
+                            value = keyHeightState,
+                            sliderValue = keyHeightSliderState,
+                            onValueChange = {
+                                keyHeightState = it
                                 updateLookAndFeel()
                             },
                             onSliderValueChange = {
