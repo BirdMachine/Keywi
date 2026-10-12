@@ -33,6 +33,11 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
+import com.dessalines.thumbkey.ui.components.keyboard.ThemeAssetStore
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -111,15 +116,24 @@ private fun SurfaceThemeSection(title: String, subtitle: String, load: (android.
     val context = LocalContext.current
     var state by remember { mutableStateOf(load(context)) }
     var mediaPickMode by remember { mutableStateOf(BackdropMode.IMAGE) }
+    val scope = rememberCoroutineScope()
+    var mediaError by remember { mutableStateOf<String?>(null) }
     fun persist(next: BackdropThemeState) { state = next; save(context, next) }
     val mediaPicker = rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()) { uri ->
         if (uri != null) {
-            runCatching { context.contentResolver.takePersistableUriPermission(uri, Intent.FLAG_GRANT_READ_URI_PERMISSION) }
-            persist(state.copy(mode = mediaPickMode, mediaUri = uri.toString()))
+            val selectedMode = mediaPickMode
+            scope.launch {
+                val result = withContext(Dispatchers.IO) { runCatching { ThemeAssetStore.copySelected(context, uri) } }
+                result.fold(
+                    onSuccess = { owned -> mediaError = null; persist(state.copy(mode = selectedMode, mediaUri = owned)) },
+                    onFailure = { mediaError = "Could not copy media: ${it.message}" },
+                )
+            }
         }
     }
     Column(gemSectionModifier(), verticalArrangement = Arrangement.spacedBy(6.dp)) {
         Text(title, style = MaterialTheme.typography.titleSmall); Text(subtitle, style = MaterialTheme.typography.bodySmall)
+        mediaError?.let { Text(it, color = MaterialTheme.colorScheme.error) }
         if (showToolbarBorder) {
             var borderWidth by remember { mutableStateOf(ToolbarBorderPreferences.loadWidth(context)) }
             var toolbarGap by remember { mutableStateOf(ToolbarLayoutPreferences.loadKeyboardGap(context)) }
@@ -186,8 +200,17 @@ private fun KeyAppearanceSection() {
 @Composable
 private fun FontAndSuggestionSection() {
     val context = LocalContext.current; var fontName by remember { mutableStateOf(FontPreferences.displayName(context)) }; var motion by remember { mutableStateOf(SuggestionMotionPreferences.load(context)) }; var newWordHighlightColor by remember { mutableStateOf(AdvancedKeyWordPreferences.newWordHighlightColor(context)) }
-    val fontPicker = rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()) { uri -> if (uri != null && FontPreferences.importFont(context, uri)) fontName = FontPreferences.displayName(context) }
+    val scope = rememberCoroutineScope()
+    var fontError by remember { mutableStateOf<String?>(null) }
+    val fontPicker = rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()) { uri ->
+        if (uri != null) scope.launch {
+            val imported = withContext(Dispatchers.IO) { FontPreferences.importFont(context, uri) }
+            if (imported) { fontName = FontPreferences.displayName(context); fontError = null }
+            else fontError = "Could not copy or load this font."
+        }
+    }
     Column(gemSectionModifier(), verticalArrangement = Arrangement.spacedBy(6.dp)) {
+        fontError?.let { Text(it, color = MaterialTheme.colorScheme.error) }
         Text("Typography", style = MaterialTheme.typography.titleSmall); Text(fontName); Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) { Button(onClick = { fontPicker.launch(arrayOf("font/*", "application/x-font-ttf", "application/x-font-opentype", "application/octet-stream")) }) { Text("Import font") }; Button(onClick = { FontPreferences.clear(context); fontName = FontPreferences.displayName(context) }) { Text("System default") } }
         Text("Suggestions", style = MaterialTheme.typography.titleSmall); Text("New Word Highlight color", style = MaterialTheme.typography.titleSmall); Text("Used for the unfinished/current-word chip. Matrix green is the default.", style = MaterialTheme.typography.bodySmall); ColorEditor("New Word Highlight", newWordHighlightColor) { newWordHighlightColor = it; AdvancedKeyWordPreferences.setNewWordHighlightColor(context, it) }; Text("Motion style", style = MaterialTheme.typography.titleSmall); ChipRow(SuggestionMotionStyle.entries, motion, { it.name.lowercase().replaceFirstChar(Char::uppercase) }) { motion = it; SuggestionMotionPreferences.save(context, it) }
     }
