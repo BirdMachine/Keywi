@@ -1,5 +1,6 @@
 package com.dessalines.thumbkey.ui.components.settings.other
 
+import com.dessalines.thumbkey.ui.components.settings.gemPreferenceModifier
 import android.util.Log
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Column
@@ -27,7 +28,7 @@ import com.dessalines.thumbkey.R
 import com.dessalines.thumbkey.db.AppSettingsViewModel
 import com.dessalines.thumbkey.db.DEFAULT_SHOW_ON_SCREEN_KEYBOARD
 import com.dessalines.thumbkey.db.OtherSettingsUpdate
-import com.dessalines.thumbkey.utils.SimpleTopAppBar
+import com.dessalines.thumbkey.ui.components.settings.GemSettingsTopAppBar as SimpleTopAppBar
 import com.dessalines.thumbkey.utils.TAG
 import com.dessalines.thumbkey.utils.toBool
 import com.dessalines.thumbkey.utils.toInt
@@ -58,6 +59,7 @@ fun OtherSettingsScreen(navController: NavController, appSettingsViewModel: AppS
         ) {
             ProvidePreferenceTheme {
                 SwitchPreference(
+                    modifier = gemPreferenceModifier(),
                     value = showOnScreenKeyboardState,
                     onValueChange = {
                         showOnScreenKeyboardState = it

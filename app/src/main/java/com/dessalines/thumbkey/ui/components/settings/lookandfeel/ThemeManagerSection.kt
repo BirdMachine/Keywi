@@ -1,5 +1,6 @@
 package com.dessalines.thumbkey.ui.components.settings.lookandfeel
 
+import com.dessalines.thumbkey.ui.components.settings.gemSectionModifier
 import android.content.Intent
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
@@ -89,10 +90,10 @@ fun ThemeManagerSection(onThemeApplied: () -> Unit) {
     val current = active()
 
     Column(
-        modifier = Modifier.fillMaxWidth().padding(horizontal = 14.dp, vertical = 10.dp),
+        modifier = gemSectionModifier(),
         verticalArrangement = Arrangement.spacedBy(8.dp),
     ) {
-        Text("Theme manager", style = MaterialTheme.typography.titleMedium)
+        Text("✦ Saved themes", style = MaterialTheme.typography.titleMedium)
         Text(
             if (current.id == CUSTOM_THEME_ID) "Custom is your scratch theme — edits are safe here."
             else "Saved themes stay intact until you choose Edit.",

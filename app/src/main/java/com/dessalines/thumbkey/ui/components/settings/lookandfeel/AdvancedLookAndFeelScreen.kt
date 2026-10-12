@@ -1,5 +1,6 @@
 package com.dessalines.thumbkey.ui.components.settings.lookandfeel
 
+import com.dessalines.thumbkey.ui.components.settings.gemSectionModifier
 import android.content.Intent
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
@@ -68,7 +69,7 @@ import com.dessalines.thumbkey.ui.components.keyboard.ToolbarBorderPreferences
 import com.dessalines.thumbkey.ui.components.keyboard.ToolbarLayoutPreferences
 import com.dessalines.thumbkey.ui.components.keyboard.ToolbarThemePreferences
 import com.dessalines.thumbkey.ui.components.keyboard.keyboardGradientBackground
-import com.dessalines.thumbkey.utils.SimpleTopAppBar
+import com.dessalines.thumbkey.ui.components.settings.GemSettingsTopAppBar as SimpleTopAppBar
 import kotlin.math.roundToInt
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -80,7 +81,7 @@ fun AdvancedLookAndFeelScreen(navController: NavController) {
 
     Scaffold(topBar = { SimpleTopAppBar(text = "Advanced look & feel", navController = navController) }) { padding ->
         Column(Modifier.padding(padding).verticalScroll(scrollState).background(MaterialTheme.colorScheme.surface).imePadding()) {
-            Row(Modifier.fillMaxWidth().padding(horizontal = 14.dp, vertical = 8.dp), Arrangement.SpaceBetween, Alignment.CenterVertically) {
+            Row(gemSectionModifier(), Arrangement.SpaceBetween, Alignment.CenterVertically) {
                 Column(Modifier.weight(1f).padding(end = 12.dp)) {
                     Text("Enable custom keyboard backgrounds", style = MaterialTheme.typography.titleSmall)
                     Text("Turn off to use Thumb-Key's original styling.", style = MaterialTheme.typography.bodySmall)
@@ -117,7 +118,7 @@ private fun SurfaceThemeSection(title: String, subtitle: String, load: (android.
             persist(state.copy(mode = mediaPickMode, mediaUri = uri.toString()))
         }
     }
-    Column(Modifier.fillMaxWidth().padding(horizontal = 14.dp, vertical = 7.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
+    Column(gemSectionModifier(), verticalArrangement = Arrangement.spacedBy(6.dp)) {
         Text(title, style = MaterialTheme.typography.titleSmall); Text(subtitle, style = MaterialTheme.typography.bodySmall)
         if (showToolbarBorder) {
             var borderWidth by remember { mutableStateOf(ToolbarBorderPreferences.loadWidth(context)) }
@@ -160,7 +161,7 @@ private fun ManagedGradientEditor(title: String, gradient: KeyboardBackdrop, onG
 private fun SuggestionLozengeAppearanceSection() {
     val context = LocalContext.current; var state by remember { mutableStateOf(SuggestionLozengeThemePreferences.load(context)) }
     fun persist(next: SuggestionLozengeThemeState) { state = next; SuggestionLozengeThemePreferences.save(context, next) }
-    Column(Modifier.fillMaxWidth().padding(horizontal = 14.dp, vertical = 7.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
+    Column(gemSectionModifier(), verticalArrangement = Arrangement.spacedBy(6.dp)) {
         Text("Toolbar lozenges", style = MaterialTheme.typography.titleSmall); Text("Suggestion pills and the ✨ toggle get their own surface and border theme.", style = MaterialTheme.typography.bodySmall); Text("Lozenge background", style = MaterialTheme.typography.titleSmall)
         ChipRow(SuggestionLozengeSurfaceStyle.entries, state.surfaceStyle, { it.name.lowercase().replaceFirstChar(Char::uppercase) }) { persist(state.copy(surfaceStyle = it)) }
         when (state.surfaceStyle) { SuggestionLozengeSurfaceStyle.GRADIENT -> ManagedGradientEditor("Lozenge background gradient", state.surfaceGradient) { persist(state.copy(surfaceGradient = it)) }; SuggestionLozengeSurfaceStyle.SOLID -> ColorEditor("Lozenge color", state.surfaceColor) { persist(state.copy(surfaceColor = it)) }; SuggestionLozengeSurfaceStyle.NONE -> Text("Transparent lozenge faces.") }
@@ -173,7 +174,7 @@ private fun SuggestionLozengeAppearanceSection() {
 private fun KeyAppearanceSection() {
     val context = LocalContext.current; var state by remember { mutableStateOf(KeyThemePreferences.load(context)) }
     fun persist(next: KeyThemeState) { state = next; KeyThemePreferences.save(context, next) }
-    Column(Modifier.fillMaxWidth().padding(horizontal = 14.dp, vertical = 7.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
+    Column(gemSectionModifier(), verticalArrangement = Arrangement.spacedBy(6.dp)) {
         Text("Keys", style = MaterialTheme.typography.titleSmall); Text("Key surface", style = MaterialTheme.typography.titleSmall)
         ChipRow(KeySurfaceStyle.entries, state.surfaceStyle, { it.name.lowercase().replaceFirstChar(Char::uppercase) }) { persist(state.copy(surfaceStyle = it)) }
         when (state.surfaceStyle) { KeySurfaceStyle.GRADIENT -> ManagedGradientEditor("Key surface gradient", state.surfaceGradient) { persist(state.copy(surfaceGradient = it)) }; KeySurfaceStyle.SOLID -> ColorEditor("Key color", state.surfaceColor) { persist(state.copy(surfaceColor = it)) }; KeySurfaceStyle.NONE -> Text("Transparent key faces.") }
@@ -186,7 +187,7 @@ private fun KeyAppearanceSection() {
 private fun FontAndSuggestionSection() {
     val context = LocalContext.current; var fontName by remember { mutableStateOf(FontPreferences.displayName(context)) }; var motion by remember { mutableStateOf(SuggestionMotionPreferences.load(context)) }; var newWordHighlightColor by remember { mutableStateOf(AdvancedKeyWordPreferences.newWordHighlightColor(context)) }
     val fontPicker = rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()) { uri -> if (uri != null && FontPreferences.importFont(context, uri)) fontName = FontPreferences.displayName(context) }
-    Column(Modifier.fillMaxWidth().padding(horizontal = 14.dp, vertical = 7.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
+    Column(gemSectionModifier(), verticalArrangement = Arrangement.spacedBy(6.dp)) {
         Text("Typography", style = MaterialTheme.typography.titleSmall); Text(fontName); Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) { Button(onClick = { fontPicker.launch(arrayOf("font/*", "application/x-font-ttf", "application/x-font-opentype", "application/octet-stream")) }) { Text("Import font") }; Button(onClick = { FontPreferences.clear(context); fontName = FontPreferences.displayName(context) }) { Text("System default") } }
         Text("Suggestions", style = MaterialTheme.typography.titleSmall); Text("New Word Highlight color", style = MaterialTheme.typography.titleSmall); Text("Used for the unfinished/current-word chip. Matrix green is the default.", style = MaterialTheme.typography.bodySmall); ColorEditor("New Word Highlight", newWordHighlightColor) { newWordHighlightColor = it; AdvancedKeyWordPreferences.setNewWordHighlightColor(context, it) }; Text("Motion style", style = MaterialTheme.typography.titleSmall); ChipRow(SuggestionMotionStyle.entries, motion, { it.name.lowercase().replaceFirstChar(Char::uppercase) }) { motion = it; SuggestionMotionPreferences.save(context, it) }
     }

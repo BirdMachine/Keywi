@@ -1,5 +1,6 @@
 package com.dessalines.thumbkey.ui.components.settings.lookandfeel
 
+import com.dessalines.thumbkey.ui.components.settings.gemPreferenceModifier
 import android.util.Log
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Column
@@ -74,7 +75,7 @@ import com.dessalines.thumbkey.db.LookAndFeelUpdate
 import com.dessalines.thumbkey.ui.components.common.TestOutTextField
 import com.dessalines.thumbkey.ui.components.settings.about.SettingsDivider
 import com.dessalines.thumbkey.utils.KeyboardPosition
-import com.dessalines.thumbkey.utils.SimpleTopAppBar
+import com.dessalines.thumbkey.ui.components.settings.GemSettingsTopAppBar as SimpleTopAppBar
 import com.dessalines.thumbkey.utils.TAG
 import com.dessalines.thumbkey.utils.ThemeColor
 import com.dessalines.thumbkey.utils.ThemeMode
@@ -191,6 +192,7 @@ fun LookAndFeelScreen(
             ) {
                 ProvidePreferenceTheme {
                     ListPreference(
+                        modifier = gemPreferenceModifier(),
                         type = ListPreferenceType.DROPDOWN_MENU,
                         value = themeState,
                         onValueChange = {
@@ -216,6 +218,8 @@ fun LookAndFeelScreen(
                     )
 
                     ListPreference(
+
+                        modifier = gemPreferenceModifier(),
                         type = ListPreferenceType.DROPDOWN_MENU,
                         value = themeColorState,
                         onValueChange = {
@@ -241,6 +245,8 @@ fun LookAndFeelScreen(
                     )
 
                     ListPreference(
+
+                        modifier = gemPreferenceModifier(),
                         type = ListPreferenceType.DROPDOWN_MENU,
                         value = positionState,
                         onValueChange = {
@@ -266,6 +272,8 @@ fun LookAndFeelScreen(
                     )
 
                     SliderPreference(
+
+                        modifier = gemPreferenceModifier(),
                         value = positionPaddingState,
                         sliderValue = positionPaddingSliderState,
                         onValueChange = {
@@ -293,6 +301,8 @@ fun LookAndFeelScreen(
                     )
 
                     SwitchPreference(
+
+                        modifier = gemPreferenceModifier(),
                         value = hideLettersState,
                         onValueChange = {
                             hideLettersState = it
@@ -310,6 +320,8 @@ fun LookAndFeelScreen(
                     )
 
                     SwitchPreference(
+
+                        modifier = gemPreferenceModifier(),
                         value = hideSymbolsState,
                         onValueChange = {
                             hideSymbolsState = it
@@ -326,6 +338,7 @@ fun LookAndFeelScreen(
                         },
                     )
                     SwitchPreference(
+                        modifier = gemPreferenceModifier(),
                         value = backdropEnabledState,
                         onValueChange = {
                             backdropEnabledState = it
@@ -344,6 +357,8 @@ fun LookAndFeelScreen(
                     BackdropSettingsSection(onChanged = { updateLookAndFeel() })
 
                     SwitchPreference(
+
+                        modifier = gemPreferenceModifier(),
                         value = ignoreBottomPaddingState,
                         onValueChange = {
                             ignoreBottomPaddingState = it
@@ -361,6 +376,8 @@ fun LookAndFeelScreen(
                     )
 
                     SwitchPreference(
+
+                        modifier = gemPreferenceModifier(),
                         value = showToastOnLayoutSwitchState,
                         onValueChange = {
                             showToastOnLayoutSwitchState = it
@@ -377,6 +394,7 @@ fun LookAndFeelScreen(
                         },
                     )
                     SwitchPreference(
+                        modifier = gemPreferenceModifier(),
                         value = disableFullscreenEditorState,
                         onValueChange = {
                             disableFullscreenEditorState = it
@@ -394,6 +412,8 @@ fun LookAndFeelScreen(
                     )
 
                     SwitchPreference(
+
+                        modifier = gemPreferenceModifier(),
                         value = autoSizeKeysState,
                         onValueChange = {
                             autoSizeKeysState = it
@@ -412,6 +432,7 @@ fun LookAndFeelScreen(
 
                     if (!autoSizeKeysState) {
                         SliderPreference(
+                            modifier = gemPreferenceModifier(),
                             value = keyWidthState,
                             sliderValue = keyWidthSliderState,
                             onValueChange = {
@@ -440,6 +461,8 @@ fun LookAndFeelScreen(
                     }
 
                     SwitchPreference(
+
+                        modifier = gemPreferenceModifier(),
                         value = nonSquareKeysState,
                         onValueChange = {
                             nonSquareKeysState = it
@@ -458,6 +481,7 @@ fun LookAndFeelScreen(
 
                     if (nonSquareKeysState) {
                         SliderPreference(
+                            modifier = gemPreferenceModifier(),
                             value = keyHeightState,
                             sliderValue = keyHeightSliderState,
                             onValueChange = {
@@ -486,6 +510,8 @@ fun LookAndFeelScreen(
                     }
 
                     SliderPreference(
+
+                        modifier = gemPreferenceModifier(),
                         value = keyPaddingState,
                         sliderValue = keyPaddingSliderState,
                         onValueChange = {
@@ -506,6 +532,7 @@ fun LookAndFeelScreen(
                         },
                     )
                     SliderPreference(
+                        modifier = gemPreferenceModifier(),
                         value = keyBorderWidthState,
                         sliderValue = keyBorderWidthSliderState,
                         onValueChange = {
@@ -526,6 +553,7 @@ fun LookAndFeelScreen(
                         },
                     )
                     SliderPreference(
+                        modifier = gemPreferenceModifier(),
                         value = keyRadiusState,
                         sliderValue = keyRadiusSliderState,
                         onValueChange = {
@@ -546,6 +574,7 @@ fun LookAndFeelScreen(
                         },
                     )
                     SliderPreference(
+                        modifier = gemPreferenceModifier(),
                         value = pushupSizeState,
                         sliderValue = pushupSizeSliderState,
                         onValueChange = {
@@ -566,6 +595,7 @@ fun LookAndFeelScreen(
                         },
                     )
                     SliderPreference(
+                        modifier = gemPreferenceModifier(),
                         value = animationSpeedState,
                         sliderValue = animationSpeedSliderState,
                         onValueChange = {
@@ -586,6 +616,7 @@ fun LookAndFeelScreen(
                         },
                     )
                     SliderPreference(
+                        modifier = gemPreferenceModifier(),
                         value = animationHelperSpeedState,
                         sliderValue = animationHelperSpeedSliderState,
                         onValueChange = {
@@ -613,6 +644,7 @@ fun LookAndFeelScreen(
                     )
                     SettingsDivider()
                     SwitchPreference(
+                        modifier = gemPreferenceModifier(),
                         value = vibrateOnTapState,
                         onValueChange = {
                             vibrateOnTapState = it
@@ -632,6 +664,7 @@ fun LookAndFeelScreen(
                         },
                     )
                     SwitchPreference(
+                        modifier = gemPreferenceModifier(),
                         enabled = settings?.slideEnabled?.toBool() == true,
                         value = vibrateOnSlideState,
                         onValueChange = {
@@ -656,6 +689,7 @@ fun LookAndFeelScreen(
                         },
                     )
                     SwitchPreference(
+                        modifier = gemPreferenceModifier(),
                         value = soundOnTapState,
                         onValueChange = {
                             soundOnTapState = it

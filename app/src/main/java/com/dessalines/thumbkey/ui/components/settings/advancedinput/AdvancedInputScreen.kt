@@ -11,7 +11,7 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.AutoAwesome
 import androidx.compose.material.icons.outlined.TextFields
-import androidx.compose.material3.Card
+import com.dessalines.thumbkey.ui.components.settings.GemSettingsCard as Card
 import androidx.compose.material3.CenterAlignedTopAppBar
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
@@ -34,7 +34,7 @@ import com.dessalines.thumbkey.R
 import com.dessalines.thumbkey.inputcontext.ContextEnginePreferences
 import com.dessalines.thumbkey.ui.components.keyboard.KaomojiLibrary
 import com.dessalines.thumbkey.ui.components.keyboard.KaomojiPreferences
-import me.zhanghai.compose.preference.Preference
+import com.dessalines.thumbkey.ui.components.settings.GemNavigationPreference as Preference
 import me.zhanghai.compose.preference.ProvidePreferenceTheme
 
 @OptIn(ExperimentalMaterial3Api::class)

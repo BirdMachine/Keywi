@@ -77,17 +77,7 @@ fun GemCutSettingsScreen(navController: NavController, appSettingsViewModel: App
             getModifiedKeyboardDefinition(layout, modifications) ?: layout.keyboardDefinition
     }
     val dark = MaterialTheme.colorScheme.background.luminance() < .5f
-    val colors = if (dark) AdvancedSettingsColors(
-        background = Color(0xFF050E1B), surface = Color(0xFF0B1B2E),
-        surfaceRaised = Color(0xFF251333), outline = Color(0xFF344766),
-        text = Color(0xFFF4EDFF), textMuted = Color(0xFFC5B6D9),
-        accent = Color(0xFFD969FF), onAccent = Color(0xFF180B2A),
-    ) else AdvancedSettingsColors(
-        background = Color(0xFFFAF7FF), surface = Color(0xFFF1EAFB),
-        surfaceRaised = Color(0xFFE4D4FF), outline = Color(0xFFC0AED5),
-        text = Color(0xFF211332), textMuted = Color(0xFF665274),
-        accent = Color(0xFF7434BD), onAccent = Color.White,
-    )
+    val colors = gemSettingsColors(dark)
 
     CompositionLocalProvider(LocalAdvancedSettingsColors provides colors) {
         Scaffold(
@@ -148,7 +138,9 @@ fun GemCutSettingsScreen(navController: NavController, appSettingsViewModel: App
                             color = colors.textMuted, style = MaterialTheme.typography.bodySmall)
                         // Keep the ambient keyboard palette; settings chrome does not apply a theme.
                         CompositionLocalProvider(LocalLayoutDirection provides LayoutDirection.Ltr) {
-                            GemCutPreviewScreen(facet, definition)
+                            MaterialTheme(colorScheme = LocalKeyboardPreviewColorScheme.current ?: MaterialTheme.colorScheme) {
+                                GemCutPreviewScreen(facet, definition)
+                            }
                         }
                     }
                 }
@@ -199,7 +191,9 @@ private fun GemCutChoice(spec: FacetSpec, selected: Boolean, definition: Keyboar
                     }
                     Box(Modifier.width(previewWidth)) {
                         CompositionLocalProvider(LocalLayoutDirection provides LayoutDirection.Ltr) {
-                            GemCutGeometryPreview(spec.id, definition.modes.main, Modifier.fillMaxWidth(), compact = true)
+                            MaterialTheme(colorScheme = LocalKeyboardPreviewColorScheme.current ?: MaterialTheme.colorScheme) {
+                                GemCutGeometryPreview(spec.id, definition.modes.main, Modifier.fillMaxWidth(), compact = true)
+                            }
                         }
                     }
                 }

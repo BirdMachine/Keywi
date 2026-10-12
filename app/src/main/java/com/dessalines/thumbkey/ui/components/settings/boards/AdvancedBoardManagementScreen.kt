@@ -20,6 +20,7 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.wrapContentSize
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.shape.CutCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
@@ -140,7 +141,9 @@ fun AdvancedBoardManagementScreen(navController: NavController) {
                         if (boards.isEmpty()) Text("No custom boards yet. Add a blank board or start with Emoji or Unicode.")
                         boards.forEachIndexed { index, board ->
                             key(board.id) {
-                                Surface(shape = RoundedCornerShape(20.dp), color = MaterialTheme.colorScheme.surfaceContainer) {
+                                Surface(shape = RoundedCornerShape(10.dp), color = MaterialTheme.colorScheme.surfaceContainer,
+                                    border = BorderStroke(if (board.enabled) 1.5.dp else 1.dp,
+                                        if (board.enabled) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.outline)) {
                                     Column(Modifier.padding(12.dp)) {
                                         Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
                                             if (page == "reorder") {
@@ -188,7 +191,7 @@ fun AdvancedBoardManagementScreen(navController: NavController) {
                         Text("Choose a starting point for your new board.")
                         val templates = remember { listOf(CustomBoard(name = "Blank board"), CustomBoardPreferences.preset(true), CustomBoardPreferences.preset(false)) }
                         templates.forEachIndexed { index, board ->
-                            Surface(onClick = { template = index }, shape = RoundedCornerShape(20.dp), color = MaterialTheme.colorScheme.surfaceContainer, border = if (template == index) BorderStroke(2.dp, MaterialTheme.colorScheme.primary) else null) {
+                            Surface(onClick = { template = index }, shape = RoundedCornerShape(10.dp), color = MaterialTheme.colorScheme.surfaceContainer, border = BorderStroke(if (template == index) 2.dp else 1.dp, if (template == index) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.outline)) {
                                 Row(Modifier.fillMaxWidth().padding(16.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(16.dp)) {
                                     BoardThumbnail(board)
                                     Column(Modifier.weight(1f)) {
@@ -212,7 +215,7 @@ fun AdvancedBoardManagementScreen(navController: NavController) {
                             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                                 repeat(3) { col ->
                                     val index = row * 3 + col
-                                    Surface(onClick = { cellIndex = index }, modifier = Modifier.weight(1f).aspectRatio(1.25f), shape = RoundedCornerShape(16.dp), color = if (cellIndex == index) MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.surfaceContainer, border = if (cellIndex == index) BorderStroke(2.dp, MaterialTheme.colorScheme.primary) else null) {
+                                    Surface(onClick = { cellIndex = index }, modifier = Modifier.weight(1f).aspectRatio(1.25f), shape = RoundedCornerShape(8.dp), color = if (cellIndex == index) MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.surfaceContainer, border = BorderStroke(if (cellIndex == index) 2.dp else 1.dp, if (cellIndex == index) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.outline)) {
                                         Box(Modifier.padding(8.dp).semantics { contentDescription = "Edit key ${index + 1}" }, contentAlignment = Alignment.Center) {
                                             Text(bindingLabel(cells.getOrNull(index)?.bindings?.get("center")), fontSize = 26.sp, maxLines = 2, overflow = TextOverflow.Ellipsis)
                                         }
@@ -226,7 +229,8 @@ fun AdvancedBoardManagementScreen(navController: NavController) {
                             Text("⌫")
                         }
                         Text("Navigation row · always available", style = MaterialTheme.typography.labelSmall)
-                        Surface(shape = RoundedCornerShape(20.dp), color = MaterialTheme.colorScheme.surfaceContainer) {
+                        Surface(shape = RoundedCornerShape(10.dp), color = MaterialTheme.colorScheme.surfaceContainer,
+                                    border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline)) {
                             Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
                                 Text("Edit key ${cellIndex + 1}", style = MaterialTheme.typography.titleLarge)
                                 val tab = when (gesture) { "center" -> 0; "hold" -> 2; else -> 1 }
@@ -335,7 +339,7 @@ private fun BoardThumbnail(board: CustomBoard) {
         repeat(3) { row ->
             Row(horizontalArrangement = Arrangement.spacedBy(2.dp)) {
                 repeat(3) { col ->
-                    Surface(modifier = Modifier.size(20.dp), shape = RoundedCornerShape(4.dp), color = MaterialTheme.colorScheme.surfaceContainerHighest) {
+                    Surface(modifier = Modifier.size(20.dp), shape = CutCornerShape(3.dp), border = BorderStroke(.5.dp, MaterialTheme.colorScheme.outline), color = MaterialTheme.colorScheme.surfaceContainerHighest) {
                         Box(contentAlignment = Alignment.Center) { Text(bindingLabel(board.sideA.getOrNull(row * 3 + col)?.bindings?.get("center")), fontSize = 10.sp, maxLines = 1, overflow = TextOverflow.Clip) }
                     }
                 }

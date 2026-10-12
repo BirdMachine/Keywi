@@ -36,7 +36,7 @@ import com.dessalines.thumbkey.ui.components.keyboard.TypingOverlayLayer
 import com.dessalines.thumbkey.ui.components.keyboard.TypingOverlayPreferences
 import com.dessalines.thumbkey.ui.components.keyboard.TypingOverlayState
 import com.dessalines.thumbkey.ui.components.keyboard.loadTypingOverlayMedia
-import com.dessalines.thumbkey.utils.SimpleTopAppBar
+import com.dessalines.thumbkey.ui.components.settings.GemSettingsTopAppBar as SimpleTopAppBar
 import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)

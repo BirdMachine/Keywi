@@ -33,10 +33,10 @@ import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
 import com.dessalines.thumbkey.R
-import com.dessalines.thumbkey.utils.SimpleTopAppBar
+import com.dessalines.thumbkey.ui.components.settings.GemSettingsTopAppBar as SimpleTopAppBar
 import com.dessalines.thumbkey.utils.TAG
 import com.dessalines.thumbkey.utils.openLink
-import me.zhanghai.compose.preference.Preference
+import com.dessalines.thumbkey.ui.components.settings.GemNavigationPreference as Preference
 import me.zhanghai.compose.preference.PreferenceCategory
 import me.zhanghai.compose.preference.ProvidePreferenceTheme
 

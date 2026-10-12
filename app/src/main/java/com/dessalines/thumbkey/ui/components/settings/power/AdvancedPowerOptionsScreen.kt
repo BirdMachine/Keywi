@@ -18,8 +18,8 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.navigation.NavController
 import com.dessalines.thumbkey.ui.components.keyboard.KeywiPowerMode
 import com.dessalines.thumbkey.ui.components.keyboard.KeywiPowerPreferences
-import com.dessalines.thumbkey.utils.SimpleTopAppBar
-import me.zhanghai.compose.preference.Preference
+import com.dessalines.thumbkey.ui.components.settings.GemSettingsTopAppBar as SimpleTopAppBar
+import com.dessalines.thumbkey.ui.components.settings.GemNavigationPreference as Preference
 import me.zhanghai.compose.preference.ProvidePreferenceTheme
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -46,6 +46,8 @@ fun AdvancedPowerOptionsScreen(navController: NavController) {
         ) {
             ProvidePreferenceTheme {
                 Preference(
+                    selected = selected == KeywiPowerMode.UNBRIDLED,
+                    showChevron = false,
                     title = { Text("Unbridled") },
                     summary = {
                         Text("No Keywi power limits. Full motion, GIF playback, and fastest suggestion refresh.")
@@ -59,6 +61,8 @@ fun AdvancedPowerOptionsScreen(navController: NavController) {
                     onClick = { choose(KeywiPowerMode.UNBRIDLED) },
                 )
                 Preference(
+                    selected = selected == KeywiPowerMode.CONSERVED,
+                    showChevron = false,
                     title = { Text("Conserved") },
                     summary = {
                         Text("Keeps the pretty stuff while reducing background polling and avoiding needless redraw work.")
@@ -72,6 +76,8 @@ fun AdvancedPowerOptionsScreen(navController: NavController) {
                     onClick = { choose(KeywiPowerMode.CONSERVED) },
                 )
                 Preference(
+                    selected = selected == KeywiPowerMode.RESTRICTED,
+                    showChevron = false,
                     title = { Text("Restricted") },
                     summary = {
                         Text(

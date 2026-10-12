@@ -1,5 +1,6 @@
 package com.dessalines.thumbkey.ui.components.settings.lookandfeel
 
+import com.dessalines.thumbkey.ui.components.settings.gemSectionModifier
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
@@ -28,7 +29,7 @@ import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.navigation.NavController
 import com.dessalines.thumbkey.ui.components.keyboard.CUSTOM_THEME_ID
 import com.dessalines.thumbkey.ui.components.keyboard.ThemeEngine
-import com.dessalines.thumbkey.utils.SimpleTopAppBar
+import com.dessalines.thumbkey.ui.components.settings.GemSettingsTopAppBar as SimpleTopAppBar
 
 /** Visible front door for Keywi themes. */
 @OptIn(ExperimentalMaterial3Api::class)
@@ -59,7 +60,7 @@ fun ThemeManagerScreen(navController: NavController) {
             KeywiThemeTestBench()
 
             Column(
-                modifier = Modifier.fillMaxWidth().padding(horizontal = 14.dp, vertical = 6.dp),
+                modifier = gemSectionModifier(),
                 verticalArrangement = Arrangement.spacedBy(6.dp),
             ) {
                 Text("Appearance editor", style = MaterialTheme.typography.titleMedium)

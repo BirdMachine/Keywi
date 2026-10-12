@@ -83,14 +83,14 @@ import com.dessalines.thumbkey.db.DEFAULT_THEME_COLOR
 import com.dessalines.thumbkey.db.DEFAULT_USE_PRIVATE_CLIPBOARD
 import com.dessalines.thumbkey.db.DEFAULT_VIBRATE_ON_SLIDE
 import com.dessalines.thumbkey.db.DEFAULT_VIBRATE_ON_TAP
-import com.dessalines.thumbkey.utils.SimpleTopAppBar
+import com.dessalines.thumbkey.ui.components.settings.GemSettingsTopAppBar as SimpleTopAppBar
 import com.dessalines.thumbkey.utils.keyboardLayoutsSetFromDbIndexString
 import com.dessalines.thumbkey.utils.updateLayouts
 import com.roomdbexportimport.RoomDBExportImport
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
-import me.zhanghai.compose.preference.Preference
+import com.dessalines.thumbkey.ui.components.settings.GemNavigationPreference as Preference
 import me.zhanghai.compose.preference.ProvidePreferenceTheme
 import java.time.LocalDate
 

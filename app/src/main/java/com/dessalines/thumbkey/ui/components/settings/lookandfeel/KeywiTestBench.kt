@@ -1,5 +1,6 @@
 package com.dessalines.thumbkey.ui.components.settings.lookandfeel
 
+import com.dessalines.thumbkey.ui.components.settings.gemSectionModifier
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -21,7 +22,7 @@ fun KeywiThemeTestBench(
 ) {
     var testText by remember { mutableStateOf("") }
 
-    Column(modifier = modifier.fillMaxWidth().padding(horizontal = 14.dp, vertical = 8.dp)) {
+    Column(modifier = modifier.then(gemSectionModifier())) {
         Text("Test out Keywi", style = MaterialTheme.typography.titleMedium)
         Text(
             "Tap below to open the keyboard and try the active theme live.",
