@@ -128,7 +128,7 @@ fun SettingsScreen(
                     )
                     Preference(
                         title = { Text(stringResource(R.string.advanced_input)) },
-                        summary = { Text(stringResource(R.string.advanced_input_description)) },
+                        summary = { Text("Gestures, typing behavior, context, characters and hardware keyboard options") },
                         icon = { Icon(Icons.Outlined.Tune, contentDescription = null) },
                         onClick = { navController.navigate("advancedInput") },
                     )
@@ -152,7 +152,7 @@ fun SettingsScreen(
                     )
                     SettingsDivider()
 
-                    GemSettingsGroupLabel("✦ SETTINGS", "Tune everyday keyboard behavior")
+                    GemSettingsGroupLabel("✦ SETTINGS", "Character layouts, clipboard and saved data")
                     MultiSelectListPreference(
 
                         modifier = gemPreferenceModifier(),
@@ -164,39 +164,23 @@ fun SettingsScreen(
                             updateLayouts(appSettingsViewModel, update)
                         },
                         icon = { Icon(Icons.Outlined.KeyboardAlt, contentDescription = null) },
-                        title = { Text(stringResource(R.string.layouts)) },
+                        title = { Text("Character layouts") },
                         summary = { Text(layoutsState.joinToString(", ") { it.keyboardDefinition.title }) },
                     )
-                    Preference(
-                        title = { Text(stringResource(R.string.look_and_feel)) },
-                        icon = { Icon(Icons.Outlined.Palette, contentDescription = null) },
-                        onClick = { navController.navigate("lookAndFeel") },
-                    )
-                    Preference(
-                        title = { Text(stringResource(R.string.behavior)) },
-                        icon = { Icon(Icons.Outlined.TouchApp, contentDescription = null) },
-                        onClick = { navController.navigate("behavior") },
-                    )
+
+
                     Preference(
                         title = { Text(stringResource(R.string.clipboard_history)) },
                         icon = { Icon(Icons.Outlined.ContentPaste, contentDescription = null) },
                         onClick = { navController.navigate("clipboardSettings") },
                     )
-                    Preference(
-                        title = { Text(stringResource(R.string.modify_keys)) },
-                        icon = { Icon(Icons.Outlined.AppRegistration, contentDescription = null) },
-                        onClick = { navController.navigate("modifyKeys") },
-                    )
+
                     Preference(
                         title = { Text(stringResource(R.string.backup_and_restore)) },
                         icon = { Icon(Icons.Outlined.Restore, contentDescription = null) },
                         onClick = { navController.navigate("backupAndRestore") },
                     )
-                    Preference(
-                        title = { Text(stringResource(R.string.other)) },
-                        icon = { Icon(Icons.Outlined.Build, contentDescription = null) },
-                        onClick = { navController.navigate("otherSettings") },
-                    )
+
                     GemSettingsGroupLabel("⌘ HELP", "Guides, releases and project links")
                     Preference(
                         title = { Text(stringResource(R.string.user_guide)) },

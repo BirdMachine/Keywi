@@ -58,6 +58,16 @@ fun AdvancedInputScreen(navController: NavController) {
         ) {
             ProvidePreferenceTheme {
                 Preference(
+                    title = { Text("Gestures & typing behavior") },
+                    summary = { Text("Swipe distance, sliding, capitalization, drag actions and ghost keys.") },
+                    onClick = { navController.navigate("behavior") },
+                )
+                Preference(
+                    title = { Text("Hardware keyboard compatibility") },
+                    summary = { Text("Choose whether Keywi stays visible while using a physical keyboard.") },
+                    onClick = { navController.navigate("otherSettings") },
+                )
+                Preference(
                     title = { Text(stringResource(R.string.context_engine)) },
                     summary = { Text(stringResource(R.string.context_engine_description)) },
                     icon = {

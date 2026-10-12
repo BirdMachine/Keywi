@@ -13,6 +13,7 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
+import com.dessalines.thumbkey.ui.components.settings.GemNavigationPreference
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.getValue
@@ -55,6 +56,12 @@ fun ThemeManagerScreen(navController: NavController) {
             key(managerRefresh) {
                 ThemeManagerSection(onThemeApplied = { managerRefresh++ })
             }
+
+            GemNavigationPreference(
+                title = { Text("Keyboard tuning") },
+                summary = { Text("Size, position, borders, base palette, animation timing and feedback.") },
+                onClick = { navController.navigate("lookAndFeel") },
+            )
 
             // Keep a real editor next to theme selection so a theme can be auditioned immediately.
             KeywiThemeTestBench()

@@ -52,7 +52,7 @@ fun OtherSettingsScreen(navController: NavController, appSettingsViewModel: AppS
 
     Scaffold(
         snackbarHost = { SnackbarHost(snackbarHostState) },
-        topBar = { SimpleTopAppBar(text = stringResource(R.string.other), navController = navController) },
+        topBar = { SimpleTopAppBar(text = "Hardware keyboard compatibility", navController = navController) },
     ) { padding ->
         Column(
             modifier = Modifier.padding(padding).verticalScroll(scrollState).background(MaterialTheme.colorScheme.surface).imePadding(),

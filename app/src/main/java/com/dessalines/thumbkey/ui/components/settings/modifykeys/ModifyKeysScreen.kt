@@ -83,7 +83,7 @@ fun ModifyKeysScreen(
         snackbarHost = { SnackbarHost(snackbarHostState) },
         topBar = {
             SimpleTopAppBar(
-                text = stringResource(R.string.modify_keys),
+                text = "Raw key YAML",
                 navController = navController,
             )
         },

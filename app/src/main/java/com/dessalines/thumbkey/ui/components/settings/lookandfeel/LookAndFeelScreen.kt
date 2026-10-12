@@ -25,7 +25,6 @@ import androidx.compose.material.icons.outlined.Palette
 import androidx.compose.material.icons.outlined.RoundedCorner
 import androidx.compose.material.icons.outlined.VerticalAlignTop
 import androidx.compose.material.icons.outlined.Vibration
-import androidx.compose.material.icons.outlined.ViewDay
 import androidx.compose.material.icons.outlined.Visibility
 import androidx.compose.material.icons.outlined.WebAssetOff
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -137,7 +136,7 @@ fun LookAndFeelScreen(
     var ignoreBottomPaddingState = (settings?.ignoreBottomPadding ?: DEFAULT_IGNORE_BOTTOM_PADDING).toBool()
     var showToastOnLayoutSwitchState = (settings?.showToastOnLayoutSwitch ?: DEFAULT_SHOW_TOAST_ON_LAYOUT_SWITCH).toBool()
 
-    var backdropEnabledState = (settings?.backdropEnabled ?: DEFAULT_BACKDROP_ENABLED).toBool()
+    val backdropEnabledState = (settings?.backdropEnabled ?: DEFAULT_BACKDROP_ENABLED).toBool()
 
     var disableFullscreenEditorState = (settings?.disableFullscreenEditor ?: DEFAULT_DISABLE_FULLSCREEN_EDITOR).toBool()
 
@@ -179,7 +178,7 @@ fun LookAndFeelScreen(
     Scaffold(
         snackbarHost = { SnackbarHost(snackbarHostState) },
         topBar = {
-            SimpleTopAppBar(text = stringResource(R.string.look_and_feel), navController = navController)
+            SimpleTopAppBar(text = "Keyboard tuning", navController = navController)
         },
         content = { padding ->
             Column(
@@ -204,7 +203,7 @@ fun LookAndFeelScreen(
                             AnnotatedString(resources.getString(it.resId))
                         },
                         title = {
-                            Text(stringResource(R.string.theme))
+                            Text("Display mode")
                         },
                         summary = {
                             Text(stringResource(themeState.resId))
@@ -231,7 +230,7 @@ fun LookAndFeelScreen(
                             AnnotatedString(resources.getString(it.resId))
                         },
                         title = {
-                            Text(stringResource(R.string.theme_color))
+                            Text("Base keyboard palette")
                         },
                         summary = {
                             Text(stringResource(themeColorState.resId))
@@ -337,24 +336,7 @@ fun LookAndFeelScreen(
                             )
                         },
                     )
-                    SwitchPreference(
-                        modifier = gemPreferenceModifier(),
-                        value = backdropEnabledState,
-                        onValueChange = {
-                            backdropEnabledState = it
-                            updateLookAndFeel()
-                        },
-                        title = {
-                            Text(stringResource(R.string.backdrop))
-                        },
-                        icon = {
-                            Icon(
-                                imageVector = Icons.Outlined.ViewDay,
-                                contentDescription = null,
-                            )
-                        },
-                    )
-                    BackdropSettingsSection(onChanged = { updateLookAndFeel() })
+
 
                     SwitchPreference(
 
