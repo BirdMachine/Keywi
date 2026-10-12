@@ -99,6 +99,19 @@ class ThemeAssetPackageTest {
     }
 
     @Test
+    fun migrationPreservesUnsavedCustomEdits() {
+        val old = ThemeEngine.captureCurrent(context, "Custom", CUSTOM_THEME_ID)
+        val file = File(context.filesDir, "themes/custom.json").also { it.parentFile!!.mkdirs(); it.writeText(ThemeEngine.export(old)) }
+        context.getSharedPreferences("keywi_theme_engine", 0).edit().putBoolean("theme_engine_migrated", true).putString("active_theme_id", CUSTOM_THEME_ID).apply()
+        val editedKeys = old.keys.copy(shadowElevation = 9f)
+        KeyThemePreferences.save(context, editedKeys)
+        ThemeEngine.ensureMigrated(context)
+        assertEquals(editedKeys, ThemeEngine.loadCustom(context).keys)
+        assertEquals(editedKeys, KeyThemePreferences.load(context))
+        assertEquals(ThemeEngine.export(old), file.readText())
+    }
+
+    @Test
     fun brokenPackagesCannotReplaceCustomOrWriteOutsideThemeFolders() {
         ThemeEngine.ensureMigrated(context)
         val before = ThemeEngine.export(ThemeEngine.loadCustom(context))

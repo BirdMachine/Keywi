@@ -47,6 +47,8 @@ object ThemeEngine {
             prefs.edit().putString(ACTIVE_THEME, CUSTOM_THEME_ID).putBoolean(MIGRATED, true).apply()
         }
         if (!prefs.getBoolean("owned_assets_migrated", false)) {
+            val activeId = prefs.getString(ACTIVE_THEME, CUSTOM_THEME_ID) ?: CUSTOM_THEME_ID
+            val liveCustom = if (activeId == CUSTOM_THEME_ID) captureCurrent(context, "Custom", CUSTOM_THEME_ID) else null
             ensureThemesDir(context)
             themeDir(context).listFiles().orEmpty().filter { it.isFile && it.extension == "json" }.forEach { file ->
                 decode(file.readText()).getOrNull()?.let { old ->
@@ -54,6 +56,8 @@ object ThemeEngine {
                     if (!manifest(context, id).exists()) store(context, old.copy(font = old.font ?: FontPreferences.snapshot(context)), id, allowMissing = true)
                 }
             }
+            // Custom's live preferences may contain edits newer than its last saved manifest.
+            liveCustom?.let { store(context, it, CUSTOM_THEME_ID, allowMissing = true) }
             // Preserve the old flat JSON files as migration backups.
             prefs.edit().putBoolean("owned_assets_migrated", true).apply()
             val id = prefs.getString(ACTIVE_THEME, CUSTOM_THEME_ID) ?: CUSTOM_THEME_ID
