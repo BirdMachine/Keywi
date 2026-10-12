@@ -61,14 +61,15 @@ fun GemCutGeometryPreview(
     BoxWithConstraints(modifier.semantics {
         contentDescription = "${if (facet == FacetId.ME_LIKE) "ME-Like" else "HK-Like"} keyboard geometry preview"
     }) {
-        val unit = maxWidth / columns
+        val availableWidth = maxWidth
+        val unit = availableWidth / columns
         val rowHeight = if (facet == FacetId.ME_LIKE) unit else if (compact) 12.dp else 44.dp
         Box {
         if (!compact && appearance) BackdropVisualLayer(backdrop, Modifier.matchParentSize())
         Column(verticalArrangement = Arrangement.spacedBy(if (facet == FacetId.ME_LIKE) 0.dp else gap)) {
             rows.forEachIndexed { rowIndex, row ->
                 // HK uses per-row weights, while ME uses fixed-size cells across all rows.
-                val rowUnit = if (facet == FacetId.HK_LIKE) maxWidth / row.sumOf { it.width.toDouble() }.toFloat() else unit
+                val rowUnit = if (facet == FacetId.HK_LIKE) availableWidth / row.sumOf { it.width.toDouble() }.toFloat() else unit
                 Row {
                     row.forEachIndexed { index, cell ->
                         val shape = if (compact) CutCornerShape(3.dp) else RoundedCornerShape(6.dp)
@@ -76,10 +77,10 @@ fun GemCutGeometryPreview(
                             Modifier.background(MaterialTheme.colorScheme.surfaceVariant)
                                 .border(1.dp, MaterialTheme.colorScheme.outline.copy(alpha = .65f), shape)
                         } else {
-                            var visual = Modifier
+                            var visual: Modifier = Modifier
                             visual = when (theme.surfaceStyle) {
                                 KeySurfaceStyle.GRADIENT -> visual.keyboardGradientSlice(
-                                    theme.surfaceGradient, with(density) { maxWidth.toPx() }, with(density) { rowHeight.toPx() } * rows.size,
+                                    theme.surfaceGradient, with(density) { availableWidth.toPx() }, with(density) { rowHeight.toPx() } * rows.size,
                                     row.take(index).sumOf { it.width.toDouble() }.toFloat() * with(density) { unit.toPx() },
                                     rowIndex * with(density) { rowHeight.toPx() },
                                 )
