@@ -24,6 +24,40 @@ data class MachineCutLayout(
 )
 
 object MachineCutLayouts {
+    /** The touch topology consumed by both the live renderer and settings thumbnails. */
+    val touchMain = touchLayout("touch-main", listOf(
+        "1234567890".map { it.toString() },
+        "qwertyuiop".map { it.toString() },
+        "asdfghjkl".map { it.toString() },
+        listOf("⇧") + "zxcvbnm".map { it.toString() } + listOf("⌫"),
+        listOf("?123", ",", "☺", "Space", ".", "↵", "⌘"),
+    ))
+    val touchSymbols = touchLayout("touch-symbols", listOf(
+        "1234567890".map { it.toString() },
+        listOf("@", "#", "$", "%", "&", "-", "+", "(", ")", "/"),
+        listOf("*", "\"", "'", ":", ";", "!", "?", "=", "_"),
+        listOf("ABC", "[", "]", "{", "}", "<", ">", "⌫"),
+        listOf("ABC", ",", "☺", "Space", ".", "↵", "⌘"),
+    ))
+    val touchAdvanced = touchLayout("touch-advanced", listOf(
+        (1..12).map { "F$it" },
+        listOf("Esc", "Tab", "Ctrl", "Alt", "Win", "Del", "Home", "End"),
+        listOf("PgUp", "PgDn", "Ins", "↑", "←", "↓", "→", "⌫"),
+        listOf("⇧") + "qwertyuiop".map { it.toString() },
+        listOf("ABC", "☺", "Space", "↵", "⌘"),
+    ))
+
+    private fun touchLayout(id: String, rows: List<List<String>>) = MachineCutLayout(
+        LayoutId(id),
+        rows.map { row -> row.map { label ->
+            MachineCutCell(label, width = when (label) {
+                "Space" -> 4.4f
+                "⇧", "⌫", "↵", "⌘", "?123", "ABC" -> 1.5f
+                else -> 1f
+            })
+        } },
+    )
+
     val qwertySkeleton = MachineCutLayout(
         id = LayoutId("machine-cut-qwerty"),
         rows = listOf(

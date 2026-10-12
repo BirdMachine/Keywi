@@ -3,32 +3,45 @@ package com.dessalines.thumbkey.ui.components.keyboard
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.padding
+import androidx.compose.material3.FilterChip
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
+import androidx.compose.foundation.layout.Row
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import com.dessalines.thumbkey.utils.KeyboardDefinition
 
-/** Developer/settings preview used to iterate on facet geometry before the
- * live IME switches away from its safe ME-Like default. */
+/** Activity-safe preview. ME legends come from the selected/modified character layout;
+ * HK reuses its live renderer, including Shift, symbols and desktop controls. */
 @Composable
 fun GemCutPreviewScreen(
-    facet: FacetId = FacetId.HK_LIKE,
+    facet: FacetId,
+    definition: KeyboardDefinition,
     modifier: Modifier = Modifier,
 ) {
-    val spec = KeywiFacets.all.first { it.id == facet }
-    Column(
-        modifier = modifier.fillMaxWidth().padding(12.dp),
-        verticalArrangement = Arrangement.spacedBy(8.dp),
-    ) {
-        Text(spec.displayName, style = MaterialTheme.typography.titleMedium)
-        Text(spec.description, style = MaterialTheme.typography.bodySmall)
-        FacetPreview(facet = facet, modifier = Modifier.fillMaxWidth()) { meModifier ->
-            Column(meModifier.padding(12.dp)) {
-                Text("ME-Like")
-                Text("Live ME-Like renderer remains unchanged while Gem Cut is introduced.", style = MaterialTheme.typography.bodySmall)
+    Column(modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(6.dp)) {
+        if (facet == FacetId.ME_LIKE) {
+            var layer by remember { mutableStateOf(0) }
+            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                listOf("ABC", "⇧", "123").forEachIndexed { index, label ->
+                    FilterChip(selected = layer == index, onClick = { layer = index }, label = { Text(label) })
+                }
             }
+            val keyboard = when (layer) {
+                1 -> definition.modes.shifted
+                2 -> definition.modes.numeric
+                else -> definition.modes.main
+            }
+            GemCutGeometryPreview(facet, keyboard, Modifier.fillMaxWidth())
+            Text(definition.title, style = MaterialTheme.typography.labelSmall)
+        } else {
+            MachineCutSkeleton()
+            Text("Try ⇧, ?123 or ⌘ to explore the HK layers.", style = MaterialTheme.typography.bodySmall)
         }
     }
 }

@@ -35,7 +35,7 @@ import com.dessalines.thumbkey.IMEService
 @Composable
 fun MachineCutSkeleton(
     modifier: Modifier = Modifier,
-    layout: MachineCutLayout = MachineCutLayouts.qwertySkeleton,
+    layout: MachineCutLayout = MachineCutLayouts.touchMain,
 ) {
     val ime = LocalContext.current as? IMEService
     var advanced by remember { mutableStateOf(false) }
@@ -45,28 +45,11 @@ fun MachineCutSkeleton(
     var alt by remember { mutableStateOf(false) }
     var momentaryAdvanced by remember { mutableStateOf(false) }
 
-    val basic = listOf(
-        "1234567890".map { it.toString() },
-        "qwertyuiop".map { it.toString() },
-        "asdfghjkl".map { it.toString() },
-        listOf("⇧") + "zxcvbnm".map { it.toString() } + listOf("⌫"),
-        listOf("?123", ",", "☺", "Space", ".", "↵", "⌘"),
-    )
-    val symbolRows = listOf(
-        "1234567890".map { it.toString() },
-        listOf("@", "#", "$", "%", "&", "-", "+", "(", ")", "/"),
-        listOf("*", "\"", "'", ":", ";", "!", "?", "=", "_"),
-        listOf("ABC", "[", "]", "{", "}", "<", ">", "⌫"),
-        listOf("ABC", ",", "☺", "Space", ".", "↵", "⌘"),
-    )
-    val advancedRows = listOf(
-        (1..12).map { "F$it" },
-        listOf("Esc", "Tab", "Ctrl", "Alt", "Win", "Del", "Home", "End"),
-        listOf("PgUp", "PgDn", "Ins", "↑", "←", "↓", "→", "⌫"),
-        listOf("⇧") + "qwertyuiop".map { it.toString() },
-        listOf("ABC", "☺", "Space", "↵", "⌘"),
-    )
-    val rows = if (advanced || momentaryAdvanced) advancedRows else if (symbols) symbolRows else basic
+    val rows = when {
+        advanced || momentaryAdvanced -> MachineCutLayouts.touchAdvanced.rows
+        symbols -> MachineCutLayouts.touchSymbols.rows
+        else -> layout.rows
+    }
 
     fun keyCode(code: Int) {
         val connection = ime?.currentInputConnection ?: return
@@ -126,12 +109,9 @@ fun MachineCutSkeleton(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.spacedBy(3.dp),
             ) {
-                row.forEach { label ->
-                    val width = when (label) {
-                        "Space" -> 4.4f
-                        "⇧", "⌫", "↵", "⌘", "?123", "ABC" -> 1.5f
-                        else -> 1f
-                    }
+                row.forEach { cell ->
+                    val label = cell.label
+                    val width = cell.width
                     HkKey(if (shifted && label.length == 1 && label[0].isLetter()) label.uppercase() else label, width, index == rows.lastIndex, { press(label) }) {
                         if (label == "⌘") momentaryAdvanced = !momentaryAdvanced
                     }
