@@ -115,6 +115,12 @@ fun SettingsScreen(
                         onClick = { navController.navigate("gemCuts") },
                     )
                     Preference(
+                        title = { Text("Themes & appearance") },
+                        summary = { Text("Advanced theme editor: gradients, GIFs, images, keys, toolbar, fonts and saved themes") },
+                        icon = { Icon(Icons.Outlined.AutoAwesome, contentDescription = null) },
+                        onClick = { navController.navigate("advancedLookAndFeel") },
+                    )
+                    Preference(
                         title = { Text("Board management") },
                         summary = { Text("Custom rooms, A/B sides, key assignments, and room options") },
                         icon = { Icon(Icons.Outlined.DashboardCustomize, contentDescription = null) },
@@ -131,12 +137,6 @@ fun SettingsScreen(
                         summary = { Text("Gestures, typing behavior, context, characters and hardware keyboard options") },
                         icon = { Icon(Icons.Outlined.Tune, contentDescription = null) },
                         onClick = { navController.navigate("advancedInput") },
-                    )
-                    Preference(
-                        title = { Text("Themes & appearance") },
-                        summary = { Text("Advanced theme editor: gradients, GIFs, images, keys, toolbar, fonts and saved themes") },
-                        icon = { Icon(Icons.Outlined.AutoAwesome, contentDescription = null) },
-                        onClick = { navController.navigate("advancedLookAndFeel") },
                     )
                     Preference(
                         title = { Text("Power options") },

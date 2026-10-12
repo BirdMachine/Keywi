@@ -181,6 +181,11 @@ private fun SuggestionLozengeAppearanceSection() {
         when (state.surfaceStyle) { SuggestionLozengeSurfaceStyle.GRADIENT -> ManagedGradientEditor("Lozenge background gradient", state.surfaceGradient) { persist(state.copy(surfaceGradient = it)) }; SuggestionLozengeSurfaceStyle.SOLID -> ColorEditor("Lozenge color", state.surfaceColor) { persist(state.copy(surfaceColor = it)) }; SuggestionLozengeSurfaceStyle.NONE -> Text("Transparent lozenge faces.") }
         Text("Lozenge border", style = MaterialTheme.typography.titleSmall); ChipRow(SuggestionLozengeBorderStyle.entries, state.borderStyle, { it.name.lowercase().replaceFirstChar(Char::uppercase) }) { persist(state.copy(borderStyle = it)) }; Text("Border width: ${String.format("%.1f", state.borderWidth)} dp"); Slider(state.borderWidth, { persist(state.copy(borderWidth = it)) }, valueRange = 0f..4f)
         when (state.borderStyle) { SuggestionLozengeBorderStyle.GRADIENT -> ManagedGradientEditor("Lozenge border gradient", state.borderGradient) { persist(state.copy(borderGradient = it)) }; SuggestionLozengeBorderStyle.SOLID -> ColorEditor("Lozenge border color", state.borderColor) { persist(state.copy(borderColor = it)) }; SuggestionLozengeBorderStyle.NONE -> Text("No lozenge border.") }
+        Text("Current / unfinished word chip", style = MaterialTheme.typography.titleSmall)
+        Text("The word you are still typing. Background alpha controls transparency; highlight colors its text and outline.", style = MaterialTheme.typography.bodySmall)
+        ColorEditor("Current-word background", state.currentWordBackgroundColor) { persist(state.copy(currentWordBackgroundColor = it)) }
+        ColorEditor("Current-word highlight", state.currentWordHighlightColor ?: AdvancedKeyWordPreferences.newWordHighlightColor(context)) { persist(state.copy(currentWordHighlightColor = it)) }
+
     }
 }
 
@@ -199,7 +204,7 @@ private fun KeyAppearanceSection() {
 
 @Composable
 private fun FontAndSuggestionSection() {
-    val context = LocalContext.current; var fontName by remember { mutableStateOf(FontPreferences.displayName(context)) }; var motion by remember { mutableStateOf(SuggestionMotionPreferences.load(context)) }; var newWordHighlightColor by remember { mutableStateOf(AdvancedKeyWordPreferences.newWordHighlightColor(context)) }
+    val context = LocalContext.current; var fontName by remember { mutableStateOf(FontPreferences.displayName(context)) }; var motion by remember { mutableStateOf(SuggestionMotionPreferences.load(context)) }
     val scope = rememberCoroutineScope()
     var fontError by remember { mutableStateOf<String?>(null) }
     val fontPicker = rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()) { uri ->
@@ -212,7 +217,7 @@ private fun FontAndSuggestionSection() {
     Column(gemSectionModifier(), verticalArrangement = Arrangement.spacedBy(6.dp)) {
         fontError?.let { Text(it, color = MaterialTheme.colorScheme.error) }
         Text("Typography", style = MaterialTheme.typography.titleSmall); Text(fontName); Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) { Button(onClick = { fontPicker.launch(arrayOf("font/*", "application/x-font-ttf", "application/x-font-opentype", "application/octet-stream")) }) { Text("Import font") }; Button(onClick = { FontPreferences.clear(context); fontName = FontPreferences.displayName(context) }) { Text("System default") } }
-        Text("Suggestions", style = MaterialTheme.typography.titleSmall); Text("New Word Highlight color", style = MaterialTheme.typography.titleSmall); Text("Used for the unfinished/current-word chip. Matrix green is the default.", style = MaterialTheme.typography.bodySmall); ColorEditor("New Word Highlight", newWordHighlightColor) { newWordHighlightColor = it; AdvancedKeyWordPreferences.setNewWordHighlightColor(context, it) }; Text("Motion style", style = MaterialTheme.typography.titleSmall); ChipRow(SuggestionMotionStyle.entries, motion, { it.name.lowercase().replaceFirstChar(Char::uppercase) }) { motion = it; SuggestionMotionPreferences.save(context, it) }
+        Text("Suggestions", style = MaterialTheme.typography.titleSmall); Text("Motion style", style = MaterialTheme.typography.titleSmall); ChipRow(SuggestionMotionStyle.entries, motion, { it.name.lowercase().replaceFirstChar(Char::uppercase) }) { motion = it; SuggestionMotionPreferences.save(context, it) }
     }
 }
 

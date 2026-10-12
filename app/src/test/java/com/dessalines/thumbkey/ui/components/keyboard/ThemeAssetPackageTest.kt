@@ -2,6 +2,7 @@ package com.dessalines.thumbkey.ui.components.keyboard
 
 import android.app.Application
 import android.net.Uri
+import androidx.compose.ui.graphics.Color
 import androidx.test.core.app.ApplicationProvider
 import com.dessalines.thumbkey.R
 import org.json.JSONObject
@@ -149,4 +150,35 @@ class ThemeAssetPackageTest {
         assertNull(imported.font)
         assertEquals("System default", FontPreferences.displayName(context))
     }
+
+    @Test
+    fun currentWordColorsTravelWithThemePackages() {
+        ThemeEngine.ensureMigrated(context)
+        val background = Color(0x66F8BBDD)
+        val highlight = Color(0xFF7D3FB0)
+        val original = SuggestionLozengeThemePreferences.load(context)
+        SuggestionLozengeThemePreferences.save(context, original.copy(currentWordBackgroundColor = background, currentWordHighlightColor = highlight))
+        ThemeEngine.saveCustom(context, ThemeEngine.captureCurrent(context, "Custom", CUSTOM_THEME_ID))
+        val saved = ThemeEngine.saveCustomAs(context, "Pink chip")
+        val bytes = packageBytes(saved)
+        SuggestionLozengeThemePreferences.save(context, original.copy(currentWordBackgroundColor = Color.Transparent, currentWordHighlightColor = Color.Red))
+        ThemeEngine.importPackage(context, ByteArrayInputStream(bytes)).getOrThrow()
+        val restored = SuggestionLozengeThemePreferences.load(context)
+        assertEquals(background, restored.currentWordBackgroundColor)
+        assertEquals(highlight, restored.currentWordHighlightColor)
+        assertEquals(original.surfaceColor, restored.surfaceColor)
+    }
+
+    @Test
+    fun legacyThemesKeepExistingHighlightAndOriginalCurrentWordBackground() {
+        val highlight = Color(0xFF9D79D8)
+        AdvancedKeyWordPreferences.setNewWordHighlightColor(context, highlight)
+        val legacy = JSONObject(ThemeEngine.export(ThemeEngine.builtInThemes().first())).put("schemaVersion", 2)
+        legacy.getJSONObject("suggestionLozenges").apply { remove("currentWordBackgroundColor"); remove("currentWordHighlightColor") }
+        ThemeEngine.importIntoCustom(context, legacy.toString()).getOrThrow()
+        val restored = SuggestionLozengeThemePreferences.load(context)
+        assertEquals(Color(0xFF031005), restored.currentWordBackgroundColor)
+        assertEquals(highlight, restored.currentWordHighlightColor)
+    }
+
 }

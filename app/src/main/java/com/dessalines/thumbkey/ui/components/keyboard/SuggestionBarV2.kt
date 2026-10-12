@@ -256,7 +256,7 @@ private fun SuggestionLozengeSlot(
                     shape = shape,
                     color =
                         if (isCurrentWord) {
-                            Color(0xFF031005)
+                            theme.currentWordBackgroundColor
                         } else {
                             when (theme.surfaceStyle) {
                                 SuggestionLozengeSurfaceStyle.SOLID -> {
@@ -274,7 +274,7 @@ private fun SuggestionLozengeSlot(
                     shadowElevation = if (isBest) 2.dp else 1.dp,
                     border =
                         if (isCurrentWord) {
-                            BorderStroke(1.dp, newWordHighlightColor)
+                            BorderStroke(1.dp, theme.currentWordHighlightColor ?: newWordHighlightColor)
                         } else {
                             when (theme.borderStyle) {
                                 SuggestionLozengeBorderStyle.SOLID -> {
@@ -322,7 +322,7 @@ private fun SuggestionLozengeSlot(
                         overflow = TextOverflow.Ellipsis,
                         color =
                             if (isCurrentWord) {
-                                newWordHighlightColor
+                                theme.currentWordHighlightColor ?: newWordHighlightColor
                             } else {
                                 MaterialTheme.colorScheme.onSurface.copy(
                                     alpha = if (isBest) 1f else 0.88f,
