@@ -165,7 +165,7 @@ private fun NoticeOverlay(title: String, eyebrow: String, icon: ImageVector, mar
                 }
             }
             Column(Modifier.weight(1f).verticalScroll(rememberScrollState()).padding(20.dp)) {
-                MarkdownText(markdown, color = scheme.onSurface, linkColor = scheme.primary)
+                MarkdownText(markdown = markdown, style = MaterialTheme.typography.bodyLarge.copy(color = scheme.onSurface), linkColor = scheme.primary)
             }
             Row(Modifier.fillMaxWidth().padding(14.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 TextButton(onClick = { openLink("$KEYWI_GITHUB_URL/releases", context) }) { Text("Keywi releases") }
