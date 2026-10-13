@@ -22,7 +22,9 @@ import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.horizontalScroll
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -341,8 +343,9 @@ private fun SuggestionLozengeSlot(
 }
 
 @Composable
-fun SuggestionBarV2(ime: IMEService, onKaomoji: () -> Unit = {}, onFancyText: () -> Unit = {}) {
+fun SuggestionBarV2(ime: IMEService, onKaomoji: () -> Unit = {}, onFancyText: (String) -> Unit = {}) {
     var enabled by remember { mutableStateOf(SuggestionPreferences.enabled(ime)) }
+    var toolsExpanded by remember { mutableStateOf(false) }
     var currentToken by remember { mutableStateOf("") }
     var prefix by remember { mutableStateOf("") }
     var suggestions by remember { mutableStateOf(emptyList<String>()) }
@@ -439,6 +442,7 @@ fun SuggestionBarV2(ime: IMEService, onKaomoji: () -> Unit = {}, onFancyText: ()
         ((if (currentWordVisible) listOf(currentToken) else emptyList()) + orderedSuggestions)
             .take(MAX_VISIBLE_SUGGESTIONS)
 
+    Column(modifier = Modifier.fillMaxWidth()) {
     Surface(
         color = MaterialTheme.colorScheme.surface.copy(alpha = if (enabled) 0.30f else 0.20f),
         modifier = Modifier.fillMaxWidth().height(BAR_HEIGHT_DP.dp),
@@ -604,8 +608,8 @@ fun SuggestionBarV2(ime: IMEService, onKaomoji: () -> Unit = {}, onFancyText: ()
 
 
             // Stationary themed controls frame the horizontally scrolling suggestion lane.
-            Box(Modifier.width(7.dp).height(30.dp).background(Brush.horizontalGradient(listOf(Color.Transparent, MaterialTheme.colorScheme.surface.copy(alpha = 0.8f)))))
-            Surface(onClick = onFancyText, shape = RoundedCornerShape(14.dp), color = MaterialTheme.colorScheme.surface.copy(alpha = 0.78f)) {
+            Box(Modifier.width(7.dp).height(30.dp).background(Brush.horizontalGradient(listOf(Color.Transparent, MaterialTheme.colorScheme.primary.copy(alpha = 0.12f), Color.Transparent))))
+            Surface(onClick = { toolsExpanded = !toolsExpanded }, shape = RoundedCornerShape(14.dp), color = MaterialTheme.colorScheme.surface.copy(alpha = 0.78f)) {
                 Text("𝕱", Modifier.padding(horizontal = 7.dp, vertical = 6.dp))
             }
             Surface(onClick = onKaomoji, shape = RoundedCornerShape(14.dp), color = MaterialTheme.colorScheme.surface.copy(alpha = 0.78f), modifier = Modifier.padding(start = 3.dp)) {
@@ -613,5 +617,21 @@ fun SuggestionBarV2(ime: IMEService, onKaomoji: () -> Unit = {}, onFancyText: ()
             }
 
         }
+    }
+    if (toolsExpanded) {
+        Row(
+            modifier = Modifier.fillMaxWidth().height(42.dp).background(MaterialTheme.colorScheme.surface.copy(alpha = 0.92f)).horizontalScroll(rememberScrollState()).padding(horizontal = 8.dp),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            listOf("𝕱𝖗𝖆𝖐𝖙𝖚𝖗" to "fraktur", "𝗕𝗼𝗹𝗱" to "bold", "𝘐𝘵𝘢𝘭𝘪𝘤" to "italic", "ⓒⓘⓡⓒⓛⓔ" to "circled").forEach { (label, style) ->
+                Surface(
+                    onClick = { onFancyText(style); toolsExpanded = false },
+                    shape = RoundedCornerShape(14.dp),
+                    color = MaterialTheme.colorScheme.primary.copy(alpha = 0.18f),
+                    modifier = Modifier.padding(end = 6.dp),
+                ) { Text(label, maxLines = 1, modifier = Modifier.padding(horizontal = 8.dp, vertical = 6.dp)) }
+            }
+        }
+    }
     }
 }
