@@ -91,7 +91,7 @@ class ComposeKeyboardView(
                 MaterialTheme(colorScheme = keyboardColorScheme) {
                     Column(modifier = Modifier.fillMaxWidth()) {
                         if (keywiEnabled) {
-                            Box(Modifier.fillMaxWidth().height(42.dp).clipToBounds().zIndex(1f)) {
+                            Box(Modifier.fillMaxWidth().height(84.dp).zIndex(1f)) {
                                 if (toolbarBackdrop.mode != BackdropMode.NONE) BackdropVisualLayer(toolbarBackdrop, Modifier.fillMaxWidth().height(42.dp))
                                 SuggestionBarV2(
                                     ctx,
@@ -101,16 +101,20 @@ class ComposeKeyboardView(
                                             activePalette = null
                                         } else activePalette = InputPalette.KAOMOJI
                                     },
-                                    onFancyText = {
+                                    onFancyText = { style ->
                                         val connection = ctx.activeInputConnectionOrNull()
                                         val selected = connection?.getSelectedText(0)?.toString().orEmpty()
                                         if (selected.isNotEmpty()) {
                                             val fancy = buildString {
                                                 selected.forEach { char ->
-                                                    val code = when (char) {
-                                                        in 'A'..'Z' -> 0x1D56C + (char - 'A')
-                                                        in 'a'..'z' -> 0x1D586 + (char - 'a')
-                                                        else -> char.code
+                                                    val upper = char in 'A'..'Z'
+                                                    val lower = char in 'a'..'z'
+                                                    val index = if (upper) char - 'A' else char - 'a'
+                                                    val code = when (style) {
+                                                        "bold" -> if (upper) 0x1D5D4 + index else if (lower) 0x1D5EE + index else char.code
+                                                        "italic" -> if (upper) 0x1D608 + index else if (lower) 0x1D622 + index else char.code
+                                                        "circled" -> if (upper) 0x24B6 + index else if (lower) 0x24D0 + index else char.code
+                                                        else -> if (upper) 0x1D56C + index else if (lower) 0x1D586 + index else char.code
                                                     }
                                                     appendCodePoint(code)
                                                 }
