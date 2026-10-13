@@ -28,6 +28,9 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.background
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -338,7 +341,7 @@ private fun SuggestionLozengeSlot(
 }
 
 @Composable
-fun SuggestionBarV2(ime: IMEService) {
+fun SuggestionBarV2(ime: IMEService, onKaomoji: () -> Unit = {}, onFancyText: () -> Unit = {}) {
     var enabled by remember { mutableStateOf(SuggestionPreferences.enabled(ime)) }
     var currentToken by remember { mutableStateOf("") }
     var prefix by remember { mutableStateOf("") }
@@ -444,6 +447,79 @@ fun SuggestionBarV2(ime: IMEService) {
             modifier = Modifier.fillMaxSize().padding(horizontal = 6.dp, vertical = 4.dp),
             verticalAlignment = Alignment.CenterVertically,
         ) {
+            val toggleShape = RoundedCornerShape(18.dp)
+            val toggleModifier =
+                Modifier
+                    .padding(start = 5.dp)
+                    .clip(toggleShape)
+                    .then(
+                        when (lozengeTheme.surfaceStyle) {
+                            SuggestionLozengeSurfaceStyle.GRADIENT -> {
+                                Modifier.keyboardGradientBackground(lozengeTheme.surfaceGradient)
+                            }
+
+                            SuggestionLozengeSurfaceStyle.SOLID,
+                            SuggestionLozengeSurfaceStyle.NONE,
+                            -> {
+                                Modifier
+                            }
+                        },
+                    ).then(
+                        when (lozengeTheme.borderStyle) {
+                            SuggestionLozengeBorderStyle.GRADIENT -> {
+                                Modifier.keyboardGradientBorder(
+                                    backdrop = lozengeTheme.borderGradient,
+                                    width = lozengeTheme.borderWidth.dp,
+                                    radius = 18.dp,
+                                )
+                            }
+
+                            SuggestionLozengeBorderStyle.SOLID,
+                            SuggestionLozengeBorderStyle.NONE,
+                            -> {
+                                Modifier
+                            }
+                        },
+                    )
+            Surface(
+                shape = toggleShape,
+                color =
+                    when (lozengeTheme.surfaceStyle) {
+                        SuggestionLozengeSurfaceStyle.SOLID -> {
+                            lozengeTheme.surfaceColor
+                        }
+
+                        SuggestionLozengeSurfaceStyle.GRADIENT,
+                        SuggestionLozengeSurfaceStyle.NONE,
+                        -> {
+                            Color.Transparent
+                        }
+                    },
+                tonalElevation = if (enabled) 2.dp else 0.dp,
+                shadowElevation = 1.dp,
+                border =
+                    when (lozengeTheme.borderStyle) {
+                        SuggestionLozengeBorderStyle.SOLID -> {
+                            BorderStroke(lozengeTheme.borderWidth.dp, lozengeTheme.borderColor)
+                        }
+
+                        SuggestionLozengeBorderStyle.GRADIENT,
+                        SuggestionLozengeBorderStyle.NONE,
+                        -> {
+                            null
+                        }
+                    },
+                modifier =
+                    toggleModifier.clickable {
+                        enabled = !enabled
+                        SuggestionPreferences.setEnabled(ime, enabled)
+                    },
+            ) {
+                Text(
+                    text = if (enabled) "◈" else "◇",
+                    modifier = Modifier.padding(horizontal = 10.dp, vertical = 6.dp),
+                )
+            }
             Box(
                 modifier = Modifier.weight(1f).fillMaxSize(),
                 contentAlignment = Alignment.Center,
@@ -526,79 +602,16 @@ fun SuggestionBarV2(ime: IMEService) {
                 }
             }
 
-            val toggleShape = RoundedCornerShape(18.dp)
-            val toggleModifier =
-                Modifier
-                    .padding(start = 5.dp)
-                    .clip(toggleShape)
-                    .then(
-                        when (lozengeTheme.surfaceStyle) {
-                            SuggestionLozengeSurfaceStyle.GRADIENT -> {
-                                Modifier.keyboardGradientBackground(lozengeTheme.surfaceGradient)
-                            }
 
-                            SuggestionLozengeSurfaceStyle.SOLID,
-                            SuggestionLozengeSurfaceStyle.NONE,
-                            -> {
-                                Modifier
-                            }
-                        },
-                    ).then(
-                        when (lozengeTheme.borderStyle) {
-                            SuggestionLozengeBorderStyle.GRADIENT -> {
-                                Modifier.keyboardGradientBorder(
-                                    backdrop = lozengeTheme.borderGradient,
-                                    width = lozengeTheme.borderWidth.dp,
-                                    radius = 18.dp,
-                                )
-                            }
-
-                            SuggestionLozengeBorderStyle.SOLID,
-                            SuggestionLozengeBorderStyle.NONE,
-                            -> {
-                                Modifier
-                            }
-                        },
-                    )
-            Surface(
-                shape = toggleShape,
-                color =
-                    when (lozengeTheme.surfaceStyle) {
-                        SuggestionLozengeSurfaceStyle.SOLID -> {
-                            lozengeTheme.surfaceColor
-                        }
-
-                        SuggestionLozengeSurfaceStyle.GRADIENT,
-                        SuggestionLozengeSurfaceStyle.NONE,
-                        -> {
-                            Color.Transparent
-                        }
-                    },
-                tonalElevation = if (enabled) 2.dp else 0.dp,
-                shadowElevation = 1.dp,
-                border =
-                    when (lozengeTheme.borderStyle) {
-                        SuggestionLozengeBorderStyle.SOLID -> {
-                            BorderStroke(lozengeTheme.borderWidth.dp, lozengeTheme.borderColor)
-                        }
-
-                        SuggestionLozengeBorderStyle.GRADIENT,
-                        SuggestionLozengeBorderStyle.NONE,
-                        -> {
-                            null
-                        }
-                    },
-                modifier =
-                    toggleModifier.clickable {
-                        enabled = !enabled
-                        SuggestionPreferences.setEnabled(ime, enabled)
-                    },
-            ) {
-                Text(
-                    text = if (enabled) "✨" else "○",
-                    modifier = Modifier.padding(horizontal = 10.dp, vertical = 6.dp),
-                )
+            // Stationary themed controls frame the horizontally scrolling suggestion lane.
+            Box(Modifier.width(7.dp).height(30.dp).background(Brush.horizontalGradient(listOf(Color.Transparent, MaterialTheme.colorScheme.surface.copy(alpha = 0.8f)))))
+            Surface(onClick = onFancyText, shape = RoundedCornerShape(14.dp), color = MaterialTheme.colorScheme.surface.copy(alpha = 0.78f)) {
+                Text("𝕱", Modifier.padding(horizontal = 7.dp, vertical = 6.dp))
             }
+            Surface(onClick = onKaomoji, shape = RoundedCornerShape(14.dp), color = MaterialTheme.colorScheme.surface.copy(alpha = 0.78f), modifier = Modifier.padding(start = 3.dp)) {
+                Text("(｡•̀ᴗ-)✧", maxLines = 1, modifier = Modifier.padding(horizontal = 5.dp, vertical = 6.dp))
+            }
+
         }
     }
 }
