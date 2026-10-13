@@ -608,11 +608,26 @@ fun SuggestionBarV2(ime: IMEService, onKaomoji: () -> Unit = {}, onFancyText: (S
 
 
             // Stationary themed controls frame the horizontally scrolling suggestion lane.
-            Box(Modifier.width(7.dp).height(30.dp).background(Brush.horizontalGradient(listOf(Color.Transparent, MaterialTheme.colorScheme.primary.copy(alpha = 0.12f), Color.Transparent))))
-            Surface(onClick = { toolsExpanded = !toolsExpanded }, shape = RoundedCornerShape(14.dp), color = MaterialTheme.colorScheme.surface.copy(alpha = 0.78f)) {
+            Box(
+                Modifier.width(7.dp).height(30.dp).background(
+                    Brush.horizontalGradient(
+                        listOf(Color.Transparent, MaterialTheme.colorScheme.primary.copy(alpha = 0.12f), Color.Transparent),
+                    ),
+                ),
+            )
+            Surface(
+                onClick = { toolsExpanded = !toolsExpanded },
+                shape = RoundedCornerShape(14.dp),
+                color = MaterialTheme.colorScheme.surface.copy(alpha = 0.78f),
+            ) {
                 Text("𝕱", Modifier.padding(horizontal = 7.dp, vertical = 6.dp))
             }
-            Surface(onClick = onKaomoji, shape = RoundedCornerShape(14.dp), color = MaterialTheme.colorScheme.surface.copy(alpha = 0.78f), modifier = Modifier.padding(start = 3.dp)) {
+            Surface(
+                onClick = onKaomoji,
+                shape = RoundedCornerShape(14.dp),
+                color = MaterialTheme.colorScheme.surface.copy(alpha = 0.78f),
+                modifier = Modifier.padding(start = 3.dp),
+            ) {
                 Text("(｡•̀ᴗ-)✧", maxLines = 1, modifier = Modifier.padding(horizontal = 5.dp, vertical = 6.dp))
             }
 
@@ -620,16 +635,28 @@ fun SuggestionBarV2(ime: IMEService, onKaomoji: () -> Unit = {}, onFancyText: (S
     }
     if (toolsExpanded) {
         Row(
-            modifier = Modifier.fillMaxWidth().height(42.dp).background(MaterialTheme.colorScheme.surface.copy(alpha = 0.92f)).horizontalScroll(rememberScrollState()).padding(horizontal = 8.dp),
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(42.dp)
+                .background(MaterialTheme.colorScheme.surface.copy(alpha = 0.92f))
+                .horizontalScroll(rememberScrollState())
+                .padding(horizontal = 8.dp),
             verticalAlignment = Alignment.CenterVertically,
         ) {
-            listOf("𝕱𝖗𝖆𝖐𝖙𝖚𝖗" to "fraktur", "𝗕𝗼𝗹𝗱" to "bold", "𝘐𝘵𝘢𝘭𝘪𝘤" to "italic", "ⓒⓘⓡⓒⓛⓔ" to "circled").forEach { (label, style) ->
+            listOf(
+                "𝕱𝖗𝖆𝖐𝖙𝖚𝖗" to "fraktur",
+                "𝗕𝗼𝗹𝗱" to "bold",
+                "𝘐𝘵𝘢𝘭𝘪𝘤" to "italic",
+                "ⓒⓘⓡⓒⓛⓔ" to "circled",
+            ).forEach { (label, style) ->
                 Surface(
                     onClick = { onFancyText(style); toolsExpanded = false },
                     shape = RoundedCornerShape(14.dp),
                     color = MaterialTheme.colorScheme.primary.copy(alpha = 0.18f),
                     modifier = Modifier.padding(end = 6.dp),
-                ) { Text(label, maxLines = 1, modifier = Modifier.padding(horizontal = 8.dp, vertical = 6.dp)) }
+                ) {
+                    Text(label, maxLines = 1, modifier = Modifier.padding(horizontal = 8.dp, vertical = 6.dp))
+                }
             }
         }
     }
