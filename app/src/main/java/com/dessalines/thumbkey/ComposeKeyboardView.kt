@@ -93,18 +93,34 @@ class ComposeKeyboardView(
                         if (keywiEnabled) {
                             Box(Modifier.fillMaxWidth().height(42.dp).clipToBounds().zIndex(1f)) {
                                 if (toolbarBackdrop.mode != BackdropMode.NONE) BackdropVisualLayer(toolbarBackdrop, Modifier.fillMaxWidth().height(42.dp))
-                                SuggestionBarV2(ctx)
-                                Surface(
-                                    onClick = {
-                                        if (activePalette == InputPalette.KAOMOJI) { PaletteSearchCapture.release(clear = true); activePalette = null }
-                                        else activePalette = InputPalette.KAOMOJI
+                                SuggestionBarV2(
+                                    ctx,
+                                    onKaomoji = {
+                                        if (activePalette == InputPalette.KAOMOJI) {
+                                            PaletteSearchCapture.release(clear = true)
+                                            activePalette = null
+                                        } else activePalette = InputPalette.KAOMOJI
                                     },
-                                    shape = RoundedCornerShape(18.dp),
-                                    color = MaterialTheme.colorScheme.surface.copy(alpha = 0.88f),
-                                    tonalElevation = 2.dp,
-                                    shadowElevation = 1.dp,
-                                    modifier = Modifier.align(Alignment.CenterEnd).padding(end = 48.dp).zIndex(3f),
-                                ) { Text("☺", Modifier.padding(horizontal = 10.dp, vertical = 6.dp)) }
+                                    onFancyText = {
+                                        val connection = ctx.activeInputConnectionOrNull()
+                                        val selected = connection?.getSelectedText(0)?.toString().orEmpty()
+                                        if (selected.isNotEmpty()) {
+                                            val fancy = buildString {
+                                                selected.forEach { char ->
+                                                    val code = when (char) {
+                                                        in 'A'..'Z' -> 0x1D56C + (char - 'A')
+                                                        in 'a'..'z' -> 0x1D586 + (char - 'a')
+                                                        else -> char.code
+                                                    }
+                                                    appendCodePoint(code)
+                                                }
+                                            }
+                                            connection?.commitText(fancy, 1)
+                                        } else {
+                                            Toast.makeText(ctx, "Select text to format", Toast.LENGTH_SHORT).show()
+                                        }
+                                    },
+                                )
                                 val width = ToolbarBorderPreferences.loadWidth(ctx)
                                 val color = ToolbarBorderPreferences.loadColor(ctx)
                                 if (width > 0f) Canvas(Modifier.fillMaxWidth().height(42.dp)) {
