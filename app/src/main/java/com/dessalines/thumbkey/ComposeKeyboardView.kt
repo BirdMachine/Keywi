@@ -91,7 +91,7 @@ class ComposeKeyboardView(
                 MaterialTheme(colorScheme = keyboardColorScheme) {
                     Column(modifier = Modifier.fillMaxWidth()) {
                         if (keywiEnabled) {
-                            Box(Modifier.fillMaxWidth().height(84.dp).zIndex(1f)) {
+                            Box(Modifier.fillMaxWidth().zIndex(1f)) {
                                 if (toolbarBackdrop.mode != BackdropMode.NONE) BackdropVisualLayer(toolbarBackdrop, Modifier.fillMaxWidth().height(42.dp))
                                 SuggestionBarV2(
                                     ctx,
