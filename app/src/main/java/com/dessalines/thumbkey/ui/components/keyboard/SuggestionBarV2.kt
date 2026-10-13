@@ -343,6 +343,44 @@ private fun SuggestionLozengeSlot(
 }
 
 @Composable
+private fun GemToolbarAction(
+    label: String,
+    theme: SuggestionLozengeThemeState,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    val shape = RoundedCornerShape(18.dp)
+    val decorated = modifier.clip(shape).then(
+        when (theme.surfaceStyle) {
+            SuggestionLozengeSurfaceStyle.GRADIENT -> Modifier.keyboardGradientBackground(theme.surfaceGradient)
+            else -> Modifier
+        },
+    ).then(
+        when (theme.borderStyle) {
+            SuggestionLozengeBorderStyle.GRADIENT -> Modifier.keyboardGradientBorder(
+                backdrop = theme.borderGradient,
+                width = theme.borderWidth.dp,
+                radius = 18.dp,
+            )
+            else -> Modifier
+        },
+    )
+    Surface(
+        onClick = onClick,
+        shape = shape,
+        color = if (theme.surfaceStyle == SuggestionLozengeSurfaceStyle.SOLID) theme.surfaceColor else Color.Transparent,
+        tonalElevation = 2.dp,
+        shadowElevation = 1.dp,
+        border = if (theme.borderStyle == SuggestionLozengeBorderStyle.SOLID) {
+            BorderStroke(theme.borderWidth.dp, theme.borderColor)
+        } else null,
+        modifier = decorated,
+    ) {
+        Text(label, maxLines = 1, modifier = Modifier.padding(horizontal = 7.dp, vertical = 6.dp))
+    }
+}
+
+@Composable
 fun SuggestionBarV2(ime: IMEService, onKaomoji: () -> Unit = {}, onFancyText: (String) -> Unit = {}) {
     var enabled by remember { mutableStateOf(SuggestionPreferences.enabled(ime)) }
     var toolsExpanded by remember { mutableStateOf(false) }
@@ -615,21 +653,17 @@ fun SuggestionBarV2(ime: IMEService, onKaomoji: () -> Unit = {}, onFancyText: (S
                     ),
                 ),
             )
-            Surface(
+            GemToolbarAction(
+                label = "𝕱",
+                theme = lozengeTheme,
                 onClick = { toolsExpanded = !toolsExpanded },
-                shape = RoundedCornerShape(14.dp),
-                color = MaterialTheme.colorScheme.surface.copy(alpha = 0.78f),
-            ) {
-                Text("𝕱", Modifier.padding(horizontal = 7.dp, vertical = 6.dp))
-            }
-            Surface(
+            )
+            GemToolbarAction(
+                label = "(｡•̀ᴗ-)✧",
+                theme = lozengeTheme,
                 onClick = onKaomoji,
-                shape = RoundedCornerShape(14.dp),
-                color = MaterialTheme.colorScheme.surface.copy(alpha = 0.78f),
                 modifier = Modifier.padding(start = 3.dp),
-            ) {
-                Text("(｡•̀ᴗ-)✧", maxLines = 1, modifier = Modifier.padding(horizontal = 5.dp, vertical = 6.dp))
-            }
+            )
 
         }
     }
