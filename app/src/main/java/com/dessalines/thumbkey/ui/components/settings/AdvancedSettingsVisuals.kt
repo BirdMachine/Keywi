@@ -10,6 +10,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.shape.CutCornerShape
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
@@ -73,7 +74,7 @@ fun AdvancedSettingsCard(
     content: @Composable () -> Unit,
 ) {
     val colors = LocalAdvancedSettingsColors.current
-    val shape = RoundedCornerShape(16.dp)
+    val shape = RoundedCornerShape(10.dp)
     val clickableModifier = if (onClick != null) Modifier.clickable(onClick = onClick) else Modifier
 
     Surface(
@@ -99,7 +100,7 @@ fun AdvancedSettingsChoice(
     modifier: Modifier = Modifier,
 ) {
     val colors = LocalAdvancedSettingsColors.current
-    val shape = RoundedCornerShape(13.dp)
+    val shape = CutCornerShape(4.dp)
     Text(
         text = label,
         color = if (selected) colors.onAccent else colors.text,

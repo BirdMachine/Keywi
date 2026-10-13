@@ -38,12 +38,12 @@ import com.dessalines.thumbkey.db.DEFAULT_KEY_MODIFICATIONS
 import com.dessalines.thumbkey.db.KeyModificationsUpdate
 import com.dessalines.thumbkey.ui.components.common.TestOutTextField
 import com.dessalines.thumbkey.ui.components.settings.about.SettingsDivider
-import com.dessalines.thumbkey.utils.SimpleTopAppBar
+import com.dessalines.thumbkey.ui.components.settings.GemSettingsTopAppBar as SimpleTopAppBar
 import com.dessalines.thumbkey.utils.TAG
 import com.dessalines.thumbkey.utils.checkAllKeyboardModifications
 import com.dessalines.thumbkey.utils.openLink
 import kotlinx.coroutines.delay
-import me.zhanghai.compose.preference.Preference
+import com.dessalines.thumbkey.ui.components.settings.GemNavigationPreference as Preference
 import me.zhanghai.compose.preference.ProvidePreferenceTheme
 
 const val MODIFY_KEYS_URL = "https://github.com/dessalines/thumb-key#modify-keys"
@@ -83,7 +83,7 @@ fun ModifyKeysScreen(
         snackbarHost = { SnackbarHost(snackbarHostState) },
         topBar = {
             SimpleTopAppBar(
-                text = stringResource(R.string.modify_keys),
+                text = "Raw key YAML",
                 navController = navController,
             )
         },

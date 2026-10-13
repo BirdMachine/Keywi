@@ -1,8 +1,16 @@
 package com.dessalines.thumbkey.ui.components.settings
 
+import com.dessalines.thumbkey.ui.components.settings.gemPreferenceModifier
 import android.util.Log
+import com.dessalines.thumbkey.ui.components.common.SettingsNoticeBanners
+import com.dessalines.thumbkey.utils.getVersionCode
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.unit.dp
+import androidx.compose.material.icons.outlined.Diamond
 import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
@@ -52,7 +60,7 @@ import com.dessalines.thumbkey.utils.keyboardLayoutsSetFromDbIndexString
 import com.dessalines.thumbkey.utils.openLink
 import com.dessalines.thumbkey.utils.updateLayouts
 import me.zhanghai.compose.preference.MultiSelectListPreference
-import me.zhanghai.compose.preference.Preference
+import com.dessalines.thumbkey.ui.components.settings.GemNavigationPreference as Preference
 import me.zhanghai.compose.preference.ProvidePreferenceTheme
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -75,7 +83,12 @@ fun SettingsScreen(
         snackbarHost = { SnackbarHost(snackbarHostState) },
         topBar = {
             CenterAlignedTopAppBar(
-                title = { Text(stringResource(R.string.app_name)) },
+                title = {
+                    Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                        Icon(Icons.Outlined.Diamond, contentDescription = null, tint = MaterialTheme.colorScheme.primary)
+                        Text(stringResource(R.string.app_name))
+                    }
+                },
             )
         },
         content = { padding ->
@@ -87,6 +100,11 @@ fun SettingsScreen(
                         .background(color = MaterialTheme.colorScheme.surface)
                         .imePadding(),
             ) {
+                SettingsNoticeBanners(
+                    versionCode = ctx.getVersionCode(),
+                    lastViewedVersion = settings?.lastVersionCodeViewed,
+                    onWelcomeViewed = { appSettingsViewModel.updateLastVersionCodeViewed(ctx.getVersionCode()) },
+                )
                 ProvidePreferenceTheme {
                     if (!(thumbkeyEnabled || thumbkeySelected)) {
                         Preference(
@@ -96,45 +114,55 @@ fun SettingsScreen(
                         )
                     }
 
+                    GemSettingsGroupLabel("◇ ADVANCED", "Shape, surfaces and input tools")
                     Preference(
-                        title = { Text("Advanced Board Management") },
+                        title = { Text("Gem cuts") },
+                        summary = { Text("Choose physical keyboard geometry independently from theme and layout") },
+                        icon = { Icon(Icons.Outlined.KeyboardAlt, contentDescription = null) },
+                        onClick = { navController.navigate("gemCuts") },
+                    )
+                    Preference(
+                        title = { Text("Themes & appearance") },
+                        summary = { Text("Advanced theme editor: gradients, GIFs, images, keys, toolbar, fonts and saved themes") },
+                        icon = { Icon(Icons.Outlined.AutoAwesome, contentDescription = null) },
+                        onClick = { navController.navigate("advancedLookAndFeel") },
+                    )
+                    Preference(
+                        title = { Text("Board management") },
                         summary = { Text("Custom rooms, A/B sides, key assignments, and room options") },
                         icon = { Icon(Icons.Outlined.DashboardCustomize, contentDescription = null) },
                         onClick = { navController.navigate("advancedBoards") },
                     )
                     Preference(
-                        title = { Text("Advanced Key & Word Selection") },
+                        title = { Text("Key & Word Selection") },
                         summary = { Text("Matrix remapper, unfinished-word chip, and personal dictionary") },
                         icon = { Icon(Icons.Outlined.KeyboardAlt, contentDescription = null) },
                         onClick = { navController.navigate("advancedKeyWordSelection") },
                     )
                     Preference(
                         title = { Text(stringResource(R.string.advanced_input)) },
-                        summary = { Text(stringResource(R.string.advanced_input_description)) },
+                        summary = { Text("Gestures, typing behavior, context, characters and hardware keyboard options") },
                         icon = { Icon(Icons.Outlined.Tune, contentDescription = null) },
                         onClick = { navController.navigate("advancedInput") },
                     )
                     Preference(
-                        title = { Text("Advanced look & feel") },
-                        summary = { Text("Backdrops, toolbar, keys, borders, fonts, and effects") },
-                        icon = { Icon(Icons.Outlined.AutoAwesome, contentDescription = null) },
-                        onClick = { navController.navigate("advancedLookAndFeel") },
-                    )
-                    Preference(
-                        title = { Text("Advanced Power Options") },
+                        title = { Text("Power options") },
                         summary = { Text("Balance Keywi's motion, effects, and refresh rate against battery use") },
                         icon = { Icon(Icons.Outlined.BatteryChargingFull, contentDescription = null) },
                         onClick = { navController.navigate("advancedPowerOptions") },
                     )
                     Preference(
-                        title = { Text("Advanced Debug & Diagnostics") },
+                        title = { Text("Debug & diagnostics") },
                         summary = { Text("Keywi logs, crash reports, process exits, and performance breadcrumbs") },
                         icon = { Icon(Icons.Outlined.BugReport, contentDescription = null) },
                         onClick = { navController.navigate("advancedDebug") },
                     )
                     SettingsDivider()
 
+                    GemSettingsGroupLabel("✦ SETTINGS", "Character layouts, clipboard and saved data")
                     MultiSelectListPreference(
+
+                        modifier = gemPreferenceModifier(),
                         value = layoutsState,
                         values = KeyboardLayout.entries.sortedBy { it.keyboardDefinition.title },
                         valueToText = { AnnotatedString(it.keyboardDefinition.title) },
@@ -143,41 +171,26 @@ fun SettingsScreen(
                             updateLayouts(appSettingsViewModel, update)
                         },
                         icon = { Icon(Icons.Outlined.KeyboardAlt, contentDescription = null) },
-                        title = { Text(stringResource(R.string.layouts)) },
+                        title = { Text("Character layouts") },
                         summary = { Text(layoutsState.joinToString(", ") { it.keyboardDefinition.title }) },
                     )
-                    Preference(
-                        title = { Text(stringResource(R.string.look_and_feel)) },
-                        icon = { Icon(Icons.Outlined.Palette, contentDescription = null) },
-                        onClick = { navController.navigate("lookAndFeel") },
-                    )
-                    Preference(
-                        title = { Text(stringResource(R.string.behavior)) },
-                        icon = { Icon(Icons.Outlined.TouchApp, contentDescription = null) },
-                        onClick = { navController.navigate("behavior") },
-                    )
+
+
                     Preference(
                         title = { Text(stringResource(R.string.clipboard_history)) },
                         icon = { Icon(Icons.Outlined.ContentPaste, contentDescription = null) },
                         onClick = { navController.navigate("clipboardSettings") },
                     )
-                    Preference(
-                        title = { Text(stringResource(R.string.modify_keys)) },
-                        icon = { Icon(Icons.Outlined.AppRegistration, contentDescription = null) },
-                        onClick = { navController.navigate("modifyKeys") },
-                    )
+
                     Preference(
                         title = { Text(stringResource(R.string.backup_and_restore)) },
                         icon = { Icon(Icons.Outlined.Restore, contentDescription = null) },
                         onClick = { navController.navigate("backupAndRestore") },
                     )
+
+                    GemSettingsGroupLabel("⌘ HELP", "Guides, releases and project links")
                     Preference(
-                        title = { Text(stringResource(R.string.other)) },
-                        icon = { Icon(Icons.Outlined.Build, contentDescription = null) },
-                        onClick = { navController.navigate("otherSettings") },
-                    )
-                    Preference(
-                        title = { Text(stringResource(R.string.user_guide)) },
+                        title = { Text("Thumb-Key user guide (upstream)") },
                         icon = { Icon(Icons.AutoMirrored.Outlined.HelpCenter, contentDescription = null) },
                         onClick = { openLink(USER_GUIDE_URL, ctx) },
                     )

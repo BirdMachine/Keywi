@@ -20,16 +20,10 @@ object FontPreferences {
         uri: Uri,
     ): Boolean =
         runCatching {
-            val dir = File(context.filesDir, "keyboard-fonts").apply { mkdirs() }
-            val name =
-                uri.lastPathSegment
-                    ?.substringAfterLast('/')
-                    ?.takeIf { it.isNotBlank() } ?: "custom-font"
-            val extension = if (name.lowercase().endsWith(".otf")) ".otf" else ".ttf"
-            val target = File(dir, "active$extension")
-            context.contentResolver.openInputStream(uri)!!.use { input ->
-                target.outputStream().use { output -> input.copyTo(output) }
-            }
+            val name = uri.lastPathSegment?.substringAfterLast('/')?.takeIf { it.isNotBlank() } ?: "Custom font"
+            val extension = if (name.lowercase().endsWith(".otf")) "otf" else "ttf"
+            val ownedUri = ThemeAssetStore.copySelected(context, uri, extension)
+            val target = File(requireNotNull(Uri.parse(ownedUri).path))
             Typeface.createFromFile(target)
             context
                 .getSharedPreferences(PREFS, Context.MODE_PRIVATE)
@@ -42,8 +36,19 @@ object FontPreferences {
 
     fun clear(context: Context) {
         val prefs = context.getSharedPreferences(PREFS, Context.MODE_PRIVATE)
-        prefs.getString(KEY_FILE, null)?.let { File(it).delete() }
         prefs.edit().clear().apply()
+    }
+
+    fun snapshot(context: Context): ThemeFont? {
+        val prefs = context.getSharedPreferences(PREFS, Context.MODE_PRIVATE)
+        return prefs.getString(KEY_FILE, null)?.let { ThemeFont(Uri.fromFile(File(it)).toString(), displayName(context)) }
+    }
+
+    fun applyTheme(context: Context, font: ThemeFont?) {
+        if (font == null) { clear(context); return }
+        val path = Uri.parse(font.asset).path ?: return
+        context.getSharedPreferences(PREFS, Context.MODE_PRIVATE).edit()
+            .putString(KEY_FILE, path).putString(KEY_NAME, font.name).apply()
     }
 
     fun typeface(context: Context): Typeface? {

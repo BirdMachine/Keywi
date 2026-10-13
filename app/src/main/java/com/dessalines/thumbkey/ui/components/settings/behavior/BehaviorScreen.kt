@@ -1,5 +1,6 @@
 package com.dessalines.thumbkey.ui.components.settings.behavior
 
+import com.dessalines.thumbkey.ui.components.settings.gemPreferenceModifier
 import android.util.Log
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Column
@@ -59,7 +60,7 @@ import com.dessalines.thumbkey.ui.components.common.TestOutTextField
 import com.dessalines.thumbkey.ui.components.settings.about.SettingsDivider
 import com.dessalines.thumbkey.utils.CircularDragAction
 import com.dessalines.thumbkey.utils.CursorAccelerationMode
-import com.dessalines.thumbkey.utils.SimpleTopAppBar
+import com.dessalines.thumbkey.ui.components.settings.GemSettingsTopAppBar as SimpleTopAppBar
 import com.dessalines.thumbkey.utils.TAG
 import com.dessalines.thumbkey.utils.toBool
 import com.dessalines.thumbkey.utils.toInt
@@ -152,6 +153,7 @@ fun BehaviorScreen(
             ) {
                 ProvidePreferenceTheme {
                     SwitchPreference(
+                        modifier = gemPreferenceModifier(),
                         value = autoCapitalizeState,
                         onValueChange = {
                             autoCapitalizeState = it
@@ -168,6 +170,7 @@ fun BehaviorScreen(
                         },
                     )
                     SwitchPreference(
+                        modifier = gemPreferenceModifier(),
                         value = spacebarMultiTapsState,
                         onValueChange = {
                             spacebarMultiTapsState = it
@@ -184,6 +187,7 @@ fun BehaviorScreen(
                         },
                     )
                     SwitchPreference(
+                        modifier = gemPreferenceModifier(),
                         value = switchToLettersAfterSpaceState,
                         onValueChange = {
                             switchToLettersAfterSpaceState = it
@@ -203,6 +207,7 @@ fun BehaviorScreen(
                         },
                     )
                     SliderPreference(
+                        modifier = gemPreferenceModifier(),
                         value = minSwipeLengthState,
                         sliderValue = minSwipeLengthSliderState,
                         onValueChange = {
@@ -228,6 +233,7 @@ fun BehaviorScreen(
                     )
                     SettingsDivider()
                     SwitchPreference(
+                        modifier = gemPreferenceModifier(),
                         value = slideEnabledState,
                         onValueChange = {
                             slideEnabledState = it
@@ -247,6 +253,7 @@ fun BehaviorScreen(
                         },
                     )
                     ListPreference(
+                        modifier = gemPreferenceModifier(),
                         enabled = slideEnabledState,
                         type = ListPreferenceType.DROPDOWN_MENU,
                         value = slideCursorMovementModeState,
@@ -272,6 +279,7 @@ fun BehaviorScreen(
                         },
                     )
                     SliderPreference(
+                        modifier = gemPreferenceModifier(),
                         valueRange = 1f..50f,
                         value = slideSensitivityState,
                         sliderValue = slideSensitivitySliderState,
@@ -299,6 +307,7 @@ fun BehaviorScreen(
                         },
                     )
                     SwitchPreference(
+                        modifier = gemPreferenceModifier(),
                         value = slideSpacebarDeadzoneEnabledState,
                         onValueChange = {
                             slideSpacebarDeadzoneEnabledState = it
@@ -316,6 +325,7 @@ fun BehaviorScreen(
                         },
                     )
                     SwitchPreference(
+                        modifier = gemPreferenceModifier(),
                         value = slideBackspaceDeadzoneEnabledState,
                         onValueChange = {
                             slideBackspaceDeadzoneEnabledState = it
@@ -333,6 +343,7 @@ fun BehaviorScreen(
                         },
                     )
                     SwitchPreference(
+                        modifier = gemPreferenceModifier(),
                         value = slideHoldEnabledState,
                         onValueChange = {
                             slideHoldEnabledState = it
@@ -357,6 +368,7 @@ fun BehaviorScreen(
                     )
                     SettingsDivider()
                     SwitchPreference(
+                        modifier = gemPreferenceModifier(),
                         value = dragReturnEnabledState,
                         onValueChange = {
                             dragReturnEnabledState = it
@@ -373,6 +385,7 @@ fun BehaviorScreen(
                         },
                     )
                     SwitchPreference(
+                        modifier = gemPreferenceModifier(),
                         value = circularDragEnabledState,
                         onValueChange = {
                             circularDragEnabledState = it
@@ -389,6 +402,7 @@ fun BehaviorScreen(
                         },
                     )
                     ListPreference(
+                        modifier = gemPreferenceModifier(),
                         enabled = circularDragEnabledState,
                         type = ListPreferenceType.DROPDOWN_MENU,
                         value = clockwiseDragActionState,
@@ -414,6 +428,7 @@ fun BehaviorScreen(
                         },
                     )
                     ListPreference(
+                        modifier = gemPreferenceModifier(),
                         enabled = circularDragEnabledState,
                         type = ListPreferenceType.DROPDOWN_MENU,
                         value = counterclockwiseDragActionState,
@@ -439,6 +454,7 @@ fun BehaviorScreen(
                         },
                     )
                     SwitchPreference(
+                        modifier = gemPreferenceModifier(),
                         value = ghostKeysEnabledState,
                         onValueChange = {
                             ghostKeysEnabledState = it

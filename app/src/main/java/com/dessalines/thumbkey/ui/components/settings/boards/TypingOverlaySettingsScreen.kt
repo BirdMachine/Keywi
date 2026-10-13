@@ -12,10 +12,10 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.Button
+import com.dessalines.thumbkey.ui.components.settings.GemButton as Button
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedButton
+import com.dessalines.thumbkey.ui.components.settings.GemOutlinedButton as OutlinedButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Slider
 import androidx.compose.material3.Switch
@@ -36,7 +36,7 @@ import com.dessalines.thumbkey.ui.components.keyboard.TypingOverlayLayer
 import com.dessalines.thumbkey.ui.components.keyboard.TypingOverlayPreferences
 import com.dessalines.thumbkey.ui.components.keyboard.TypingOverlayState
 import com.dessalines.thumbkey.ui.components.keyboard.loadTypingOverlayMedia
-import com.dessalines.thumbkey.utils.SimpleTopAppBar
+import com.dessalines.thumbkey.ui.components.settings.GemSettingsTopAppBar as SimpleTopAppBar
 import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)

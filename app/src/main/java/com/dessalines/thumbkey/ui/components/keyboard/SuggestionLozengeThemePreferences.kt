@@ -23,6 +23,9 @@ data class SuggestionLozengeThemeState(
     val borderGradient: KeyboardBackdrop = BIRDIE_GOLD_BORDER,
     val borderColor: Color = Color(0x70FFFFFF),
     val borderWidth: Float = 1f,
+    val currentWordBackgroundColor: Color = Color(0xFF031005),
+    // Null in older theme documents preserves the previous global highlight choice.
+    val currentWordHighlightColor: Color? = null,
 )
 
 object SuggestionLozengeThemePreferences {
@@ -47,6 +50,8 @@ object SuggestionLozengeThemePreferences {
             borderGradient = readGradient(prefs, "border", BIRDIE_GOLD_BORDER),
             borderColor = readColor(prefs, "border_color", defaults.borderColor),
             borderWidth = prefs.getFloat("border_width", 1f).coerceIn(0f, 6f),
+            currentWordBackgroundColor = readColor(prefs, "current_word_background", defaults.currentWordBackgroundColor),
+            currentWordHighlightColor = readColor(prefs, "current_word_highlight", AdvancedKeyWordPreferences.newWordHighlightColor(context)),
         )
     }
 
@@ -65,6 +70,8 @@ object SuggestionLozengeThemePreferences {
                 writeGradient(this, "border", state.borderGradient)
                 putLong("border_color", state.borderColor.value.toLong())
                 putFloat("border_width", state.borderWidth.coerceIn(0f, 6f))
+                putLong("current_word_background", state.currentWordBackgroundColor.value.toLong())
+                state.currentWordHighlightColor?.let { putLong("current_word_highlight", it.value.toLong()) }
             }.apply()
     }
 

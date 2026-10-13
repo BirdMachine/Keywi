@@ -617,12 +617,12 @@ class AppSettingsRepository(
             try {
                 val releasesStr =
                     ctx.assets
-                        .open("RELEASES.md")
+                        .open("KEYWI_RELEASES.md")
                         .bufferedReader()
                         .use { it.readText() }
                 _changelog.value = releasesStr
             } catch (e: Exception) {
-                Log.e("thumb-key", "Failed to load changelog: $e")
+                Log.e("Keywi", "Failed to load changelog: $e")
             }
         }
     }

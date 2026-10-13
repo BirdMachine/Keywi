@@ -3,15 +3,13 @@ package com.dessalines.thumbkey.ui.components.settings.lookandfeel
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.Button
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
+import com.dessalines.thumbkey.ui.components.settings.GemNavigationPreference
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.getValue
@@ -28,13 +26,12 @@ import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.navigation.NavController
 import com.dessalines.thumbkey.ui.components.keyboard.CUSTOM_THEME_ID
 import com.dessalines.thumbkey.ui.components.keyboard.ThemeEngine
-import com.dessalines.thumbkey.utils.SimpleTopAppBar
+import com.dessalines.thumbkey.ui.components.settings.GemSettingsTopAppBar as SimpleTopAppBar
 
 /** Visible front door for Keywi themes. */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ThemeManagerScreen(navController: NavController) {
-    val context = LocalContext.current
     val lifecycleOwner = LocalLifecycleOwner.current
     var managerRefresh by remember { mutableIntStateOf(0) }
 
@@ -51,33 +48,37 @@ fun ThemeManagerScreen(navController: NavController) {
             modifier = Modifier.fillMaxSize().padding(padding).verticalScroll(rememberScrollState()),
             verticalArrangement = Arrangement.spacedBy(8.dp),
         ) {
+            AdvancedThemeEditorEntry(navController)
+
             key(managerRefresh) {
-                ThemeManagerSection(onThemeApplied = { managerRefresh++ })
+                ThemeManagerSection(
+                    onThemeApplied = { managerRefresh++ },
+                    onEditTheme = { navController.navigate("advancedLookAndFeelEditor") },
+                )
             }
 
-            // Keep a real editor next to theme selection so a theme can be auditioned immediately.
             KeywiThemeTestBench()
 
-            Column(
-                modifier = Modifier.fillMaxWidth().padding(horizontal = 14.dp, vertical = 6.dp),
-                verticalArrangement = Arrangement.spacedBy(6.dp),
-            ) {
-                Text("Appearance editor", style = MaterialTheme.typography.titleMedium)
-                Text(
-                    "Edit backdrop, toolbar, keys, typography, gradients, and effects for the active theme.",
-                    style = MaterialTheme.typography.bodySmall,
-                )
-                Button(
-                    onClick = {
-                        val active = ThemeEngine.loadActive(context)
-                        if (active.id != CUSTOM_THEME_ID) ThemeEngine.beginEditing(context, active)
-                        navController.navigate("advancedLookAndFeelEditor")
-                    },
-                    modifier = Modifier.fillMaxWidth(),
-                ) {
-                    Text("Edit active theme")
-                }
-            }
+            GemNavigationPreference(
+                title = { Text("Keyboard tuning") },
+                summary = { Text("Size, position, base palette and feedback. For gradients, GIFs and surfaces, use Advanced theme editor above.") },
+                onClick = { navController.navigate("lookAndFeel") },
+            )
         }
     }
+}
+
+/** Opens the full surface editor, forking saved themes into Custom before editing. */
+@Composable
+fun AdvancedThemeEditorEntry(navController: NavController) {
+    val context = LocalContext.current
+    GemNavigationPreference(
+        title = { Text("Advanced theme editor") },
+        summary = { Text("Edit gradients, GIFs, images, key surfaces, borders, toolbar and fonts.") },
+        onClick = {
+            val active = ThemeEngine.loadActive(context)
+            if (active.id != CUSTOM_THEME_ID) ThemeEngine.beginEditing(context, active)
+            navController.navigate("advancedLookAndFeelEditor")
+        },
+    )
 }

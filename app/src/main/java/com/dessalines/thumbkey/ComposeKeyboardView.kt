@@ -46,12 +46,16 @@ import com.dessalines.thumbkey.ui.components.keyboard.BackdropVisualLayer
 import com.dessalines.thumbkey.ui.components.keyboard.ExpandedInputPaletteHost
 import com.dessalines.thumbkey.ui.components.keyboard.InputPalette
 import com.dessalines.thumbkey.ui.components.keyboard.KeyboardScreen
+import com.dessalines.thumbkey.ui.components.keyboard.GemCutPreferences
+import com.dessalines.thumbkey.ui.components.keyboard.FacetId
+import com.dessalines.thumbkey.ui.components.keyboard.MachineCutSkeleton
 import com.dessalines.thumbkey.ui.components.keyboard.KeywiAppearancePreferences
 import com.dessalines.thumbkey.ui.components.keyboard.PaletteSearchCapture
 import com.dessalines.thumbkey.ui.components.keyboard.SuggestionBarV2
 import com.dessalines.thumbkey.ui.components.keyboard.ToolbarBorderPreferences
 import com.dessalines.thumbkey.ui.components.keyboard.ToolbarLayoutPreferences
 import com.dessalines.thumbkey.ui.components.keyboard.ToolbarThemePreferences
+import com.dessalines.thumbkey.ui.components.keyboard.TypingOverlayPreferences
 import com.dessalines.thumbkey.ui.theme.ThumbkeyTheme
 import com.dessalines.thumbkey.utils.KeyboardPosition
 import com.dessalines.thumbkey.utils.keyboardLayoutsSetFromDbIndexString
@@ -79,7 +83,7 @@ class ComposeKeyboardView(
             val density = LocalDensity.current
             val typingPulse = remember { androidx.compose.runtime.mutableLongStateOf(0L) }
             val overlayTriggerGate = remember { com.dessalines.thumbkey.ui.components.keyboard.OverlayTriggerGate() }
-            remember(ctx) { com.dessalines.thumbkey.ui.components.keyboard.TypingOverlayPreferences.load(ctx) }
+            remember(ctx) { TypingOverlayPreferences.load(ctx) }
             var keyboardHeightPx by remember { mutableIntStateOf(0) }
             var activePalette by remember { mutableStateOf<InputPalette?>(null) }
 
@@ -119,11 +123,13 @@ class ComposeKeyboardView(
                             }
                             val keyboardSettings = if (!keywiEnabled) settings else if (mainBackdrop.mode == BackdropMode.COLORFUL) settings?.copy(backdropEnabled = 1) else settings?.copy(backdropEnabled = 0)
                             Box(Modifier.align(Alignment.BottomCenter).onSizeChanged { if (it.height != keyboardHeightPx) keyboardHeightPx = it.height }) {
-                                KeyboardScreen(
+                                when (GemCutPreferences.load(ctx)) {
+                                    FacetId.HK_LIKE -> MachineCutSkeleton()
+                                    FacetId.ME_LIKE -> KeyboardScreen(
                                     settings = keyboardSettings,
                                     onTyped = {
                                         KeywiDiagnostics.inputPulse()
-                                        val overlay = com.dessalines.thumbkey.ui.components.keyboard.TypingOverlayPreferences.current
+                                        val overlay = TypingOverlayPreferences.current
                                         if (overlay.enabled && overlay.uri != null && overlayTriggerGate.accept(android.os.SystemClock.uptimeMillis(), overlay.cooldownMs)) {
                                             typingPulse.longValue++
                                         }
@@ -150,11 +156,12 @@ class ComposeKeyboardView(
                                     onGoToClipboardSettings = {
                                         context.startActivity(Intent(context, MainActivity::class.java).apply { putExtra("startRoute", "clipboardSettings"); addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK) })
                                     },
-                                )
+                                    )
+                                }
                             }
                             com.dessalines.thumbkey.ui.components.keyboard.TypingOverlayLayer(
                                 typingPulse,
-                                com.dessalines.thumbkey.ui.components.keyboard.TypingOverlayPreferences.current,
+                                TypingOverlayPreferences.current,
                                 Modifier.matchParentSize().zIndex(4f),
                             )
                             activePalette?.let { palette ->

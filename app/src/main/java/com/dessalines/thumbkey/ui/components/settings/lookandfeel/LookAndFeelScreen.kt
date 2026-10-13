@@ -1,5 +1,6 @@
 package com.dessalines.thumbkey.ui.components.settings.lookandfeel
 
+import com.dessalines.thumbkey.ui.components.settings.gemPreferenceModifier
 import android.util.Log
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Column
@@ -24,7 +25,6 @@ import androidx.compose.material.icons.outlined.Palette
 import androidx.compose.material.icons.outlined.RoundedCorner
 import androidx.compose.material.icons.outlined.VerticalAlignTop
 import androidx.compose.material.icons.outlined.Vibration
-import androidx.compose.material.icons.outlined.ViewDay
 import androidx.compose.material.icons.outlined.Visibility
 import androidx.compose.material.icons.outlined.WebAssetOff
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -74,7 +74,7 @@ import com.dessalines.thumbkey.db.LookAndFeelUpdate
 import com.dessalines.thumbkey.ui.components.common.TestOutTextField
 import com.dessalines.thumbkey.ui.components.settings.about.SettingsDivider
 import com.dessalines.thumbkey.utils.KeyboardPosition
-import com.dessalines.thumbkey.utils.SimpleTopAppBar
+import com.dessalines.thumbkey.ui.components.settings.GemSettingsTopAppBar as SimpleTopAppBar
 import com.dessalines.thumbkey.utils.TAG
 import com.dessalines.thumbkey.utils.ThemeColor
 import com.dessalines.thumbkey.utils.ThemeMode
@@ -136,7 +136,7 @@ fun LookAndFeelScreen(
     var ignoreBottomPaddingState = (settings?.ignoreBottomPadding ?: DEFAULT_IGNORE_BOTTOM_PADDING).toBool()
     var showToastOnLayoutSwitchState = (settings?.showToastOnLayoutSwitch ?: DEFAULT_SHOW_TOAST_ON_LAYOUT_SWITCH).toBool()
 
-    var backdropEnabledState = (settings?.backdropEnabled ?: DEFAULT_BACKDROP_ENABLED).toBool()
+    val backdropEnabledState = (settings?.backdropEnabled ?: DEFAULT_BACKDROP_ENABLED).toBool()
 
     var disableFullscreenEditorState = (settings?.disableFullscreenEditor ?: DEFAULT_DISABLE_FULLSCREEN_EDITOR).toBool()
 
@@ -178,7 +178,7 @@ fun LookAndFeelScreen(
     Scaffold(
         snackbarHost = { SnackbarHost(snackbarHostState) },
         topBar = {
-            SimpleTopAppBar(text = stringResource(R.string.look_and_feel), navController = navController)
+            SimpleTopAppBar(text = "Keyboard tuning", navController = navController)
         },
         content = { padding ->
             Column(
@@ -189,8 +189,10 @@ fun LookAndFeelScreen(
                         .background(color = MaterialTheme.colorScheme.surface)
                         .imePadding(),
             ) {
+                AdvancedThemeEditorEntry(navController)
                 ProvidePreferenceTheme {
                     ListPreference(
+                        modifier = gemPreferenceModifier(),
                         type = ListPreferenceType.DROPDOWN_MENU,
                         value = themeState,
                         onValueChange = {
@@ -202,7 +204,7 @@ fun LookAndFeelScreen(
                             AnnotatedString(resources.getString(it.resId))
                         },
                         title = {
-                            Text(stringResource(R.string.theme))
+                            Text("Display mode")
                         },
                         summary = {
                             Text(stringResource(themeState.resId))
@@ -216,6 +218,8 @@ fun LookAndFeelScreen(
                     )
 
                     ListPreference(
+
+                        modifier = gemPreferenceModifier(),
                         type = ListPreferenceType.DROPDOWN_MENU,
                         value = themeColorState,
                         onValueChange = {
@@ -227,7 +231,7 @@ fun LookAndFeelScreen(
                             AnnotatedString(resources.getString(it.resId))
                         },
                         title = {
-                            Text(stringResource(R.string.theme_color))
+                            Text("Base keyboard palette")
                         },
                         summary = {
                             Text(stringResource(themeColorState.resId))
@@ -241,6 +245,8 @@ fun LookAndFeelScreen(
                     )
 
                     ListPreference(
+
+                        modifier = gemPreferenceModifier(),
                         type = ListPreferenceType.DROPDOWN_MENU,
                         value = positionState,
                         onValueChange = {
@@ -266,6 +272,8 @@ fun LookAndFeelScreen(
                     )
 
                     SliderPreference(
+
+                        modifier = gemPreferenceModifier(),
                         value = positionPaddingState,
                         sliderValue = positionPaddingSliderState,
                         onValueChange = {
@@ -293,6 +301,8 @@ fun LookAndFeelScreen(
                     )
 
                     SwitchPreference(
+
+                        modifier = gemPreferenceModifier(),
                         value = hideLettersState,
                         onValueChange = {
                             hideLettersState = it
@@ -310,6 +320,8 @@ fun LookAndFeelScreen(
                     )
 
                     SwitchPreference(
+
+                        modifier = gemPreferenceModifier(),
                         value = hideSymbolsState,
                         onValueChange = {
                             hideSymbolsState = it
@@ -325,25 +337,11 @@ fun LookAndFeelScreen(
                             )
                         },
                     )
-                    SwitchPreference(
-                        value = backdropEnabledState,
-                        onValueChange = {
-                            backdropEnabledState = it
-                            updateLookAndFeel()
-                        },
-                        title = {
-                            Text(stringResource(R.string.backdrop))
-                        },
-                        icon = {
-                            Icon(
-                                imageVector = Icons.Outlined.ViewDay,
-                                contentDescription = null,
-                            )
-                        },
-                    )
-                    BackdropSettingsSection(onChanged = { updateLookAndFeel() })
+
 
                     SwitchPreference(
+
+                        modifier = gemPreferenceModifier(),
                         value = ignoreBottomPaddingState,
                         onValueChange = {
                             ignoreBottomPaddingState = it
@@ -361,6 +359,8 @@ fun LookAndFeelScreen(
                     )
 
                     SwitchPreference(
+
+                        modifier = gemPreferenceModifier(),
                         value = showToastOnLayoutSwitchState,
                         onValueChange = {
                             showToastOnLayoutSwitchState = it
@@ -377,6 +377,7 @@ fun LookAndFeelScreen(
                         },
                     )
                     SwitchPreference(
+                        modifier = gemPreferenceModifier(),
                         value = disableFullscreenEditorState,
                         onValueChange = {
                             disableFullscreenEditorState = it
@@ -394,6 +395,8 @@ fun LookAndFeelScreen(
                     )
 
                     SwitchPreference(
+
+                        modifier = gemPreferenceModifier(),
                         value = autoSizeKeysState,
                         onValueChange = {
                             autoSizeKeysState = it
@@ -412,6 +415,7 @@ fun LookAndFeelScreen(
 
                     if (!autoSizeKeysState) {
                         SliderPreference(
+                            modifier = gemPreferenceModifier(),
                             value = keyWidthState,
                             sliderValue = keyWidthSliderState,
                             onValueChange = {
@@ -440,6 +444,8 @@ fun LookAndFeelScreen(
                     }
 
                     SwitchPreference(
+
+                        modifier = gemPreferenceModifier(),
                         value = nonSquareKeysState,
                         onValueChange = {
                             nonSquareKeysState = it
@@ -458,6 +464,7 @@ fun LookAndFeelScreen(
 
                     if (nonSquareKeysState) {
                         SliderPreference(
+                            modifier = gemPreferenceModifier(),
                             value = keyHeightState,
                             sliderValue = keyHeightSliderState,
                             onValueChange = {
@@ -486,6 +493,8 @@ fun LookAndFeelScreen(
                     }
 
                     SliderPreference(
+
+                        modifier = gemPreferenceModifier(),
                         value = keyPaddingState,
                         sliderValue = keyPaddingSliderState,
                         onValueChange = {
@@ -506,6 +515,7 @@ fun LookAndFeelScreen(
                         },
                     )
                     SliderPreference(
+                        modifier = gemPreferenceModifier(),
                         value = keyBorderWidthState,
                         sliderValue = keyBorderWidthSliderState,
                         onValueChange = {
@@ -526,6 +536,7 @@ fun LookAndFeelScreen(
                         },
                     )
                     SliderPreference(
+                        modifier = gemPreferenceModifier(),
                         value = keyRadiusState,
                         sliderValue = keyRadiusSliderState,
                         onValueChange = {
@@ -546,6 +557,7 @@ fun LookAndFeelScreen(
                         },
                     )
                     SliderPreference(
+                        modifier = gemPreferenceModifier(),
                         value = pushupSizeState,
                         sliderValue = pushupSizeSliderState,
                         onValueChange = {
@@ -566,6 +578,7 @@ fun LookAndFeelScreen(
                         },
                     )
                     SliderPreference(
+                        modifier = gemPreferenceModifier(),
                         value = animationSpeedState,
                         sliderValue = animationSpeedSliderState,
                         onValueChange = {
@@ -586,6 +599,7 @@ fun LookAndFeelScreen(
                         },
                     )
                     SliderPreference(
+                        modifier = gemPreferenceModifier(),
                         value = animationHelperSpeedState,
                         sliderValue = animationHelperSpeedSliderState,
                         onValueChange = {
@@ -613,6 +627,7 @@ fun LookAndFeelScreen(
                     )
                     SettingsDivider()
                     SwitchPreference(
+                        modifier = gemPreferenceModifier(),
                         value = vibrateOnTapState,
                         onValueChange = {
                             vibrateOnTapState = it
@@ -632,6 +647,7 @@ fun LookAndFeelScreen(
                         },
                     )
                     SwitchPreference(
+                        modifier = gemPreferenceModifier(),
                         enabled = settings?.slideEnabled?.toBool() == true,
                         value = vibrateOnSlideState,
                         onValueChange = {
@@ -656,6 +672,7 @@ fun LookAndFeelScreen(
                         },
                     )
                     SwitchPreference(
+                        modifier = gemPreferenceModifier(),
                         value = soundOnTapState,
                         onValueChange = {
                             soundOnTapState = it

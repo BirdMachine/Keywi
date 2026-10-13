@@ -1,6 +1,6 @@
 package com.dessalines.thumbkey.ui.components.settings.lookandfeel
 
-import android.content.Intent
+import com.dessalines.thumbkey.ui.components.settings.gemSectionModifier
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.Arrangement
@@ -9,11 +9,11 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.Button
+import com.dessalines.thumbkey.ui.components.settings.GemButton as Button
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedButton
+import com.dessalines.thumbkey.ui.components.settings.GemOutlinedButton as OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -21,6 +21,12 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
+import java.io.BufferedInputStream
+import java.io.ByteArrayOutputStream
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
@@ -29,9 +35,9 @@ import com.dessalines.thumbkey.ui.components.keyboard.CUSTOM_THEME_ID
 import com.dessalines.thumbkey.ui.components.keyboard.ThemeDocument
 import com.dessalines.thumbkey.ui.components.keyboard.ThemeEngine
 
-/** Compact front door for the theme engine. Detailed controls remain below for now. */
+/** Saved-theme selection and import/export; editing opens the advanced surface editor. */
 @Composable
-fun ThemeManagerSection(onThemeApplied: () -> Unit) {
+fun ThemeManagerSection(onThemeApplied: () -> Unit, onEditTheme: () -> Unit) {
     val context = LocalContext.current
     ThemeEngine.ensureMigrated(context)
 
@@ -40,11 +46,15 @@ fun ThemeManagerSection(onThemeApplied: () -> Unit) {
     var naming by remember { mutableStateOf(false) }
     var name by remember { mutableStateOf("") }
     var message by remember { mutableStateOf<String?>(null) }
+    val scope = rememberCoroutineScope()
+    var busy by remember { mutableStateOf(false) }
 
     fun active(): ThemeDocument = ThemeEngine.loadActive(context)
     fun themes(): List<ThemeDocument> = ThemeEngine.listThemes(context)
-    fun snapshotCustom(): ThemeDocument =
-        ThemeEngine.captureCurrent(context, "Custom", CUSTOM_THEME_ID).also { ThemeEngine.saveCustom(context, it) }
+    fun snapshotCustom(): ThemeDocument {
+        ThemeEngine.saveCustom(context, ThemeEngine.captureCurrent(context, "Custom", CUSTOM_THEME_ID))
+        return ThemeEngine.loadCustom(context)
+    }
     fun changed(text: String? = null) {
         refresh++
         message = text
@@ -52,55 +62,78 @@ fun ThemeManagerSection(onThemeApplied: () -> Unit) {
     }
 
     val importLauncher = rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()) { uri ->
-        if (uri != null) {
-            runCatching {
-                context.contentResolver.takePersistableUriPermission(uri, Intent.FLAG_GRANT_READ_URI_PERMISSION)
-                context.contentResolver.openInputStream(uri)?.bufferedReader()?.use { it.readText() }
-                    ?: error("Could not read theme")
-            }.fold(
-                onSuccess = { json ->
-                    ThemeEngine.importIntoCustom(context, json).fold(
-                        onSuccess = { changed("Imported into Custom") },
-                        onFailure = { message = "Import failed: ${it.message ?: "invalid theme"}" },
-                    )
-                },
-                onFailure = { message = "Import failed: ${it.message ?: "could not read file"}" },
+        if (uri != null) scope.launch {
+            busy = true
+            val result = withContext(Dispatchers.IO) {
+                runCatching {
+                    val stream = BufferedInputStream(requireNotNull(context.contentResolver.openInputStream(uri)))
+                    stream.use {
+                        it.mark(4)
+                        val first = it.read(); val second = it.read(); it.reset()
+                        if (first == 'P'.code && second == 'K'.code) ThemeEngine.importPackage(context, it).getOrThrow()
+                        else {
+                            val output = ByteArrayOutputStream()
+                            val buffer = ByteArray(8192)
+                            while (true) {
+                                val count = it.read(buffer)
+                                if (count < 0) break
+                                require(output.size() + count <= 1024 * 1024) { "Theme document is too large" }
+                                output.write(buffer, 0, count)
+                            }
+                            ThemeEngine.importIntoCustom(context, output.toString("UTF-8")).getOrThrow()
+                        }
+                    }
+                }
+            }
+            busy = false
+            result.fold(
+                onSuccess = { changed("Imported into Custom, including assets") },
+                onFailure = { message = "Import failed: ${it.message ?: "invalid theme"}" },
             )
         }
     }
 
     var pendingExport by remember { mutableStateOf<ThemeDocument?>(null) }
-    val exportLauncher = rememberLauncherForActivityResult(ActivityResultContracts.CreateDocument("application/json")) { uri ->
+    val exportLauncher = rememberLauncherForActivityResult(ActivityResultContracts.CreateDocument("application/zip")) { uri ->
         val theme = pendingExport
-        if (uri != null && theme != null) {
-            runCatching {
-                context.contentResolver.openOutputStream(uri)?.bufferedWriter()?.use {
-                    it.write(ThemeEngine.export(theme))
-                } ?: error("Could not open destination")
-            }.fold(
-                onSuccess = { message = "Theme exported" },
+        pendingExport = null
+        if (uri != null && theme != null) scope.launch {
+            busy = true
+            val result = withContext(Dispatchers.IO) {
+                runCatching {
+                    context.contentResolver.openOutputStream(uri)?.use { ThemeEngine.exportPackage(context, theme, it) }
+                        ?: error("Could not open destination")
+                }
+            }
+            busy = false
+            result.fold(
+                onSuccess = { message = "Theme exported with its assets" },
                 onFailure = { message = "Export failed: ${it.message ?: "could not write file"}" },
             )
         }
-        pendingExport = null
     }
 
     @Suppress("UNUSED_VARIABLE") val refreshToken = refresh
     val current = active()
 
     Column(
-        modifier = Modifier.fillMaxWidth().padding(horizontal = 14.dp, vertical = 10.dp),
+        modifier = gemSectionModifier(),
         verticalArrangement = Arrangement.spacedBy(8.dp),
     ) {
-        Text("Theme manager", style = MaterialTheme.typography.titleMedium)
+        Text("✦ Saved themes", style = MaterialTheme.typography.titleMedium)
+        Text("Images, GIFs and fonts live in Keywi's theme folders. Exports include these assets.", style = MaterialTheme.typography.bodySmall)
+        if (busy) Text("Copying theme files…", style = MaterialTheme.typography.bodySmall)
+        if (ThemeEngine.missingAssets(context, current).isNotEmpty()) {
+            Text("Some original files are unavailable. Open Advanced theme editor and re-select the missing image, GIF or font.", color = MaterialTheme.colorScheme.error, style = MaterialTheme.typography.bodySmall)
+        }
         Text(
             if (current.id == CUSTOM_THEME_ID) "Custom is your scratch theme — edits are safe here."
-            else "Saved themes stay intact until you choose Edit.",
+            else "Edit works in Custom; your saved theme stays intact.",
             style = MaterialTheme.typography.bodySmall,
         )
 
         Column {
-            OutlinedButton(onClick = { expanded = true }, modifier = Modifier.fillMaxWidth()) {
+            OutlinedButton(enabled = !busy, onClick = { expanded = true }, modifier = Modifier.fillMaxWidth()) {
                 Text("Theme: ${current.name}  ▾")
             }
             DropdownMenu(expanded = expanded, onDismissRequest = { expanded = false }) {
@@ -128,24 +161,32 @@ fun ThemeManagerSection(onThemeApplied: () -> Unit) {
         Row(horizontalArrangement = Arrangement.spacedBy(8.dp), modifier = Modifier.fillMaxWidth()) {
             if (current.id != CUSTOM_THEME_ID) {
                 Button(
+                    enabled = !busy,
                     onClick = {
                         ThemeEngine.beginEditing(context, current)
                         changed("Copied ${current.name} into Custom")
+                        onEditTheme()
                     },
                     modifier = Modifier.weight(1f),
                 ) { Text("Edit") }
             } else {
-                Button(onClick = { naming = true }, modifier = Modifier.weight(1f)) { Text("Save as…") }
+                Button(enabled = !busy, onClick = { naming = true }, modifier = Modifier.weight(1f)) { Text("Save as…") }
             }
             OutlinedButton(
-                onClick = { importLauncher.launch(arrayOf("application/json", "text/json", "text/plain")) },
+                enabled = !busy,
+                onClick = { importLauncher.launch(arrayOf("application/zip", "application/x-zip-compressed", "application/json", "text/json", "text/plain", "application/octet-stream")) },
                 modifier = Modifier.weight(1f),
             ) { Text("Import") }
             OutlinedButton(
+                enabled = !busy,
                 onClick = {
-                    val exportTheme = if (current.id == CUSTOM_THEME_ID) snapshotCustom() else current
-                    pendingExport = exportTheme
-                    exportLauncher.launch("${safeThemeFileName(exportTheme.name)}.keywi-theme.json")
+                    runCatching { if (current.id == CUSTOM_THEME_ID) snapshotCustom() else current }.fold(
+                        onSuccess = { exportTheme ->
+                            pendingExport = exportTheme
+                            exportLauncher.launch("${safeThemeFileName(exportTheme.name)}.keywi-theme.zip")
+                        },
+                        onFailure = { message = "Export failed: ${it.message}" },
+                    )
                 },
                 modifier = Modifier.weight(1f),
             ) { Text("Export") }
@@ -173,13 +214,18 @@ fun ThemeManagerSection(onThemeApplied: () -> Unit) {
             },
             confirmButton = {
                 TextButton(
-                    enabled = name.isNotBlank(),
+                    enabled = name.isNotBlank() && !busy,
                     onClick = {
-                        snapshotCustom()
-                        val saved = ThemeEngine.saveCustomAs(context, name)
-                        name = ""
-                        naming = false
-                        changed("Saved ${saved.name}")
+                        val selectedName = name
+                        scope.launch {
+                            busy = true
+                            val result = withContext(Dispatchers.IO) { runCatching { snapshotCustom(); ThemeEngine.saveCustomAs(context, selectedName) } }
+                            busy = false
+                            result.fold(
+                                onSuccess = { saved -> name = ""; naming = false; changed("Saved ${saved.name}") },
+                                onFailure = { message = "Save failed: ${it.message}"; naming = false },
+                            )
+                        }
                     },
                 ) { Text("Save") }
             },

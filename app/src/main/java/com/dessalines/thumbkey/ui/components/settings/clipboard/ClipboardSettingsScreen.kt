@@ -1,5 +1,6 @@
 package com.dessalines.thumbkey.ui.components.settings.clipboard
 
+import com.dessalines.thumbkey.ui.components.settings.gemPreferenceModifier
 import android.util.Log
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Column
@@ -47,7 +48,7 @@ import com.dessalines.thumbkey.db.DEFAULT_CLIPBOARD_SIZE_LIMIT_ENABLED
 import com.dessalines.thumbkey.db.DEFAULT_USE_PRIVATE_CLIPBOARD
 import com.dessalines.thumbkey.db.MAX_CLIPBOARD_MAX_SIZE
 import com.dessalines.thumbkey.db.MIN_CLIPBOARD_MAX_SIZE
-import com.dessalines.thumbkey.utils.SimpleTopAppBar
+import com.dessalines.thumbkey.ui.components.settings.GemSettingsTopAppBar as SimpleTopAppBar
 import com.dessalines.thumbkey.utils.TAG
 import com.dessalines.thumbkey.utils.toBool
 import com.dessalines.thumbkey.utils.toInt
@@ -150,6 +151,7 @@ fun ClipboardSettingsScreen(
             ) {
                 ProvidePreferenceTheme {
                     SwitchPreference(
+                        modifier = gemPreferenceModifier(),
                         value = clipboardHistoryEnabledState,
                         onValueChange = {
                             clipboardHistoryEnabledState = it
@@ -169,6 +171,7 @@ fun ClipboardSettingsScreen(
                         },
                     )
                     SwitchPreference(
+                        modifier = gemPreferenceModifier(),
                         value = clipboardAutoCleanupEnabledState,
                         onValueChange = {
                             clipboardAutoCleanupEnabledState = it
@@ -189,6 +192,7 @@ fun ClipboardSettingsScreen(
                         },
                     )
                     SliderPreference(
+                        modifier = gemPreferenceModifier(),
                         value = clipboardCleanupDuration.ordinal.toFloat(),
                         sliderValue = clipboardCleanupSliderState,
                         onValueChange = {
@@ -216,6 +220,7 @@ fun ClipboardSettingsScreen(
                         },
                     )
                     SwitchPreference(
+                        modifier = gemPreferenceModifier(),
                         value = clipboardSizeLimitEnabledState,
                         onValueChange = {
                             clipboardSizeLimitEnabledState = it
@@ -236,6 +241,7 @@ fun ClipboardSettingsScreen(
                         },
                     )
                     SliderPreference(
+                        modifier = gemPreferenceModifier(),
                         value = clipboardMaxSizeState,
                         sliderValue = clipboardMaxSizeSliderState,
                         onValueChange = {
@@ -261,6 +267,7 @@ fun ClipboardSettingsScreen(
                         },
                     )
                     SwitchPreference(
+                        modifier = gemPreferenceModifier(),
                         value = usePrivateClipboardState,
                         onValueChange = {
                             usePrivateClipboardState = it
