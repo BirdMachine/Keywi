@@ -678,10 +678,18 @@ fun SuggestionBarV2(ime: IMEService, onKaomoji: () -> Unit = {}, onFancyText: (S
             verticalAlignment = Alignment.CenterVertically,
         ) {
             listOf(
-                "𝕱𝖗𝖆𝖐𝖙𝖚𝖗" to "fraktur",
+                "ABC" to "uppercase",
+                "abc" to "lowercase",
+                "Title Case" to "title",
+                "aLtErNaTe" to "alternating",
+                "ˢᵘᵖᵉʳ" to "superscript",
+                "ₛᵤᵦ" to "subscript",
                 "𝗕𝗼𝗹𝗱" to "bold",
                 "𝘐𝘵𝘢𝘭𝘪𝘤" to "italic",
+                "𝙼𝚘𝚗𝚘" to "monospace",
                 "ⓒⓘⓡⓒⓛⓔ" to "circled",
+                "Ｆｕｌｌ" to "fullwidth",
+                "𝕱𝖗𝖆𝖐𝖙𝖚𝖗" to "fraktur",
             ).forEach { (label, style) ->
                 Surface(
                     onClick = { onFancyText(style); toolsExpanded = false },
