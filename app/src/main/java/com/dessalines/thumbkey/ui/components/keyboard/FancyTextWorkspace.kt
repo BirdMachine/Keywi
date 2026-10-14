@@ -3,6 +3,7 @@ package com.dessalines.thumbkey.ui.components.keyboard
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
@@ -40,7 +41,7 @@ fun FancyTextWorkspace(
         "𝕱𝖗𝖆𝖐𝖙𝖚𝖗" to "fraktur",
     )
     Surface(
-        modifier = modifier.fillMaxWidth(),
+        modifier = modifier.fillMaxWidth().height(220.dp),
         shape = RoundedCornerShape(topStart = 18.dp, topEnd = 18.dp),
         color = MaterialTheme.colorScheme.surface.copy(alpha = 0.96f),
         tonalElevation = 4.dp,
