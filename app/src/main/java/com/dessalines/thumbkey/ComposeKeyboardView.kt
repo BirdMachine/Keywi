@@ -105,18 +105,42 @@ class ComposeKeyboardView(
                                         val connection = ctx.activeInputConnectionOrNull()
                                         val selected = connection?.getSelectedText(0)?.toString().orEmpty()
                                         if (selected.isNotEmpty()) {
-                                            val fancy = buildString {
-                                                selected.forEach { char ->
-                                                    val upper = char in 'A'..'Z'
-                                                    val lower = char in 'a'..'z'
-                                                    val index = if (upper) char - 'A' else char - 'a'
-                                                    val code = when (style) {
-                                                        "bold" -> if (upper) 0x1D5D4 + index else if (lower) 0x1D5EE + index else char.code
-                                                        "italic" -> if (upper) 0x1D608 + index else if (lower) 0x1D622 + index else char.code
-                                                        "circled" -> if (upper) 0x24B6 + index else if (lower) 0x24D0 + index else char.code
-                                                        else -> if (upper) 0x1D56C + index else if (lower) 0x1D586 + index else char.code
+                                            val fancy = when (style) {
+                                                "uppercase" -> selected.uppercase()
+                                                "lowercase" -> selected.lowercase()
+                                                "title" -> selected.split(Regex("\\\\s+")).joinToString("") { word ->
+                                                    word.replaceFirstChar { it.uppercase() }
+                                                }
+                                                "alternating" -> buildString {
+                                                    var position = 0
+                                                    selected.forEach { char ->
+                                                        append(if (position % 2 == 0) char.lowercaseChar() else char.uppercaseChar())
+                                                        if (char.isLetter()) position++
                                                     }
-                                                    appendCodePoint(code)
+                                                }
+                                                else -> buildString {
+                                                    val superscript = "ᴬᴮꟲᴰᴱᶠᴳᴴᴵᴶᴷᴸᴹᴺᴼᴾꟴᴿˢᵀᵁⱽᵂˣʸᶻ"
+                                                    val subscript = "ₐᵦ꜀ₔₑբ₉ₕᵢⱼₖₗₘₙₒₚ૧ᵣₛₜᵤᵥwₓᵧz"
+                                                    selected.forEach { char ->
+                                                        val upper = char in 'A'..'Z'
+                                                        val lower = char in 'a'..'z'
+                                                        val index = if (upper) char - 'A' else char - 'a'
+                                                        when (style) {
+                                                            "superscript" -> append(if (upper || lower) superscript[index] else char)
+                                                            "subscript" -> append(if (upper || lower) subscript[index] else char)
+                                                            else -> {
+                                                                val code = when (style) {
+                                                                    "bold" -> if (upper) 0x1D5D4 + index else if (lower) 0x1D5EE + index else char.code
+                                                                    "italic" -> if (upper) 0x1D608 + index else if (lower) 0x1D622 + index else char.code
+                                                                    "monospace" -> if (upper) 0x1D670 + index else if (lower) 0x1D68A + index else char.code
+                                                                    "circled" -> if (upper) 0x24B6 + index else if (lower) 0x24D0 + index else char.code
+                                                                    "fullwidth" -> if (char.code in 33..126) char.code + 0xFEE0 else char.code
+                                                                    else -> if (upper) 0x1D56C + index else if (lower) 0x1D586 + index else char.code
+                                                                }
+                                                                appendCodePoint(code)
+                                                            }
+                                                        }
+                                                    }
                                                 }
                                             }
                                             connection?.commitText(fancy, 1)
