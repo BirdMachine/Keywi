@@ -43,6 +43,7 @@ import com.dessalines.thumbkey.diagnostics.KeywiDiagnostics
 import com.dessalines.thumbkey.ui.components.keyboard.BackdropMode
 import com.dessalines.thumbkey.ui.components.keyboard.BackdropThemePreferences
 import com.dessalines.thumbkey.ui.components.keyboard.BackdropVisualLayer
+import com.dessalines.thumbkey.ui.components.keyboard.FancyTextWorkspace
 import com.dessalines.thumbkey.ui.components.keyboard.ExpandedInputPaletteHost
 import com.dessalines.thumbkey.ui.components.keyboard.InputPalette
 import com.dessalines.thumbkey.ui.components.keyboard.KeyboardScreen
@@ -86,22 +87,13 @@ class ComposeKeyboardView(
             remember(ctx) { TypingOverlayPreferences.load(ctx) }
             var keyboardHeightPx by remember { mutableIntStateOf(0) }
             var activePalette by remember { mutableStateOf<InputPalette?>(null) }
+            var fancyOpen by remember { mutableStateOf(false) }
 
             CompositionLocalProvider(LocalLayoutDirection provides LayoutDirection.Ltr) {
                 MaterialTheme(colorScheme = keyboardColorScheme) {
                     Column(modifier = Modifier.fillMaxWidth()) {
                         if (keywiEnabled) {
-                            Box(Modifier.fillMaxWidth().zIndex(1f)) {
-                                if (toolbarBackdrop.mode != BackdropMode.NONE) BackdropVisualLayer(toolbarBackdrop, Modifier.fillMaxWidth().height(42.dp))
-                                SuggestionBarV2(
-                                    ctx,
-                                    onKaomoji = {
-                                        if (activePalette == InputPalette.KAOMOJI) {
-                                            PaletteSearchCapture.release(clear = true)
-                                            activePalette = null
-                                        } else activePalette = InputPalette.KAOMOJI
-                                    },
-                                    onFancyText = { style ->
+                            val applyFancyText: (String) -> Unit = { style: String ->
                                         val connection = ctx.activeInputConnectionOrNull()
                                         val selected = connection?.getSelectedText(0)?.toString().orEmpty()
                                         if (selected.isNotEmpty()) {
@@ -147,6 +139,23 @@ class ComposeKeyboardView(
                                         } else {
                                             Toast.makeText(ctx, "Select text to format", Toast.LENGTH_SHORT).show()
                                         }
+                                    }
+                            Box(Modifier.fillMaxWidth().zIndex(1f)) {
+                                if (toolbarBackdrop.mode != BackdropMode.NONE) BackdropVisualLayer(toolbarBackdrop, Modifier.fillMaxWidth().height(42.dp))
+                                SuggestionBarV2(
+                                    ctx,
+                                    onKaomoji = {
+                                        if (activePalette == InputPalette.KAOMOJI) {
+                                            PaletteSearchCapture.release(clear = true)
+                                            activePalette = null
+                                        } else {
+                                            fancyOpen = false
+                                            activePalette = InputPalette.KAOMOJI
+                                        }
+                                    },
+                                    onFancyOpen = {
+                                        fancyOpen = !fancyOpen
+                                        if (fancyOpen) activePalette = null
                                     },
                                 )
                                 val width = ToolbarBorderPreferences.loadWidth(ctx)
@@ -208,6 +217,13 @@ class ComposeKeyboardView(
                                 TypingOverlayPreferences.current,
                                 Modifier.matchParentSize().zIndex(4f),
                             )
+                            if (fancyOpen) {
+                                FancyTextWorkspace(
+                                    onApply = applyFancyText,
+                                    onClose = { fancyOpen = false },
+                                    modifier = Modifier.align(Alignment.BottomCenter).zIndex(5f),
+                                )
+                            }
                             activePalette?.let { palette ->
                                 ExpandedInputPaletteHost(
                                     palette, ctx,
