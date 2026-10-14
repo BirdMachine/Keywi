@@ -108,7 +108,7 @@ class ComposeKeyboardView(
                                             val fancy = when (style) {
                                                 "uppercase" -> selected.uppercase()
                                                 "lowercase" -> selected.lowercase()
-                                                "title" -> selected.split(Regex("\\\\s+")).joinToString("") { word ->
+                                                "title" -> selected.split(Regex("\\s+")).joinToString(" ") { word ->
                                                     word.replaceFirstChar { it.uppercase() }
                                                 }
                                                 "alternating" -> buildString {
@@ -119,8 +119,8 @@ class ComposeKeyboardView(
                                                     }
                                                 }
                                                 else -> buildString {
-                                                    val superscript = "ᴬᴮꟲᴰᴱᶠᴳᴴᴵᴶᴷᴸᴹᴺᴼᴾꟴᴿˢᵀᵁⱽᵂˣʸᶻ"
-                                                    val subscript = "ₐᵦ꜀ₔₑբ₉ₕᵢⱼₖₗₘₙₒₚ૧ᵣₛₜᵤᵥwₓᵧz"
+                                                    val superscript = "ᴬᴮCᴰᴱᶠᴳᴴᴵᴶᴷᴸᴹᴺᴼᴾQᴿˢᵀᵁⱽᵂˣʸᶻ"
+                                                    val subscript = "ₐᵦcₔₑf₉ₕᵢⱼₖₗₘₙₒₚqᵣₛₜᵤᵥwₓᵧz"
                                                     selected.forEach { char ->
                                                         val upper = char in 'A'..'Z'
                                                         val lower = char in 'a'..'z'
