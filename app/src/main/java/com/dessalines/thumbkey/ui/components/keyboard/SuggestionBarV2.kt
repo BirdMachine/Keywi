@@ -381,9 +381,8 @@ private fun GemToolbarAction(
 }
 
 @Composable
-fun SuggestionBarV2(ime: IMEService, onKaomoji: () -> Unit = {}, onFancyText: (String) -> Unit = {}) {
+fun SuggestionBarV2(ime: IMEService, onKaomoji: () -> Unit = {}, onFancyOpen: () -> Unit = {}) {
     var enabled by remember { mutableStateOf(SuggestionPreferences.enabled(ime)) }
-    var toolsExpanded by remember { mutableStateOf(false) }
     var currentToken by remember { mutableStateOf("") }
     var prefix by remember { mutableStateOf("") }
     var suggestions by remember { mutableStateOf(emptyList<String>()) }
@@ -656,7 +655,7 @@ fun SuggestionBarV2(ime: IMEService, onKaomoji: () -> Unit = {}, onFancyText: (S
             GemToolbarAction(
                 label = "𝕱",
                 theme = lozengeTheme,
-                onClick = { toolsExpanded = !toolsExpanded },
+                onClick = onFancyOpen,
             )
             GemToolbarAction(
                 label = "(｡•̀ᴗ-)✧",
@@ -665,41 +664,6 @@ fun SuggestionBarV2(ime: IMEService, onKaomoji: () -> Unit = {}, onFancyText: (S
                 modifier = Modifier.padding(start = 3.dp),
             )
 
-        }
-    }
-    if (toolsExpanded) {
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(42.dp)
-                .background(MaterialTheme.colorScheme.surface.copy(alpha = 0.92f))
-                .horizontalScroll(rememberScrollState())
-                .padding(horizontal = 8.dp),
-            verticalAlignment = Alignment.CenterVertically,
-        ) {
-            listOf(
-                "ABC" to "uppercase",
-                "abc" to "lowercase",
-                "Title Case" to "title",
-                "aLtErNaTe" to "alternating",
-                "ˢᵘᵖᵉʳ" to "superscript",
-                "ₛᵤᵦ" to "subscript",
-                "𝗕𝗼𝗹𝗱" to "bold",
-                "𝘐𝘵𝘢𝘭𝘪𝘤" to "italic",
-                "𝙼𝚘𝚗𝚘" to "monospace",
-                "ⓒⓘⓡⓒⓛⓔ" to "circled",
-                "Ｆｕｌｌ" to "fullwidth",
-                "𝕱𝖗𝖆𝖐𝖙𝖚𝖗" to "fraktur",
-            ).forEach { (label, style) ->
-                Surface(
-                    onClick = { onFancyText(style); toolsExpanded = false },
-                    shape = RoundedCornerShape(14.dp),
-                    color = MaterialTheme.colorScheme.primary.copy(alpha = 0.18f),
-                    modifier = Modifier.padding(end = 6.dp),
-                ) {
-                    Text(label, maxLines = 1, modifier = Modifier.padding(horizontal = 8.dp, vertical = 6.dp))
-                }
-            }
         }
     }
     }
