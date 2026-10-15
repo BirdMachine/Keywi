@@ -345,38 +345,27 @@ private fun SuggestionLozengeSlot(
 @Composable
 private fun GemToolbarAction(
     label: String,
-    theme: SuggestionLozengeThemeState,
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    val shape = RoundedCornerShape(18.dp)
-    val decorated = modifier.clip(shape).then(
-        when (theme.surfaceStyle) {
-            SuggestionLozengeSurfaceStyle.GRADIENT -> Modifier.keyboardGradientBackground(theme.surfaceGradient)
-            else -> Modifier
-        },
-    ).then(
-        when (theme.borderStyle) {
-            SuggestionLozengeBorderStyle.GRADIENT -> Modifier.keyboardGradientBorder(
-                backdrop = theme.borderGradient,
-                width = theme.borderWidth.dp,
-                radius = 18.dp,
-            )
-            else -> Modifier
-        },
-    )
     Surface(
         onClick = onClick,
-        shape = shape,
-        color = if (theme.surfaceStyle == SuggestionLozengeSurfaceStyle.SOLID) theme.surfaceColor else Color.Transparent,
-        tonalElevation = 2.dp,
-        shadowElevation = 1.dp,
-        border = if (theme.borderStyle == SuggestionLozengeBorderStyle.SOLID) {
-            BorderStroke(theme.borderWidth.dp, theme.borderColor)
-        } else null,
-        modifier = decorated,
+        shape = RoundedCornerShape(0.dp),
+        color = MaterialTheme.colorScheme.surfaceVariant,
+        contentColor = MaterialTheme.colorScheme.onSurfaceVariant,
+        tonalElevation = 0.dp,
+        shadowElevation = 0.dp,
+        modifier = modifier.height(34.dp),
     ) {
-        Text(label, maxLines = 1, modifier = Modifier.padding(horizontal = 7.dp, vertical = 6.dp))
+        Box(contentAlignment = Alignment.Center) {
+            Text(
+                label,
+                maxLines = 1,
+                style = MaterialTheme.typography.labelLarge,
+                fontWeight = FontWeight.Bold,
+                modifier = Modifier.padding(horizontal = 8.dp, vertical = 5.dp),
+            )
+        }
     }
 }
 
@@ -644,25 +633,24 @@ fun SuggestionBarV2(ime: IMEService, onKaomoji: () -> Unit = {}, onFancyOpen: ()
             }
 
 
-            // Stationary themed controls frame the horizontally scrolling suggestion lane.
-            Box(
-                Modifier.width(7.dp).height(30.dp).background(
-                    Brush.horizontalGradient(
-                        listOf(Color.Transparent, MaterialTheme.colorScheme.primary.copy(alpha = 0.12f), Color.Transparent),
-                    ),
-                ),
-            )
-            GemToolbarAction(
-                label = "𝕱",
-                theme = lozengeTheme,
-                onClick = onFancyOpen,
-            )
-            GemToolbarAction(
-                label = "(｡•̀ᴗ-)✧",
-                theme = lozengeTheme,
-                onClick = onKaomoji,
-                modifier = Modifier.padding(start = 3.dp),
-            )
+            // Fixed rectangular tools share one solid segment, separate from scrolling suggestions.
+            Row(
+                modifier = Modifier.padding(start = 4.dp).clip(RoundedCornerShape(0.dp)),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                GemToolbarAction(
+                    label = "𝕱",
+                    onClick = onFancyOpen,
+                )
+                Box(
+                    Modifier.width(1.dp).height(26.dp)
+                        .background(MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.28f)),
+                )
+                GemToolbarAction(
+                    label = "(｡•̀ᴗ-)✧",
+                    onClick = onKaomoji,
+                )
+            }
 
         }
     }
