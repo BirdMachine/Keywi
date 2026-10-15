@@ -3,7 +3,7 @@ package com.dessalines.thumbkey.ui.components.keyboard
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
@@ -14,6 +14,7 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 
 /**
@@ -23,7 +24,7 @@ import androidx.compose.ui.unit.dp
 @Composable
 fun FancyTextWorkspace(
     onApply: (String) -> Unit,
-    onClose: () -> Unit,
+    onClose: () -> Unit = {},
     modifier: Modifier = Modifier,
 ) {
     val styles = listOf(
@@ -41,21 +42,15 @@ fun FancyTextWorkspace(
         "𝕱𝖗𝖆𝖐𝖙𝖚𝖗" to "fraktur",
     )
     Surface(
-        modifier = modifier.fillMaxWidth().height(220.dp),
+        modifier = modifier.fillMaxSize(),
         shape = RoundedCornerShape(topStart = 18.dp, topEnd = 18.dp),
-        color = MaterialTheme.colorScheme.surface.copy(alpha = 0.96f),
-        tonalElevation = 4.dp,
+        color = Color.Transparent,
+        tonalElevation = 0.dp,
     ) {
         Column(
-            modifier = Modifier.fillMaxWidth().padding(10.dp),
+            modifier = Modifier.fillMaxSize().padding(10.dp),
             verticalArrangement = Arrangement.spacedBy(8.dp),
         ) {
-            Row(horizontalArrangement = Arrangement.SpaceBetween, modifier = Modifier.fillMaxWidth()) {
-                Text("𝕱  Fancy Text", style = MaterialTheme.typography.titleMedium)
-                Surface(onClick = onClose, shape = RoundedCornerShape(12.dp)) {
-                    Text("✕", modifier = Modifier.padding(horizontal = 12.dp, vertical = 4.dp))
-                }
-            }
             Text("Select text in the editor, then choose a style.", style = MaterialTheme.typography.bodySmall)
             Column(
                 modifier = Modifier.fillMaxWidth().verticalScroll(rememberScrollState()),
