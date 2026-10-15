@@ -27,6 +27,7 @@ import com.dessalines.thumbkey.inputcontext.ContextEnginePreferences
 /** Browsable input surfaces that are deliberately opened instead of cycled as keyboard modes. */
 enum class InputPalette {
     KAOMOJI,
+    FANCY_TEXT,
 }
 
 @Composable
@@ -38,6 +39,8 @@ fun ExpandedInputPaletteHost(
     onDismiss: () -> Unit,
     keyboardHeight: Dp,
     modifier: Modifier = Modifier,
+    onFancyApply: (String) -> Unit = {},
+    onSwitchPalette: (InputPalette) -> Unit = {},
 ) {
     val capabilities =
         ContextEnginePolicy.evaluate(
@@ -49,7 +52,7 @@ fun ExpandedInputPaletteHost(
     val configuration = LocalConfiguration.current
     val view = LocalView.current
     val audioManager = ime.getSystemService(Context.AUDIO_SERVICE) as AudioManager
-    val searchActive = PaletteSearchCapture.active
+    val searchActive = palette == InputPalette.KAOMOJI && PaletteSearchCapture.active
     val browseHeight =
         (configuration.screenHeightDp * 0.62f)
             .coerceIn(380f, 680f)
@@ -107,6 +110,9 @@ fun ExpandedInputPaletteHost(
             }
 
             when (palette) {
+                InputPalette.FANCY_TEXT -> {
+                    FancyTextWorkspace(onApply = onFancyApply, modifier = Modifier.fillMaxSize())
+                }
                 InputPalette.KAOMOJI -> {
                     KaomojiRoom(
                         onCommit = { text ->
