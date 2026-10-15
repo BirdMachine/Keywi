@@ -52,8 +52,13 @@ internal object FancyTextFormatter {
             "alternating" -> buildString {
                 var position = 0
                 text.forEach { char ->
-                    append(if (position % 2 == 0) char.lowercaseChar() else char.uppercaseChar())
-                    if (char.isLetter()) position++
+                    if (char.isLetter()) {
+                        append(if (position % 2 == 0) char.lowercaseChar() else char.uppercaseChar())
+                        position++
+                    } else {
+                        append(char)
+                        position = 0
+                    }
                 }
             }
             "superscript", "subscript" -> buildString {
