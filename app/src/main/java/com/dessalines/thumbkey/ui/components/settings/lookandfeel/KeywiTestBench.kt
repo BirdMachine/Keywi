@@ -10,6 +10,22 @@ import androidx.compose.ui.platform.LocalContext
 import com.dessalines.thumbkey.ui.components.keyboard.BackdropThemePreferences
 import com.dessalines.thumbkey.ui.components.keyboard.BackdropVisualLayer
 import androidx.compose.foundation.background
+import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.padding
+import androidx.compose.material3.Surface
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.text.font.FontWeight
+import com.dessalines.thumbkey.ui.components.keyboard.KeyThemePreferences
+import com.dessalines.thumbkey.ui.components.keyboard.KeySurfaceStyle
+import com.dessalines.thumbkey.ui.components.keyboard.KeyBorderStyle
+import com.dessalines.thumbkey.ui.components.keyboard.SuggestionLozengeThemePreferences
+import com.dessalines.thumbkey.ui.components.keyboard.SuggestionLozengeSurfaceStyle
+import com.dessalines.thumbkey.ui.components.keyboard.keyboardGradientBackground
+import com.dessalines.thumbkey.ui.components.keyboard.keyboardGradientBorder
 import androidx.compose.ui.graphics.Color
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -41,7 +57,49 @@ fun KeywiThemeTestBench(
         Box(Modifier.fillMaxWidth().height(72.dp).clip(RoundedCornerShape(12.dp)).background(MaterialTheme.colorScheme.surfaceVariant)) {
             BackdropVisualLayer(BackdropThemePreferences.load(LocalContext.current))
         }
-        Text("Background preview above · tap below to open the real keyboard", style = MaterialTheme.typography.labelSmall)
+        Text("Material inspector · actual saved key and suggestion styling", style = MaterialTheme.typography.labelSmall)
+        val context = LocalContext.current
+        val keyTheme = KeyThemePreferences.load(context)
+        val lozenge = SuggestionLozengeThemePreferences.load(context)
+        Row(
+            Modifier.fillMaxWidth().padding(vertical = 8.dp),
+            horizontalArrangement = Arrangement.spacedBy(16.dp),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            val keyRadius = 18.dp
+            val keyModifier = Modifier.size(104.dp).clip(RoundedCornerShape(keyRadius))
+                .then(if (keyTheme.surfaceStyle == KeySurfaceStyle.GRADIENT)
+                    Modifier.keyboardGradientBackground(keyTheme.surfaceGradient) else Modifier)
+                .then(if (keyTheme.borderStyle == KeyBorderStyle.GRADIENT)
+                    Modifier.keyboardGradientBorder(backdrop = keyTheme.borderGradient, width = 2.dp, radius = keyRadius) else Modifier)
+            Surface(
+                modifier = keyModifier,
+                shape = RoundedCornerShape(keyRadius),
+                color = when (keyTheme.surfaceStyle) {
+                    KeySurfaceStyle.SOLID -> keyTheme.surfaceColor
+                    KeySurfaceStyle.GRADIENT -> Color.Transparent
+                    KeySurfaceStyle.NONE -> MaterialTheme.colorScheme.surface.copy(alpha = 0.18f)
+                },
+                border = if (keyTheme.borderStyle == KeyBorderStyle.SOLID) BorderStroke(2.dp, keyTheme.borderColor) else null,
+                shadowElevation = if (keyTheme.borderStyle == KeyBorderStyle.SHADOW) keyTheme.shadowElevation.dp else 0.dp,
+            ) {
+                Box(contentAlignment = Alignment.Center) {
+                    Text("A", style = MaterialTheme.typography.headlineLarge, fontWeight = FontWeight.Bold)
+                }
+            }
+            val chipModifier = Modifier.clip(RoundedCornerShape(16.dp))
+                .then(if (lozenge.surfaceStyle == SuggestionLozengeSurfaceStyle.GRADIENT)
+                    Modifier.keyboardGradientBackground(lozenge.surfaceGradient) else Modifier)
+            Surface(
+                modifier = chipModifier,
+                shape = RoundedCornerShape(16.dp),
+                color = if (lozenge.surfaceStyle == SuggestionLozengeSurfaceStyle.SOLID) lozenge.surfaceColor else Color.Transparent,
+                border = BorderStroke(lozenge.borderWidth.dp, lozenge.borderColor),
+            ) {
+                Text("suggestion", Modifier.padding(horizontal = 12.dp, vertical = 8.dp))
+            }
+        }
+        Text("Tap below to try the full keyboard", style = MaterialTheme.typography.labelSmall)
         OutlinedTextField(
             value = testText,
             onValueChange = { testText = it },
