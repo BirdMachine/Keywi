@@ -273,7 +273,38 @@ private fun GradientEditor(label: String, gradient: KeyboardBackdrop, onChange: 
 }
 
 @Composable
-private fun ColorEditor(label: String, color: Color, onChange: (Color) -> Unit) { Column(Modifier.fillMaxWidth().padding(vertical = 2.dp)) { Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) { Box(Modifier.size(22.dp).clip(RoundedCornerShape(7.dp)).background(color)); Text("$label • A ${(color.alpha * 100).roundToInt()}%", style = MaterialTheme.typography.labelMedium) }; Channel("R", color.red) { onChange(Color(it, color.green, color.blue, color.alpha)) }; Channel("G", color.green) { onChange(Color(color.red, it, color.blue, color.alpha)) }; Channel("B", color.blue) { onChange(Color(color.red, color.green, it, color.alpha)) }; Channel("A", color.alpha) { onChange(Color(color.red, color.green, color.blue, it)) } } }
+private fun ColorEditor(label: String, color: Color, onChange: (Color) -> Unit) {
+    var showChannels by remember { mutableStateOf(false) }
+    val hsv = remember(color) {
+        FloatArray(3).also { android.graphics.Color.colorToHSV(
+            android.graphics.Color.rgb((color.red * 255).toInt(), (color.green * 255).toInt(), (color.blue * 255).toInt()), it
+        ) }
+    }
+    fun changeHsv(hue: Float = hsv[0], saturation: Float = hsv[1], value: Float = hsv[2]) {
+        val rgb = android.graphics.Color.HSVToColor(floatArrayOf(hue, saturation, value))
+        onChange(Color(android.graphics.Color.red(rgb) / 255f, android.graphics.Color.green(rgb) / 255f, android.graphics.Color.blue(rgb) / 255f, color.alpha))
+    }
+    Column(Modifier.fillMaxWidth().padding(vertical = 4.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
+        Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
+            Box(Modifier.size(32.dp).clip(RoundedCornerShape(8.dp)).background(color))
+            Text(label, style = MaterialTheme.typography.labelMedium, modifier = Modifier.weight(1f))
+            Text("Advanced ${if (showChannels) "▲" else "▼"}", modifier = Modifier.clickable { showChannels = !showChannels }, color = MaterialTheme.colorScheme.primary, style = MaterialTheme.typography.labelSmall)
+        }
+        Text("Hue • ${hsv[0].roundToInt()}°", style = MaterialTheme.typography.labelSmall)
+        Slider(hsv[0], { changeHsv(hue = it) }, valueRange = 0f..360f)
+        Text("Saturation • ${(hsv[1] * 100).roundToInt()}%", style = MaterialTheme.typography.labelSmall)
+        Slider(hsv[1], { changeHsv(saturation = it) }, valueRange = 0f..1f)
+        Text("Brightness • ${(hsv[2] * 100).roundToInt()}%", style = MaterialTheme.typography.labelSmall)
+        Slider(hsv[2], { changeHsv(value = it) }, valueRange = 0f..1f)
+        if (showChannels) {
+            Channel("R", color.red) { onChange(Color(it, color.green, color.blue, color.alpha)) }
+            Channel("G", color.green) { onChange(Color(color.red, it, color.blue, color.alpha)) }
+            Channel("B", color.blue) { onChange(Color(color.red, color.green, it, color.alpha)) }
+        }
+        Text("Opacity • ${(color.alpha * 100).roundToInt()}%", style = MaterialTheme.typography.labelSmall)
+        Slider(color.alpha, { onChange(Color(color.red, color.green, color.blue, it)) }, valueRange = 0f..1f)
+    }
+}
 @Composable
 private fun Channel(label: String, value: Float, onChange: (Float) -> Unit) { Text("$label ${(value * 255).roundToInt()}", style = MaterialTheme.typography.labelSmall); Slider(value, onChange, valueRange = 0f..1f) }
 
