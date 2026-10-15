@@ -43,7 +43,6 @@ import com.dessalines.thumbkey.diagnostics.KeywiDiagnostics
 import com.dessalines.thumbkey.ui.components.keyboard.BackdropMode
 import com.dessalines.thumbkey.ui.components.keyboard.BackdropThemePreferences
 import com.dessalines.thumbkey.ui.components.keyboard.BackdropVisualLayer
-import com.dessalines.thumbkey.ui.components.keyboard.FancyTextWorkspace
 import com.dessalines.thumbkey.ui.components.keyboard.ExpandedInputPaletteHost
 import com.dessalines.thumbkey.ui.components.keyboard.InputPalette
 import com.dessalines.thumbkey.ui.components.keyboard.KeyboardScreen
@@ -87,7 +86,6 @@ class ComposeKeyboardView(
             remember(ctx) { TypingOverlayPreferences.load(ctx) }
             var keyboardHeightPx by remember { mutableIntStateOf(0) }
             var activePalette by remember { mutableStateOf<InputPalette?>(null) }
-            var fancyOpen by remember { mutableStateOf(false) }
 
             CompositionLocalProvider(LocalLayoutDirection provides LayoutDirection.Ltr) {
                 MaterialTheme(colorScheme = keyboardColorScheme) {
@@ -150,13 +148,14 @@ class ComposeKeyboardView(
                                             PaletteSearchCapture.release(clear = true)
                                             activePalette = null
                                         } else {
-                                            fancyOpen = false
+                                            PaletteSearchCapture.release(clear = true)
                                             activePalette = InputPalette.KAOMOJI
                                         }
                                     },
                                     onFancyOpen = {
-                                        fancyOpen = !fancyOpen
-                                        if (fancyOpen) activePalette = null
+                                        PaletteSearchCapture.release(clear = true)
+                                        activePalette =
+                                            if (activePalette == InputPalette.FANCY_TEXT) null else InputPalette.FANCY_TEXT
                                     },
                                 )
                                 val width = ToolbarBorderPreferences.loadWidth(ctx)
@@ -218,21 +217,23 @@ class ComposeKeyboardView(
                                 TypingOverlayPreferences.current,
                                 Modifier.matchParentSize().zIndex(4f),
                             )
-                            if (fancyOpen) {
-                                FancyTextWorkspace(
-                                    onApply = applyFancyText,
-                                    onClose = { fancyOpen = false },
-                                    modifier = Modifier.align(Alignment.BottomCenter).zIndex(5f),
-                                )
-                            }
                             activePalette?.let { palette ->
                                 ExpandedInputPaletteHost(
-                                    palette, ctx,
-                                    (settings?.vibrateOnTap ?: DEFAULT_VIBRATE_ON_TAP).toBool(),
-                                    (settings?.soundOnTap ?: DEFAULT_SOUND_ON_TAP).toBool(),
-                                    { PaletteSearchCapture.release(clear = true); activePalette = null },
-                                    with(density) { keyboardHeightPx.toDp() },
-                                    Modifier.align(Alignment.BottomCenter).zIndex(5f),
+                                    palette = palette,
+                                    ime = ctx,
+                                    vibrateOnTap = (settings?.vibrateOnTap ?: DEFAULT_VIBRATE_ON_TAP).toBool(),
+                                    soundOnTap = (settings?.soundOnTap ?: DEFAULT_SOUND_ON_TAP).toBool(),
+                                    onDismiss = {
+                                        PaletteSearchCapture.release(clear = true)
+                                        activePalette = null
+                                    },
+                                    keyboardHeight = with(density) { keyboardHeightPx.toDp() },
+                                    modifier = Modifier.align(Alignment.BottomCenter).zIndex(5f),
+                                    onFancyApply = applyFancyText,
+                                    onSwitchPalette = { next ->
+                                        PaletteSearchCapture.release(clear = true)
+                                        activePalette = next
+                                    },
                                 )
                             }
                         }
