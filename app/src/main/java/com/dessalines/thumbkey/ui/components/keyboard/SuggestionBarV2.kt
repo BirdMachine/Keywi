@@ -33,7 +33,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
-import androidx.compose.ui.draw.drawBehind
+import androidx.compose.ui.draw.drawWithContent
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.foundation.layout.widthIn
@@ -478,8 +478,9 @@ fun SuggestionBarV2(ime: IMEService, onKaomoji: () -> Unit = {}, onFancyOpen: ()
             verticalAlignment = Alignment.CenterVertically,
         ) {
             // Active diamond uses the configured active/current-word lozenge background.
-            // Inactive diamond returns to the normal lozenge theme surface.
+            // Toggle face uses the lozenge fill; its outline uses the KEY theme.
             val toggleShape = RoundedCornerShape(18.dp)
+            val toggleKeyTheme = KeyThemePreferences.current
             val toggleModifier =
                 Modifier
                     .padding(start = 5.dp)
@@ -511,17 +512,13 @@ fun SuggestionBarV2(ime: IMEService, onKaomoji: () -> Unit = {}, onFancyOpen: ()
                     },
             ) {
                 Box(
-                    Modifier.drawBehind {
+                    Modifier.drawWithContent {
+                        drawContent()
                         // Draw on top of the active face, inset by half the stroke width.
                         // A Surface border underneath a themed fill can disappear.
                         val stroke = 2.dp.toPx()
                         drawCircle(
-                            color =
-                                if (enabled) {
-                                    lozengeTheme.currentWordHighlightColor ?: newWordHighlightColor
-                                } else {
-                                    lozengeTheme.borderColor
-                                },
+                            color = toggleKeyTheme.borderColor,
                             radius = (size.minDimension - stroke) / 2f,
                             style = Stroke(width = stroke),
                         )
