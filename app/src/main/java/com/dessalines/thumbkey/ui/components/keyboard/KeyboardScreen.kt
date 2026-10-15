@@ -193,8 +193,23 @@ fun KeyboardScreen(
     LaunchedEffect(boardId, activeBoard?.id) {
         if (boardId != null && activeBoard == null) { boardId = null; mode = KeyboardMode.MAIN; capsLock = false }
     }
-    val keyboard = remember(baseKeyboard, boards.isNotEmpty()) {
-        if (boards.isNotEmpty()) baseKeyboard.withBoardPaging() else baseKeyboard
+    val keyboard = remember(baseKeyboard, baseDefinition, activeBoard, mode, boards.isNotEmpty()) {
+        if (activeBoard != null) {
+            // The custom 3x3 replaces only the main letter grid, never the right tools
+            // or the bottom spacebar/enter row from the selected host geometry.
+            val host = when (mode) {
+                KeyboardMode.NUMERIC -> baseDefinition.modes.numeric
+                KeyboardMode.SHIFTED -> baseDefinition.modes.shifted
+                KeyboardMode.CTRLED -> baseDefinition.modes.ctrled ?: baseDefinition.modes.main
+                KeyboardMode.ALTED -> baseDefinition.modes.alted ?: baseDefinition.modes.main
+                else -> baseDefinition.modes.main
+            }
+            activeBoard.overlayOn(host, mode == KeyboardMode.NUMERIC).withBoardPaging()
+        } else if (boards.isNotEmpty()) {
+            baseKeyboard.withBoardPaging()
+        } else {
+            baseKeyboard
+        }
     }
     fun boardEvent(action: KeyAction) {
         when (action) {
