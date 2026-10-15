@@ -84,10 +84,8 @@ fun FancyTextWorkspace(
                         modifier = Modifier.fillMaxWidth(),
                     ) {
                         row.forEach { style ->
-                            Surface(
+                            PaletteKeySurface(
                                 onClick = { onApply(style.id) },
-                                shape = RoundedCornerShape(12.dp),
-                                color = MaterialTheme.colorScheme.primary.copy(alpha = 0.16f),
                                 modifier = Modifier.weight(1f),
                             ) {
                                 Column(
