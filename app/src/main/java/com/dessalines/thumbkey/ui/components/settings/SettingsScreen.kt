@@ -86,7 +86,7 @@ fun SettingsScreen(
                 title = {
                     Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(10.dp)) {
                         Icon(Icons.Outlined.Diamond, contentDescription = null, tint = MaterialTheme.colorScheme.primary)
-                        Text(stringResource(R.string.app_name))
+                        Text("KEYWI ✦", style = MaterialTheme.typography.headlineSmall)
                     }
                 },
             )
