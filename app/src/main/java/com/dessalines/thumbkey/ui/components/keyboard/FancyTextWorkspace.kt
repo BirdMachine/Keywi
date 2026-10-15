@@ -1,11 +1,13 @@
 package com.dessalines.thumbkey.ui.components.keyboard
 
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.horizontalScroll
@@ -19,6 +21,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.style.TextOverflow
@@ -43,13 +46,15 @@ fun FancyTextWorkspace(
     Surface(
         modifier = modifier.fillMaxSize(),
         shape = RoundedCornerShape(topStart = 18.dp, topEnd = 18.dp),
-        color = Color.Transparent,
+        color = MaterialTheme.colorScheme.surface.copy(alpha = 0.83f),
+        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.55f)),
         tonalElevation = 0.dp,
     ) {
         Column(
             modifier = Modifier.fillMaxSize().padding(horizontal = 9.dp, vertical = 7.dp),
             verticalArrangement = Arrangement.spacedBy(8.dp),
         ) {
+            Text("𝕱  FANCY TEXT", style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.primary)
             Text(
                 if (previewText.isEmpty()) "Select text to apply • showing sample previews"
                 else "Previewing selected text • tap a style to apply",
@@ -86,7 +91,7 @@ fun FancyTextWorkspace(
                         row.forEach { style ->
                             PaletteKeySurface(
                                 onClick = { onApply(style.id) },
-                                modifier = Modifier.weight(1f),
+                                modifier = Modifier.weight(1f).heightIn(min = 68.dp),
                             ) {
                                 Column(
                                     modifier = Modifier.padding(horizontal = 9.dp, vertical = 8.dp),
