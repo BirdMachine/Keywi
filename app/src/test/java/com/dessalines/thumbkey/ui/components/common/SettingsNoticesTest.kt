@@ -34,15 +34,14 @@ class SettingsNoticesTest {
                 SettingsNoticeBanners(11, viewed.value) { acknowledgments++; viewed.value = 11 }
             } }
         }
-        compose.onNodeWithText("BUILD 11 · WHAT'S NEW").assertIsDisplayed()
-        compose.onNodeWithText("Done").performClick()
-        compose.onNodeWithText("GOOGLE POLICY · INFORMATION").assertIsDisplayed()
-        compose.onNodeWithText("Done").performClick()
-        compose.runOnIdle { assertEquals(1, acknowledgments); assertEquals(11, viewed.value) }
+        // Both notices remain available as banners, but neither auto-launches.
+        assertEquals(0, compose.onAllNodesWithText("Done").fetchSemanticsNodes().size)
         compose.onNodeWithText("Welcome to Keywi").performClick()
         compose.onNodeWithText("BUILD 11 · WHAT'S NEW").assertIsDisplayed()
         compose.onNodeWithText("Done").performClick()
-        // Reopening a read welcome does not automatically reopen the policy.
+        compose.runOnIdle { assertEquals(1, acknowledgments); assertEquals(11, viewed.value) }
+        // Closing the welcome does not automatically open the policy.
+        assertEquals(0, compose.onAllNodesWithText("Done").fetchSemanticsNodes().size)
         compose.onNodeWithText("Android installation policy").performClick()
         compose.onNodeWithText("GOOGLE POLICY · INFORMATION").assertIsDisplayed()
         compose.onNodeWithText("Done").performClick()
