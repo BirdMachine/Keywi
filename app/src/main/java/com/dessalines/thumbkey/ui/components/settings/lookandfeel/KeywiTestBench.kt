@@ -33,6 +33,8 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -46,6 +48,29 @@ fun KeywiThemeTestBench(
     modifier: Modifier = Modifier,
 ) {
     var testText by remember { mutableStateOf("") }
+    val context = LocalContext.current
+    var themeRevision by remember { mutableIntStateOf(0) }
+    // Editors persist every slider change. Observe those writes directly so the
+    // inspector updates during a drag, without waiting for Save or a manual refresh.
+    DisposableEffect(context) {
+        val preferenceFiles = listOf(
+            "birdie_backdrop_theme",
+            "key_theme_preferences",
+            "suggestion_lozenge_theme",
+            "birdie_toolbar_theme",
+        )
+        val listener = android.content.SharedPreferences.OnSharedPreferenceChangeListener { _, _ ->
+            themeRevision++
+        }
+        val preferences = preferenceFiles.map {
+            context.getSharedPreferences(it, android.content.Context.MODE_PRIVATE)
+        }
+        preferences.forEach { it.registerOnSharedPreferenceChangeListener(listener) }
+        onDispose {
+            preferences.forEach { it.unregisterOnSharedPreferenceChangeListener(listener) }
+        }
+    }
+    @Suppress("UNUSED_VARIABLE") val currentThemeRevision = themeRevision
 
     Column(modifier = modifier.then(gemSectionModifier())) {
         Text("Test out Keywi", style = MaterialTheme.typography.titleMedium)
@@ -58,7 +83,6 @@ fun KeywiThemeTestBench(
             BackdropVisualLayer(BackdropThemePreferences.load(LocalContext.current))
         }
         Text("Material inspector · actual saved key and suggestion styling", style = MaterialTheme.typography.labelSmall)
-        val context = LocalContext.current
         val keyTheme = KeyThemePreferences.load(context)
         val lozenge = SuggestionLozengeThemePreferences.load(context)
         Row(
