@@ -32,6 +32,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.rememberScrollState
@@ -348,15 +349,11 @@ private fun GemToolbarAction(
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    Surface(
+    // Use the same gem material as keys, without a separate opaque rectangle.
+    PaletteKeySurface(
         onClick = onClick,
-        shape = RoundedCornerShape(0.dp),
-        color = KeyThemePreferences.current.surfaceColor,
-        border = BorderStroke(1.dp, KeyThemePreferences.current.borderColor),
-        contentColor = MaterialTheme.colorScheme.onSurface,
-        tonalElevation = 0.dp,
-        shadowElevation = 0.dp,
         modifier = modifier.height(34.dp),
+        radius = 0,
     ) {
         Box(contentAlignment = Alignment.Center) {
             Text(
@@ -475,7 +472,7 @@ fun SuggestionBarV2(ime: IMEService, onKaomoji: () -> Unit = {}, onFancyOpen: ()
         modifier = Modifier.fillMaxWidth().height(BAR_HEIGHT_DP.dp),
     ) {
         Row(
-            modifier = Modifier.fillMaxSize().padding(horizontal = 6.dp, vertical = 4.dp),
+            modifier = Modifier.fillMaxSize().padding(start = 6.dp, end = 0.dp, top = 4.dp, bottom = 4.dp),
             verticalAlignment = Alignment.CenterVertically,
         ) {
             // Active diamond uses the configured active/current-word lozenge background.
@@ -501,13 +498,20 @@ fun SuggestionBarV2(ime: IMEService, onKaomoji: () -> Unit = {}, onFancyOpen: ()
                 } else {
                     Color.Transparent
                 },
-                border = BorderStroke(1.dp, if (enabled) lozengeTheme.currentWordHighlightColor ?: newWordHighlightColor else lozengeTheme.borderColor),
+                // Draw the outline on the outermost modifier so the active fill cannot paint over it.
+                border = null,
                 tonalElevation = 0.dp,
                 shadowElevation = 1.dp,
-                modifier = toggleModifier.clickable {
-                    enabled = !enabled
-                    SuggestionPreferences.setEnabled(ime, enabled)
-                },
+                modifier = toggleModifier
+                    .border(
+                        1.dp,
+                        if (enabled) lozengeTheme.currentWordHighlightColor ?: newWordHighlightColor else lozengeTheme.borderColor,
+                        toggleShape,
+                    )
+                    .clickable {
+                        enabled = !enabled
+                        SuggestionPreferences.setEnabled(ime, enabled)
+                    },
             ) {
                 Text(
                     text = if (enabled) "◈" else "◇",
