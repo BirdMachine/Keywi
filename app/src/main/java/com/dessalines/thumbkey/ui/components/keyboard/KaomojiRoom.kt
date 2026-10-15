@@ -3,6 +3,7 @@ package com.dessalines.thumbkey.ui.components.keyboard
 import android.content.Intent
 import android.net.Uri
 import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.background
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.horizontalScroll
@@ -98,9 +99,12 @@ fun KaomojiRoom(
     }
 
     Column(
-        modifier = modifier.padding(horizontal = 7.dp, vertical = 5.dp),
+        modifier = modifier.clip(RoundedCornerShape(topStart = 18.dp, topEnd = 18.dp))
+            .background(MaterialTheme.colorScheme.surface.copy(alpha = 0.82f))
+            .padding(horizontal = 9.dp, vertical = 8.dp),
         verticalArrangement = Arrangement.spacedBy(5.dp),
     ) {
+        Text("✧  KAOMOJI", style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.primary)
         Row(
             modifier = Modifier.fillMaxWidth(),
             verticalAlignment = Alignment.CenterVertically,
