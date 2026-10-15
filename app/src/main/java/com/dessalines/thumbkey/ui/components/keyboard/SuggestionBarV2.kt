@@ -33,6 +33,8 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.drawBehind
+import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.rememberScrollState
@@ -503,20 +505,29 @@ fun SuggestionBarV2(ime: IMEService, onKaomoji: () -> Unit = {}, onFancyOpen: ()
                 tonalElevation = 0.dp,
                 shadowElevation = 1.dp,
                 modifier = toggleModifier
-                    .border(
-                        1.dp,
-                        if (enabled) lozengeTheme.currentWordHighlightColor ?: newWordHighlightColor else lozengeTheme.borderColor,
-                        toggleShape,
-                    )
                     .clickable {
                         enabled = !enabled
                         SuggestionPreferences.setEnabled(ime, enabled)
                     },
             ) {
+                Box(
+                    Modifier.drawBehind {
+                        // Draw on top of the active face, inset by half the stroke width.
+                        // A Surface border underneath a themed fill can disappear.
+                        val stroke = 2.dp.toPx()
+                        drawCircle(
+                            color = if (enabled) lozengeTheme.currentWordHighlightColor ?: newWordHighlightColor else lozengeTheme.borderColor,
+                            radius = (size.minDimension - stroke) / 2f,
+                            style = Stroke(width = stroke),
+                        )
+                    },
+                    contentAlignment = Alignment.Center,
+                ) {
                 Text(
                     text = if (enabled) "◈" else "◇",
                     modifier = Modifier.padding(horizontal = 10.dp, vertical = 6.dp),
                 )
+                }
             }
             Box(
                 modifier = Modifier.weight(1f).fillMaxSize(),
