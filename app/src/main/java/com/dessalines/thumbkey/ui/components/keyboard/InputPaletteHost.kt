@@ -111,6 +111,8 @@ fun ExpandedInputPaletteHost(
                 )
             }
 
+            Column(modifier = Modifier.fillMaxSize()) {
+                PaletteWorkspaceHeader(palette, onSwitchPalette, onDismiss)
             when (palette) {
                 InputPalette.FANCY_TEXT -> {
                     FancyTextWorkspace(onApply = onFancyApply, modifier = Modifier.fillMaxSize())
@@ -129,6 +131,7 @@ fun ExpandedInputPaletteHost(
                         modifier = Modifier.fillMaxSize(),
                     )
                 }
+            }
             }
         }
     }
