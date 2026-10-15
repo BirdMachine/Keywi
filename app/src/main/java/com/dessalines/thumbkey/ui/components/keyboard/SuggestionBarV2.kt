@@ -516,7 +516,12 @@ fun SuggestionBarV2(ime: IMEService, onKaomoji: () -> Unit = {}, onFancyOpen: ()
                         // A Surface border underneath a themed fill can disappear.
                         val stroke = 2.dp.toPx()
                         drawCircle(
-                            color = if (enabled) lozengeTheme.currentWordHighlightColor ?: newWordHighlightColor else lozengeTheme.borderColor,
+                            color =
+                                if (enabled) {
+                                    lozengeTheme.currentWordHighlightColor ?: newWordHighlightColor
+                                } else {
+                                    lozengeTheme.borderColor
+                                },
                             radius = (size.minDimension - stroke) / 2f,
                             style = Stroke(width = stroke),
                         )
