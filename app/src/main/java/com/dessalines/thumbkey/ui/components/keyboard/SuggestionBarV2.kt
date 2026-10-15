@@ -614,16 +614,13 @@ fun SuggestionBarV2(ime: IMEService, onKaomoji: () -> Unit = {}, onFancyOpen: ()
 
             // Fixed rectangular tools share one solid segment, separate from scrolling suggestions.
             Row(
-                modifier = Modifier.clip(RoundedCornerShape(0.dp)),
+                modifier = Modifier.padding(end = 0.dp),
+                horizontalArrangement = androidx.compose.foundation.layout.Arrangement.spacedBy(0.dp),
                 verticalAlignment = Alignment.CenterVertically,
             ) {
                 GemToolbarAction(
                     label = "𝕱",
                     onClick = onFancyOpen,
-                )
-                Box(
-                    Modifier.width(1.dp).height(26.dp)
-                        .background(MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.28f)),
                 )
                 GemToolbarAction(
                     label = "(｡•̀ᴗ-)✧",
