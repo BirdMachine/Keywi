@@ -26,7 +26,7 @@ internal fun PaletteKeySurface(
             Modifier.keyboardGradientBackground(theme.surfaceGradient)
         } else Modifier)
         .then(if (theme.borderStyle == KeyBorderStyle.GRADIENT) {
-            Modifier.keyboardGradientBorder(theme.borderGradient, 1.dp, radius.dp)
+            Modifier.keyboardGradientBorder(backdrop = theme.borderGradient, width = 1.dp, radius = radius.dp)
         } else Modifier)
     Surface(
         onClick = onClick,
