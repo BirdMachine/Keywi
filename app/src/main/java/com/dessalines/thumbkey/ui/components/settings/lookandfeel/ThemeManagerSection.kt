@@ -4,6 +4,16 @@ import com.dessalines.thumbkey.ui.components.settings.gemSectionModifier
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.ui.draw.clip
+import androidx.compose.material3.Surface
+import com.dessalines.thumbkey.ui.components.keyboard.ThemeLibraryStrip
+import com.dessalines.thumbkey.ui.components.keyboard.ThemeLibraryTile
+import com.dessalines.thumbkey.ui.components.keyboard.BackdropVisualLayer
+import com.dessalines.thumbkey.ui.components.keyboard.ThemeAssetStore
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -132,31 +142,32 @@ fun ThemeManagerSection(onThemeApplied: () -> Unit, onEditTheme: () -> Unit) {
             style = MaterialTheme.typography.bodySmall,
         )
 
-        Column {
-            OutlinedButton(enabled = !busy, onClick = { expanded = true }, modifier = Modifier.fillMaxWidth()) {
-                Text("Theme: ${current.name}  ▾")
-            }
-            DropdownMenu(expanded = expanded, onDismissRequest = { expanded = false }) {
-                DropdownMenuItem(
-                    text = { Text("Custom") },
-                    onClick = {
-                        expanded = false
-                        ThemeEngine.apply(context, ThemeEngine.loadCustom(context))
-                        changed()
-                    },
-                )
-                themes().forEach { theme ->
-                    DropdownMenuItem(
-                        text = { Text(theme.name) },
-                        onClick = {
-                            expanded = false
-                            ThemeEngine.apply(context, theme)
-                            changed()
-                        },
-                    )
+        // Library tiles are rendered with each theme's actual saved backdrop.
+        // The renderer resolves app-owned assets instead of depending on source URIs.
+        val libraryThemes = listOf(ThemeEngine.loadCustom(context)) + themes()
+        ThemeLibraryStrip(
+            themes = libraryThemes.map { theme ->
+                ThemeLibraryTile(id = theme.id, name = theme.name) {
+                    Box(Modifier.fillMaxSize()) {
+                        BackdropVisualLayer(
+                            state = theme.backdrop.copy(
+                                mediaUri = ThemeAssetStore.resolve(context, theme.id, theme.backdrop.mediaUri),
+                            ),
+                            modifier = Modifier.fillMaxSize(),
+                        )
+                    }
                 }
-            }
-        }
+            },
+            selectedId = current.id,
+            onSelect = { id ->
+                if (!busy && id != current.id) {
+                    libraryThemes.firstOrNull { it.id == id }?.let {
+                        ThemeEngine.apply(context, it)
+                        changed()
+                    }
+                }
+            },
+        )
 
         Row(horizontalArrangement = Arrangement.spacedBy(8.dp), modifier = Modifier.fillMaxWidth()) {
             if (current.id != CUSTOM_THEME_ID) {
