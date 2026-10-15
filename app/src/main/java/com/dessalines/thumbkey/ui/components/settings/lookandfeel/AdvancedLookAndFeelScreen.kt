@@ -94,7 +94,6 @@ fun AdvancedLookAndFeelScreen(navController: NavController) {
     val openingTheme = remember(context) { ThemeEngine.captureCurrent(context, "Opening appearance", CUSTOM_THEME_ID) }
     var editNotice by remember { mutableStateOf<String?>(null) }
     var editorRevision by remember { mutableIntStateOf(0) }
-    var previewRevision by remember { mutableIntStateOf(0) }
 
     Scaffold(topBar = { SimpleTopAppBar(text = "Theme editor", navController = navController) }) { padding ->
         Column(Modifier.padding(padding).verticalScroll(scrollState).background(MaterialTheme.colorScheme.surface).imePadding()) {
@@ -121,10 +120,7 @@ fun AdvancedLookAndFeelScreen(navController: NavController) {
                     }, modifier = Modifier.weight(1f)) { Text("Revert") }
                 }
                 editNotice?.let { Text(it, Modifier.padding(horizontal = 16.dp), style = MaterialTheme.typography.bodySmall) }
-                key(previewRevision, editorRevision) { KeywiThemeTestBench() }
-                Button(onClick = { previewRevision++ }, modifier = Modifier.padding(horizontal = 16.dp)) {
-                    Text("↻ Refresh material preview")
-                }
+                key(editorRevision) { KeywiThemeTestBench() }
                 Text("✦ Live theme tuning", Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
                     style = MaterialTheme.typography.titleMedium)
                 Text("Use the test keyboard in Theme manager to inspect the actual geometry.",
