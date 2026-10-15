@@ -3,6 +3,8 @@ package com.dessalines.thumbkey.ui.components.keyboard
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.defaultMinSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -21,24 +23,24 @@ fun PaletteWorkspaceHeader(
     onSelect: (InputPalette) -> Unit,
     onClose: () -> Unit,
 ) {
-    val colors = MaterialTheme.colorScheme
     Row(
         modifier = Modifier.fillMaxWidth().padding(horizontal = 8.dp, vertical = 7.dp),
-        horizontalArrangement = Arrangement.spacedBy(6.dp),
+        horizontalArrangement = Arrangement.spacedBy(4.dp),
     ) {
+        Spacer(Modifier.weight(1f))
         listOf(
-            InputPalette.FANCY_TEXT to "𝕱  Fancy Text",
-            InputPalette.KAOMOJI to "(｡•̀ᴗ-)✧  Kaomoji",
+            InputPalette.FANCY_TEXT to "𝕱",
+            InputPalette.KAOMOJI to "(｡•̀ᴗ-)✧",
         ).forEach { (palette, title) ->
             val active = selected == palette
             PaletteKeySurface(
                 onClick = { onSelect(palette) },
-                modifier = Modifier.weight(1f).defaultMinSize(minHeight = 44.dp),
-                radius = 6,
+                modifier = Modifier.defaultMinSize(minWidth = if (palette == InputPalette.FANCY_TEXT) 48.dp else 110.dp, minHeight = 44.dp),
+                radius = 0,
             ) {
                 Text(
                     title,
-                    modifier = Modifier.padding(horizontal = 8.dp, vertical = 12.dp),
+                    modifier = Modifier.padding(horizontal = 12.dp, vertical = 12.dp),
                     style = MaterialTheme.typography.labelLarge,
                     fontWeight = FontWeight.Bold,
                     maxLines = 1,
@@ -48,7 +50,7 @@ fun PaletteWorkspaceHeader(
         PaletteKeySurface(
             onClick = onClose,
             modifier = Modifier.defaultMinSize(minWidth = 48.dp, minHeight = 44.dp),
-            radius = 6,
+            radius = 0,
         ) {
             Text(
                 "✕",
