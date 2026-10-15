@@ -84,6 +84,7 @@ val GOOGLE_POLICY_MARKDOWN = """
 fun SettingsNoticeBanners(versionCode: Int, lastViewedVersion: Int?, onWelcomeViewed: () -> Unit) {
     val context = LocalContext.current
     val prefs = remember(context) { context.getSharedPreferences("keywi_notices", 0) }
+    // Notices are opt-in via their persistent banners, never opened automatically.
     var openNotice by rememberSaveable(versionCode) { mutableStateOf<String?>(null) }
     fun openPolicy() { openNotice = "policy" }
     fun closeNotice() {
