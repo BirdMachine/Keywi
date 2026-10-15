@@ -31,13 +31,10 @@ fun PaletteWorkspaceHeader(
             InputPalette.KAOMOJI to "(｡•̀ᴗ-)✧  Kaomoji",
         ).forEach { (palette, title) ->
             val active = selected == palette
-            Surface(
+            PaletteKeySurface(
                 onClick = { onSelect(palette) },
                 modifier = Modifier.weight(1f).defaultMinSize(minHeight = 44.dp),
-                shape = RoundedCornerShape(6.dp),
-                color = if (active) colors.primary else colors.surfaceVariant,
-                contentColor = if (active) colors.onPrimary else colors.onSurfaceVariant,
-                border = if (active) BorderStroke(1.dp, colors.onPrimary.copy(alpha = 0.32f)) else null,
+                radius = 6,
             ) {
                 Text(
                     title,
@@ -48,12 +45,10 @@ fun PaletteWorkspaceHeader(
                 )
             }
         }
-        Surface(
+        PaletteKeySurface(
             onClick = onClose,
             modifier = Modifier.defaultMinSize(minWidth = 48.dp, minHeight = 44.dp),
-            shape = RoundedCornerShape(6.dp),
-            color = colors.errorContainer,
-            contentColor = colors.onErrorContainer,
+            radius = 6,
         ) {
             Text(
                 "✕",
