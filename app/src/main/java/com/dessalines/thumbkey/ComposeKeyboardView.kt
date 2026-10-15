@@ -43,6 +43,7 @@ import com.dessalines.thumbkey.diagnostics.KeywiDiagnostics
 import com.dessalines.thumbkey.ui.components.keyboard.BackdropMode
 import com.dessalines.thumbkey.ui.components.keyboard.BackdropThemePreferences
 import com.dessalines.thumbkey.ui.components.keyboard.BackdropVisualLayer
+import com.dessalines.thumbkey.ui.components.keyboard.FancyTextFormatter
 import com.dessalines.thumbkey.ui.components.keyboard.ExpandedInputPaletteHost
 import com.dessalines.thumbkey.ui.components.keyboard.InputPalette
 import com.dessalines.thumbkey.ui.components.keyboard.KeyboardScreen
