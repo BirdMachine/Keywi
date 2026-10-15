@@ -96,6 +96,20 @@ data class CustomBoard(
         return KeyboardC(grid + listOf(listOf(navigation, control(KeyAction.CommitText(" "), "␣"), control(KeyAction.DeleteKeyAction, "⌫").copy(top = BoardBinding("enter").key()))))
     }
 
+    /**
+     * Custom rooms occupy only the nine central letter positions of the host layout.
+     * Preserve the host's right-side tools and bottom space/enter row unchanged.
+     */
+    fun overlayOn(base: KeyboardC, second: Boolean): KeyboardC {
+        val cells = if (second) sideB else sideA
+        val grid = List(9) { cells.getOrNull(it)?.key() ?: BoardCell().key() }.chunked(3)
+        return base.copy(arr = base.arr.mapIndexed { rowIndex, row ->
+            if (rowIndex < 3) row.mapIndexed { columnIndex, key ->
+                if (columnIndex < 3) grid[rowIndex][columnIndex] else key
+            } else row
+        })
+    }
+
     fun definition(): KeyboardDefinition {
         val a = side(sideA, false)
         val b = side(sideB, true)
