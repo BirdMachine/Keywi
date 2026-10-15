@@ -42,6 +42,7 @@ fun KaomojiRoom(
     onCommit: (String) -> Unit,
     onBackToLetters: () -> Unit,
     onGoToEmoji: (() -> Unit)? = null,
+    showDismissButton: Boolean = true,
     modifier: Modifier = Modifier,
 ) {
     val context = LocalContext.current
@@ -153,6 +154,7 @@ fun KaomojiRoom(
                     theme = lozengeTheme,
                 )
             }
+            if (showDismissButton) {
             PaletteLozengeButton(
                 text = "✕",
                 onClick = {
@@ -161,6 +163,7 @@ fun KaomojiRoom(
                 },
                 theme = lozengeTheme,
             )
+            }
         }
 
         Row(

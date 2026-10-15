@@ -128,6 +128,7 @@ fun ExpandedInputPaletteHost(
                         },
                         onBackToLetters = onDismiss,
                         onGoToEmoji = null,
+                        showDismissButton = false,
                         modifier = Modifier.fillMaxSize(),
                     )
                 }
