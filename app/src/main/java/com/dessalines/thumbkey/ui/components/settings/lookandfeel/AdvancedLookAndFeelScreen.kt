@@ -41,6 +41,9 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import com.dessalines.thumbkey.ui.components.keyboard.ThemeAssetStore
+import com.dessalines.thumbkey.ui.components.keyboard.ThemeEngine
+import com.dessalines.thumbkey.ui.components.keyboard.CUSTOM_THEME_ID
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -86,6 +89,8 @@ fun AdvancedLookAndFeelScreen(navController: NavController) {
     val scrollState = rememberScrollState()
     val context = LocalContext.current
     var keywiEnabled by remember { mutableStateOf(KeywiAppearancePreferences.load(context)) }
+    val openingTheme = remember(context) { ThemeEngine.captureCurrent(context, "Opening appearance", CUSTOM_THEME_ID) }
+    var editNotice by remember { mutableStateOf<String?>(null) }
 
     Scaffold(topBar = { SimpleTopAppBar(text = "Theme editor", navController = navController) }) { padding ->
         Column(Modifier.padding(padding).verticalScroll(scrollState).background(MaterialTheme.colorScheme.surface).imePadding()) {
@@ -97,6 +102,21 @@ fun AdvancedLookAndFeelScreen(navController: NavController) {
                 Switch(checked = keywiEnabled, onCheckedChange = { keywiEnabled = it; KeywiAppearancePreferences.save(context, it) })
             }
             if (keywiEnabled) {
+                Row(
+                    Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 8.dp),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                ) {
+                    Button(onClick = {
+                        ThemeEngine.saveCustom(context, ThemeEngine.captureCurrent(context, "Custom", CUSTOM_THEME_ID))
+                        editNotice = "Saved to Custom. Use Save as… in Theme manager to add it to the library."
+                    }, modifier = Modifier.weight(1f)) { Text("Save") }
+                    OutlinedButton(onClick = {
+                        ThemeEngine.apply(context, openingTheme)
+                        editNotice = "Reverted to the appearance when this editor opened. Reopen to refresh the sliders."
+                    }, modifier = Modifier.weight(1f)) { Text("Revert") }
+                }
+                editNotice?.let { Text(it, Modifier.padding(horizontal = 16.dp), style = MaterialTheme.typography.bodySmall) }
+                KeywiThemeTestBench()
                 Text("✦ Live theme tuning", Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
                     style = MaterialTheme.typography.titleMedium)
                 Text("Use the test keyboard in Theme manager to inspect the actual geometry.",
