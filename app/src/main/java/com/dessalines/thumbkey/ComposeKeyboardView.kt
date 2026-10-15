@@ -92,7 +92,6 @@ class ComposeKeyboardView(
             CompositionLocalProvider(LocalLayoutDirection provides LayoutDirection.Ltr) {
                 MaterialTheme(colorScheme = keyboardColorScheme) {
                     Column(modifier = Modifier.fillMaxWidth()) {
-                        if (keywiEnabled) {
                             val applyFancyText: (String) -> Unit = { style: String ->
                                         val connection = ctx.activeInputConnectionOrNull()
                                         val selected = connection?.getSelectedText(0)?.toString().orEmpty()
@@ -140,6 +139,8 @@ class ComposeKeyboardView(
                                             Toast.makeText(ctx, "Select text to format", Toast.LENGTH_SHORT).show()
                                         }
                                     }
+                        if (keywiEnabled) {
+
                             Box(Modifier.fillMaxWidth().zIndex(1f)) {
                                 if (toolbarBackdrop.mode != BackdropMode.NONE) BackdropVisualLayer(toolbarBackdrop, Modifier.fillMaxWidth().height(42.dp))
                                 SuggestionBarV2(
