@@ -275,6 +275,8 @@ private fun GradientEditor(label: String, gradient: KeyboardBackdrop, onChange: 
 @Composable
 private fun ColorEditor(label: String, color: Color, onChange: (Color) -> Unit) {
     var showChannels by remember { mutableStateOf(false) }
+    var pickerExpanded by remember { mutableStateOf(false) }
+    val hexColor = String.format(java.util.Locale.US, "#%02X%02X%02X", (color.red * 255).roundToInt(), (color.green * 255).roundToInt(), (color.blue * 255).roundToInt())
     val hsv = remember(color) {
         FloatArray(3).also { android.graphics.Color.colorToHSV(
             android.graphics.Color.rgb((color.red * 255).toInt(), (color.green * 255).toInt(), (color.blue * 255).toInt()), it
@@ -287,15 +289,20 @@ private fun ColorEditor(label: String, color: Color, onChange: (Color) -> Unit) 
     Column(Modifier.fillMaxWidth().padding(vertical = 4.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
         Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
             Box(Modifier.size(32.dp).clip(RoundedCornerShape(8.dp)).background(color))
-            Text(label, style = MaterialTheme.typography.labelMedium, modifier = Modifier.weight(1f))
-            Text("Advanced ${if (showChannels) "▲" else "▼"}", modifier = Modifier.clickable { showChannels = !showChannels }, color = MaterialTheme.colorScheme.primary, style = MaterialTheme.typography.labelSmall)
+            Column(Modifier.weight(1f)) {
+                Text(label, style = MaterialTheme.typography.labelMedium)
+                Text(hexColor, style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+            }
+            Text(if (pickerExpanded) "Close ▲" else "Edit color ▼", modifier = Modifier.clickable { pickerExpanded = !pickerExpanded }, color = MaterialTheme.colorScheme.primary, style = MaterialTheme.typography.labelMedium)
         }
+        if (pickerExpanded) {
         ColorFieldPicker(
             hue = hsv[0],
             saturation = hsv[1],
             value = hsv[2],
             onColorChange = { h, sat, v -> changeHsv(hue = h, saturation = sat, value = v) },
         )
+        Text("RGB channels ${if (showChannels) "▲" else "▼"}", modifier = Modifier.clickable { showChannels = !showChannels }, style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.primary)
         if (showChannels) {
             Channel("R", color.red) { onChange(Color(it, color.green, color.blue, color.alpha)) }
             Channel("G", color.green) { onChange(Color(color.red, it, color.blue, color.alpha)) }
@@ -303,6 +310,7 @@ private fun ColorEditor(label: String, color: Color, onChange: (Color) -> Unit) 
         }
         Text("Opacity • ${(color.alpha * 100).roundToInt()}%", style = MaterialTheme.typography.labelSmall)
         Slider(color.alpha, { onChange(Color(color.red, color.green, color.blue, it)) }, valueRange = 0f..1f)
+        }
     }
 }
 @Composable
