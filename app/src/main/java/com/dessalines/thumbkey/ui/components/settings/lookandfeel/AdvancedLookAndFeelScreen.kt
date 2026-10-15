@@ -34,6 +34,8 @@ import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.key
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
@@ -91,6 +93,7 @@ fun AdvancedLookAndFeelScreen(navController: NavController) {
     var keywiEnabled by remember { mutableStateOf(KeywiAppearancePreferences.load(context)) }
     val openingTheme = remember(context) { ThemeEngine.captureCurrent(context, "Opening appearance", CUSTOM_THEME_ID) }
     var editNotice by remember { mutableStateOf<String?>(null) }
+    var editorRevision by remember { mutableIntStateOf(0) }
 
     Scaffold(topBar = { SimpleTopAppBar(text = "Theme editor", navController = navController) }) { padding ->
         Column(Modifier.padding(padding).verticalScroll(scrollState).background(MaterialTheme.colorScheme.surface).imePadding()) {
@@ -112,7 +115,8 @@ fun AdvancedLookAndFeelScreen(navController: NavController) {
                     }, modifier = Modifier.weight(1f)) { Text("Save") }
                     OutlinedButton(onClick = {
                         ThemeEngine.apply(context, openingTheme)
-                        editNotice = "Reverted to the appearance when this editor opened. Reopen to refresh the sliders."
+                        editorRevision++
+                        editNotice = "Reverted. All appearance controls have been refreshed."
                     }, modifier = Modifier.weight(1f)) { Text("Revert") }
                 }
                 editNotice?.let { Text(it, Modifier.padding(horizontal = 16.dp), style = MaterialTheme.typography.bodySmall) }
@@ -121,6 +125,7 @@ fun AdvancedLookAndFeelScreen(navController: NavController) {
                     style = MaterialTheme.typography.titleMedium)
                 Text("Use the test keyboard in Theme manager to inspect the actual geometry.",
                     Modifier.padding(horizontal = 16.dp), style = MaterialTheme.typography.bodySmall)
+                key(editorRevision) {
                 ThemeEditorFold("Keyboard background", "Image, GIF, opacity and gradients", true) {
                     SurfaceThemeSection("Main backdrop", "The large space behind and around the keys.", BackdropThemePreferences::load, BackdropThemePreferences::save)
                 }
@@ -133,6 +138,7 @@ fun AdvancedLookAndFeelScreen(navController: NavController) {
                 }
                 ThemeEditorFold("Typography", "Key labels, fonts and suggestion text") {
                     FontAndSuggestionSection()
+                }
                 }
                 Text("Planned surface slot: one-shot key-press overlays (GIF/image effects).", Modifier.padding(16.dp), style = MaterialTheme.typography.bodySmall)
             } else {
