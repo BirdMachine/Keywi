@@ -351,8 +351,9 @@ private fun GemToolbarAction(
     Surface(
         onClick = onClick,
         shape = RoundedCornerShape(0.dp),
-        color = MaterialTheme.colorScheme.surfaceVariant,
-        contentColor = MaterialTheme.colorScheme.onSurfaceVariant,
+        color = KeyThemePreferences.current.surfaceColor,
+        border = BorderStroke(1.dp, KeyThemePreferences.current.borderColor),
+        contentColor = MaterialTheme.colorScheme.onSurface,
         tonalElevation = 0.dp,
         shadowElevation = 0.dp,
         modifier = modifier.height(34.dp),
@@ -500,6 +501,7 @@ fun SuggestionBarV2(ime: IMEService, onKaomoji: () -> Unit = {}, onFancyOpen: ()
                 } else {
                     Color.Transparent
                 },
+                border = BorderStroke(1.dp, if (enabled) lozengeTheme.currentWordHighlightColor ?: newWordHighlightColor else lozengeTheme.borderColor),
                 tonalElevation = 0.dp,
                 shadowElevation = 1.dp,
                 modifier = toggleModifier.clickable {
@@ -597,7 +599,7 @@ fun SuggestionBarV2(ime: IMEService, onKaomoji: () -> Unit = {}, onFancyOpen: ()
 
             // Fixed rectangular tools share one solid segment, separate from scrolling suggestions.
             Row(
-                modifier = Modifier.padding(start = 4.dp).clip(RoundedCornerShape(0.dp)),
+                modifier = Modifier.clip(RoundedCornerShape(0.dp)),
                 verticalAlignment = Alignment.CenterVertically,
             ) {
                 GemToolbarAction(
