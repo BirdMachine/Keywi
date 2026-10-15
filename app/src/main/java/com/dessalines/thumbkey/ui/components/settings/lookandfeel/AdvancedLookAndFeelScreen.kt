@@ -290,12 +290,12 @@ private fun ColorEditor(label: String, color: Color, onChange: (Color) -> Unit) 
             Text(label, style = MaterialTheme.typography.labelMedium, modifier = Modifier.weight(1f))
             Text("Advanced ${if (showChannels) "▲" else "▼"}", modifier = Modifier.clickable { showChannels = !showChannels }, color = MaterialTheme.colorScheme.primary, style = MaterialTheme.typography.labelSmall)
         }
-        Text("Hue • ${hsv[0].roundToInt()}°", style = MaterialTheme.typography.labelSmall)
-        Slider(hsv[0], { changeHsv(hue = it) }, valueRange = 0f..360f)
-        Text("Saturation • ${(hsv[1] * 100).roundToInt()}%", style = MaterialTheme.typography.labelSmall)
-        Slider(hsv[1], { changeHsv(saturation = it) }, valueRange = 0f..1f)
-        Text("Brightness • ${(hsv[2] * 100).roundToInt()}%", style = MaterialTheme.typography.labelSmall)
-        Slider(hsv[2], { changeHsv(value = it) }, valueRange = 0f..1f)
+        ColorFieldPicker(
+            hue = hsv[0],
+            saturation = hsv[1],
+            value = hsv[2],
+            onColorChange = { h, sat, v -> changeHsv(hue = h, saturation = sat, value = v) },
+        )
         if (showChannels) {
             Channel("R", color.red) { onChange(Color(it, color.green, color.blue, color.alpha)) }
             Channel("G", color.green) { onChange(Color(color.red, it, color.blue, color.alpha)) }
