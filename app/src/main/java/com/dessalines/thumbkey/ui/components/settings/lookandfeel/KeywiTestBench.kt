@@ -2,6 +2,15 @@ package com.dessalines.thumbkey.ui.components.settings.lookandfeel
 
 import com.dessalines.thumbkey.ui.components.settings.gemSectionModifier
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.platform.LocalContext
+import com.dessalines.thumbkey.ui.components.keyboard.BackdropThemePreferences
+import com.dessalines.thumbkey.ui.components.keyboard.BackdropVisualLayer
+import androidx.compose.foundation.background
+import androidx.compose.ui.graphics.Color
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.MaterialTheme
@@ -29,6 +38,10 @@ fun KeywiThemeTestBench(
             style = MaterialTheme.typography.bodySmall,
             modifier = Modifier.padding(top = 2.dp, bottom = 6.dp),
         )
+        Box(Modifier.fillMaxWidth().height(72.dp).clip(RoundedCornerShape(12.dp)).background(MaterialTheme.colorScheme.surfaceVariant)) {
+            BackdropVisualLayer(BackdropThemePreferences.load(LocalContext.current))
+        }
+        Text("Background preview above · tap below to open the real keyboard", style = MaterialTheme.typography.labelSmall)
         OutlinedTextField(
             value = testText,
             onValueChange = { testText = it },
