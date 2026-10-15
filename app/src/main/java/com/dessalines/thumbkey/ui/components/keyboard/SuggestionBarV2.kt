@@ -477,73 +477,35 @@ fun SuggestionBarV2(ime: IMEService, onKaomoji: () -> Unit = {}, onFancyOpen: ()
             modifier = Modifier.fillMaxSize().padding(horizontal = 6.dp, vertical = 4.dp),
             verticalAlignment = Alignment.CenterVertically,
         ) {
+            // Active diamond uses the configured active/current-word lozenge background.
+            // Inactive diamond returns to the normal lozenge theme surface.
             val toggleShape = RoundedCornerShape(18.dp)
             val toggleModifier =
                 Modifier
                     .padding(start = 5.dp)
                     .clip(toggleShape)
                     .then(
-                        when (lozengeTheme.surfaceStyle) {
-                            SuggestionLozengeSurfaceStyle.GRADIENT -> {
-                                Modifier.keyboardGradientBackground(lozengeTheme.surfaceGradient)
-                            }
-
-                            SuggestionLozengeSurfaceStyle.SOLID,
-                            SuggestionLozengeSurfaceStyle.NONE,
-                            -> {
-                                Modifier
-                            }
-                        },
-                    ).then(
-                        when (lozengeTheme.borderStyle) {
-                            SuggestionLozengeBorderStyle.GRADIENT -> {
-                                Modifier.keyboardGradientBorder(
-                                    backdrop = lozengeTheme.borderGradient,
-                                    width = lozengeTheme.borderWidth.dp,
-                                    radius = 18.dp,
-                                )
-                            }
-
-                            SuggestionLozengeBorderStyle.SOLID,
-                            SuggestionLozengeBorderStyle.NONE,
-                            -> {
-                                Modifier
-                            }
+                        if (!enabled && lozengeTheme.surfaceStyle == SuggestionLozengeSurfaceStyle.GRADIENT) {
+                            Modifier.keyboardGradientBackground(lozengeTheme.surfaceGradient)
+                        } else {
+                            Modifier
                         },
                     )
             Surface(
                 shape = toggleShape,
-                color =
-                    when (lozengeTheme.surfaceStyle) {
-                        SuggestionLozengeSurfaceStyle.SOLID -> {
-                            lozengeTheme.surfaceColor
-                        }
-
-                        SuggestionLozengeSurfaceStyle.GRADIENT,
-                        SuggestionLozengeSurfaceStyle.NONE,
-                        -> {
-                            Color.Transparent
-                        }
-                    },
-                tonalElevation = if (enabled) 2.dp else 0.dp,
+                color = if (enabled) {
+                    lozengeTheme.currentWordBackgroundColor
+                } else if (lozengeTheme.surfaceStyle == SuggestionLozengeSurfaceStyle.SOLID) {
+                    lozengeTheme.surfaceColor
+                } else {
+                    Color.Transparent
+                },
+                tonalElevation = 0.dp,
                 shadowElevation = 1.dp,
-                border =
-                    when (lozengeTheme.borderStyle) {
-                        SuggestionLozengeBorderStyle.SOLID -> {
-                            BorderStroke(lozengeTheme.borderWidth.dp, lozengeTheme.borderColor)
-                        }
-
-                        SuggestionLozengeBorderStyle.GRADIENT,
-                        SuggestionLozengeBorderStyle.NONE,
-                        -> {
-                            null
-                        }
-                    },
-                modifier =
-                    toggleModifier.clickable {
-                        enabled = !enabled
-                        SuggestionPreferences.setEnabled(ime, enabled)
-                    },
+                modifier = toggleModifier.clickable {
+                    enabled = !enabled
+                    SuggestionPreferences.setEnabled(ime, enabled)
+                },
             ) {
                 Text(
                     text = if (enabled) "◈" else "◇",
