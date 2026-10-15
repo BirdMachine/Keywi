@@ -8,39 +8,38 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 
 /**
- * Fancy Text occupies the same keyboard overlay slot as the Kaomoji palette.
- * Style selection currently transforms the editor selection; live preview follows.
+ * The shared palette host owns the header, background and dismiss action.
+ * This panel owns only Fancy Text browsing and editor-selection previews.
  */
 @Composable
 fun FancyTextWorkspace(
     onApply: (String) -> Unit,
-    onClose: () -> Unit = {},
     modifier: Modifier = Modifier,
+    previewText: String = "",
 ) {
-    val styles = listOf(
-        "UPPERCASE" to "uppercase",
-        "lowercase" to "lowercase",
-        "Title Case" to "title",
-        "aLtErNaTiNg" to "alternating",
-        "ˢᵘᵖᵉʳ" to "superscript",
-        "ₛᵤᵦ" to "subscript",
-        "𝗕𝗼𝗹𝗱" to "bold",
-        "𝘐𝘵𝘢𝘭𝘪𝘤" to "italic",
-        "𝙼𝚘𝚗𝚘" to "monospace",
-        "ⓒⓘⓡⓒⓛⓔ" to "circled",
-        "Ｆｕｌｌ" to "fullwidth",
-        "𝕱𝖗𝖆𝖐𝖙𝖚𝖗" to "fraktur",
-    )
+    val context = LocalContext.current
+    val theme = SuggestionLozengeThemePreferences.load(context)
+    var category by remember { mutableStateOf<FancyTextFormatter.Category?>(null) }
+    val sample = previewText.ifEmpty { "Keywi 123" }
+    val styles = FancyTextFormatter.styles.filter { category == null || it.category == category }
+
     Surface(
         modifier = modifier.fillMaxSize(),
         shape = RoundedCornerShape(topStart = 18.dp, topEnd = 18.dp),
@@ -48,25 +47,65 @@ fun FancyTextWorkspace(
         tonalElevation = 0.dp,
     ) {
         Column(
-            modifier = Modifier.fillMaxSize().padding(10.dp),
+            modifier = Modifier.fillMaxSize().padding(horizontal = 9.dp, vertical = 7.dp),
             verticalArrangement = Arrangement.spacedBy(8.dp),
         ) {
-            Text("Select text in the editor, then choose a style.", style = MaterialTheme.typography.bodySmall)
+            Text(
+                if (previewText.isEmpty()) "Select text to apply • showing sample previews"
+                else "Previewing selected text • tap a style to apply",
+                style = MaterialTheme.typography.bodySmall,
+            )
+            Row(
+                modifier = Modifier.fillMaxWidth().horizontalScroll(rememberScrollState()),
+                horizontalArrangement = Arrangement.spacedBy(6.dp),
+            ) {
+                PaletteWorkspaceCategoryChip(
+                    text = "All",
+                    selected = category == null,
+                    theme = theme,
+                    onClick = { category = null },
+                )
+                FancyTextFormatter.Category.entries.forEach { entry ->
+                    PaletteWorkspaceCategoryChip(
+                        text = entry.title,
+                        selected = category == entry,
+                        theme = theme,
+                        onClick = { category = entry },
+                    )
+                }
+            }
             Column(
                 modifier = Modifier.fillMaxWidth().verticalScroll(rememberScrollState()),
-                verticalArrangement = Arrangement.spacedBy(6.dp),
+                verticalArrangement = Arrangement.spacedBy(7.dp),
             ) {
-                styles.chunked(3).forEach { row ->
-                    Row(horizontalArrangement = Arrangement.spacedBy(6.dp), modifier = Modifier.fillMaxWidth()) {
-                        row.forEach { (label, style) ->
+                styles.chunked(2).forEach { row ->
+                    Row(
+                        horizontalArrangement = Arrangement.spacedBy(7.dp),
+                        modifier = Modifier.fillMaxWidth(),
+                    ) {
+                        row.forEach { style ->
                             Surface(
-                                onClick = { onApply(style) },
+                                onClick = { onApply(style.id) },
                                 shape = RoundedCornerShape(12.dp),
                                 color = MaterialTheme.colorScheme.primary.copy(alpha = 0.16f),
                                 modifier = Modifier.weight(1f),
                             ) {
-                                Text(label, maxLines = 1, modifier = Modifier.padding(9.dp))
+                                Column(
+                                    modifier = Modifier.padding(horizontal = 9.dp, vertical = 8.dp),
+                                    verticalArrangement = Arrangement.spacedBy(3.dp),
+                                ) {
+                                    Text(style.title, style = MaterialTheme.typography.labelSmall, maxLines = 1)
+                                    Text(
+                                        FancyTextFormatter.transform(sample, style.id),
+                                        style = MaterialTheme.typography.bodyMedium,
+                                        maxLines = 2,
+                                        overflow = TextOverflow.Ellipsis,
+                                    )
+                                }
                             }
+                        }
+                        if (row.size == 1) {
+                            androidx.compose.foundation.layout.Spacer(Modifier.weight(1f))
                         }
                     }
                 }
