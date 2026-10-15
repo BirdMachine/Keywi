@@ -1,0 +1,64 @@
+name: Keywi Emulator Showcase
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - feature/emulator-showcase-capture
+
+permissions:
+  contents: read
+
+jobs:
+  capture:
+    name: Capture real Android emulator screenshots
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    env:
+      KEYWI_DEBUG_STORE_FILE: ${{ github.workspace }}/.github/keywi-debug.keystore
+      KEYWI_DEBUG_STORE_PASSWORD: keywi-debug
+      KEYWI_DEBUG_KEY_ALIAS: keywi-debug
+      KEYWI_DEBUG_KEY_PASSWORD: keywi-debug
+    steps:
+      - uses: actions/checkout@v4
+      - name: Restore stable debug signing key
+        run: |
+          base64 --decode .github/keywi-debug.keystore.b64 > .github/keywi-debug.keystore
+          chmod 600 .github/keywi-debug.keystore
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+      - uses: gradle/actions/setup-gradle@v4
+      - name: Build Keywi
+        run: ./gradlew assembleDebug
+      - name: Capture emulator baseline
+        uses: reactivecircus/android-emulator-runner@v2
+        with:
+          api-level: 35
+          target: google_apis
+          arch: x86_64
+          profile: pixel_6
+          disable-animations: true
+          emulator-options: -no-window -gpu swiftshader_indirect -no-snapshot -noaudio -no-boot-anim
+          script: |
+            set -euo pipefail
+            mkdir -p showcase/screenshots
+            adb wait-for-device
+            adb shell wm size 1080x2400
+            adb shell wm density 420
+            adb install -r app/build/outputs/apk/debug/app-debug.apk
+            adb shell input keyevent KEYCODE_HOME
+            sleep 3
+            adb shell screencap -p /sdcard/keywi-baseline.png
+            adb pull /sdcard/keywi-baseline.png showcase/screenshots/emulator-home-baseline.png
+            adb shell pm list packages | grep -i thumbkey > showcase/installed-packages.txt
+            adb shell getprop ro.build.version.release > showcase/android-version.txt
+      - name: Upload genuine emulator captures
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: keywi-emulator-showcase
+          path: showcase/
+          if-no-files-found: warn
+          retention-days: 14
