@@ -6,6 +6,9 @@ import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.BorderStroke
+import androidx.compose.material3.Surface
+import androidx.compose.runtime.mutableStateMapOf
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -84,7 +87,7 @@ fun AdvancedLookAndFeelScreen(navController: NavController) {
     val context = LocalContext.current
     var keywiEnabled by remember { mutableStateOf(KeywiAppearancePreferences.load(context)) }
 
-    Scaffold(topBar = { SimpleTopAppBar(text = "Advanced look & feel", navController = navController) }) { padding ->
+    Scaffold(topBar = { SimpleTopAppBar(text = "Theme editor", navController = navController) }) { padding ->
         Column(Modifier.padding(padding).verticalScroll(scrollState).background(MaterialTheme.colorScheme.surface).imePadding()) {
             Row(gemSectionModifier(), Arrangement.SpaceBetween, Alignment.CenterVertically) {
                 Column(Modifier.weight(1f).padding(end = 12.dp)) {
@@ -94,11 +97,23 @@ fun AdvancedLookAndFeelScreen(navController: NavController) {
                 Switch(checked = keywiEnabled, onCheckedChange = { keywiEnabled = it; KeywiAppearancePreferences.save(context, it) })
             }
             if (keywiEnabled) {
-                SurfaceThemeSection("Main backdrop", "The large space behind and around the keys.", BackdropThemePreferences::load, BackdropThemePreferences::save)
-                SurfaceThemeSection("Suggestion toolbar", "The strip behind suggestion lozenges and the ✨ toggle.", ToolbarThemePreferences::load, ToolbarThemePreferences::save, true)
-                SuggestionLozengeAppearanceSection()
-                KeyAppearanceSection()
-                FontAndSuggestionSection()
+                Text("✦ Live theme tuning", Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
+                    style = MaterialTheme.typography.titleMedium)
+                Text("Use the test keyboard in Theme manager to inspect the actual geometry.",
+                    Modifier.padding(horizontal = 16.dp), style = MaterialTheme.typography.bodySmall)
+                ThemeEditorFold("Keyboard background", "Image, GIF, opacity and gradients", true) {
+                    SurfaceThemeSection("Main backdrop", "The large space behind and around the keys.", BackdropThemePreferences::load, BackdropThemePreferences::save)
+                }
+                ThemeEditorFold("Suggestion bar", "Toolbar, lozenges and current-word highlight") {
+                    SurfaceThemeSection("Suggestion toolbar", "The strip behind suggestion lozenges and the ✨ toggle.", ToolbarThemePreferences::load, ToolbarThemePreferences::save, true)
+                    SuggestionLozengeAppearanceSection()
+                }
+                ThemeEditorFold("Keys", "Fill, borders, shadows and key surfaces", true) {
+                    KeyAppearanceSection()
+                }
+                ThemeEditorFold("Typography", "Key labels, fonts and suggestion text") {
+                    FontAndSuggestionSection()
+                }
                 Text("Planned surface slot: one-shot key-press overlays (GIF/image effects).", Modifier.padding(16.dp), style = MaterialTheme.typography.bodySmall)
             } else {
                 Column(Modifier.fillMaxWidth().alpha(0.42f).padding(horizontal = 16.dp, vertical = 10.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
@@ -234,3 +249,33 @@ private fun GradientEditor(label: String, gradient: KeyboardBackdrop, onChange: 
 private fun ColorEditor(label: String, color: Color, onChange: (Color) -> Unit) { Column(Modifier.fillMaxWidth().padding(vertical = 2.dp)) { Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) { Box(Modifier.size(22.dp).clip(RoundedCornerShape(7.dp)).background(color)); Text("$label • A ${(color.alpha * 100).roundToInt()}%", style = MaterialTheme.typography.labelMedium) }; Channel("R", color.red) { onChange(Color(it, color.green, color.blue, color.alpha)) }; Channel("G", color.green) { onChange(Color(color.red, it, color.blue, color.alpha)) }; Channel("B", color.blue) { onChange(Color(color.red, color.green, it, color.alpha)) }; Channel("A", color.alpha) { onChange(Color(color.red, color.green, color.blue, it)) } } }
 @Composable
 private fun Channel(label: String, value: Float, onChange: (Float) -> Unit) { Text("$label ${(value * 255).roundToInt()}", style = MaterialTheme.typography.labelSmall); Slider(value, onChange, valueRange = 0f..1f) }
+
+/** Compact, independently expandable editor sections; advanced controls stay intact. */
+@Composable
+private fun ThemeEditorFold(
+    title: String,
+    subtitle: String,
+    initiallyExpanded: Boolean = false,
+    content: @Composable () -> Unit,
+) {
+    var expanded by remember { mutableStateOf(initiallyExpanded) }
+    Column(Modifier.fillMaxWidth().padding(horizontal = 12.dp, vertical = 4.dp)) {
+        Surface(
+            onClick = { expanded = !expanded },
+            shape = RoundedCornerShape(14.dp),
+            color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.55f),
+            border = BorderStroke(1.dp, MaterialTheme.colorScheme.primary.copy(alpha = 0.22f)),
+        ) {
+            Row(Modifier.fillMaxWidth().padding(14.dp),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically) {
+                Column(Modifier.weight(1f)) {
+                    Text(title, style = MaterialTheme.typography.titleSmall)
+                    Text(subtitle, style = MaterialTheme.typography.bodySmall)
+                }
+                Text(if (expanded) "⌃" else "›", style = MaterialTheme.typography.titleLarge)
+            }
+        }
+        if (expanded) content()
+    }
+}
