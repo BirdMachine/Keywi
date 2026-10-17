@@ -2,6 +2,7 @@
 import json
 import pathlib
 import subprocess
+import sys
 import time
 import xml.etree.ElementTree as ET
 
@@ -11,8 +12,6 @@ ACTIVITY = f"{PKG}/com.dessalines.thumbkey.MainActivity"
 PAGES = [
     ("settings", "Gem cuts"),
     ("gemCuts", "Choose your geometry"),
-    ("advancedLookAndFeel", "Saved themes"),
-    ("advancedLookAndFeelEditor", "Enable custom keyboard backgrounds"),
     ("lookAndFeel", "Display mode"),
     ("advancedBoards", "Add board"),
     ("advancedKeyWordSelection", "MATRIX"),
@@ -21,6 +20,10 @@ PAGES = [
     ("advancedPowerOptions", "Unbridled"),
     ("clipboardSettings", "Clipboard"),
     ("backupAndRestore", "Backup"),
+]
+THEME_PREVIEWS = [
+    ("advancedLookAndFeel", "Saved themes"),
+    ("advancedLookAndFeelEditor", "Enable custom keyboard backgrounds"),
 ]
 
 
@@ -53,8 +56,10 @@ def main():
         raise RuntimeError("Keywi IME did not register after installation; see diagnostics")
     shell("ime", "enable", ime)
     records = []
+    include_previews = "--include-theme-previews" in sys.argv
+    pages = PAGES + (THEME_PREVIEWS if include_previews else [])
     try:
-        for route, expected in PAGES:
+        for route, expected in pages:
             print(f"Capturing {route}", flush=True)
             # Restart the activity so startRoute is read for each page. Selection
             # is unnecessary: these captures document settings, not the live IME.
@@ -83,6 +88,7 @@ def main():
             "commit": subprocess.check_output(["git", "rev-parse", "HEAD"], text=True).strip(),
             "device": "Pixel 6 emulator, API 34, 1080x2400, density 420",
             "pages": records,
+            "excluded_theme_previews": [] if include_previews else [route for route, _ in THEME_PREVIEWS],
         }, indent=2))
         try:
             (OUT / "logcat.txt").write_text(shell("logcat", "-d", "-t", "500"))

@@ -2,6 +2,11 @@ name: Settings guide screenshots
 
 on:
   workflow_dispatch:
+    inputs:
+      include_theme_previews:
+        description: 'Also attempt theme preview pages (known emulator disconnect)'
+        type: boolean
+        default: false
   push:
     branches: [docs/settings-guide]
     paths:
@@ -41,7 +46,7 @@ jobs:
           ram-size: 2048M
           cores: 2
           emulator-options: -no-window -gpu swiftshader_indirect -feature -Vulkan -no-snapshot -noaudio -no-boot-anim
-          script: python3 scripts/capture-settings-guide.py
+          script: python3 scripts/capture-settings-guide.py ${{ inputs.include_theme_previews && '--include-theme-previews' || '' }}
       - uses: actions/upload-artifact@v6
         if: always()
         with:
