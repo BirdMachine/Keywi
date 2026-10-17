@@ -4,6 +4,8 @@
 
 ## Gestures and typing behavior
 
+<img src="images/advanced-input.png" width="360" alt="Advanced input navigation" />
+
 Open **Settings → Advanced input → Gestures & typing behavior**. These controls include auto-capitalization, spacebar multi-taps, returning to letters after a space, minimum swipe length, slide gestures, cursor movement mode and sensitivity, dead zones, slide-hold, drag-and-return, circular drag actions and ghost keys.
 
 | If you want to… | Start with… |
@@ -17,6 +19,8 @@ Open **Settings → Advanced input → Gestures & typing behavior**. These contr
 Some subordinate controls require their parent gesture switch. These behavior options come from the swipe keyboard system; do not assume every gesture maps to HK-Like's tap rows.
 
 ## Context engine
+
+<img src="images/context-engine.png" width="360" alt="Context engine switches and capability explanations" />
 
 Open **Advanced input → Context engine**.
 
@@ -38,6 +42,8 @@ Use the keyboard's **𝕱** tool to open Fancy Text; the **(｡•̀ᴗ-)✧** t
 **Hardware keyboard compatibility** opens the option controlling whether Keywi stays on screen with a physical keyboard connected.
 
 ## Clipboard history
+
+<img src="images/clipboard.png" width="360" alt="Clipboard settings with history off and dependent options disabled" />
 
 Open **Settings → Clipboard history**.
 

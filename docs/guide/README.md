@@ -12,6 +12,8 @@ Welcome to your keyboard's control room. This guide follows the English settings
 
 Open the Keywi app whenever you need settings. HK-Like also has a **⚙** shortcut on its basic, symbol, and advanced layers.
 
+<img src="images/settings-dark.png" width="360" alt="Keywi settings overview showing Gem cuts, Themes & appearance, Board management, Key & Word Selection and Advanced input" />
+
 ## Find a setting
 
 | Settings entry | What you can do | Guide |
@@ -41,6 +43,6 @@ Changing a cut preserves the saved theme and character-layout settings. **HK-Lik
 
 ## Pictures and guide maintenance
 
-Screenshots are captured from the actual app, with their source and limitations recorded in [Screenshot notes](screenshots.md). A settings screenshot does not establish that a live keyboard interaction passed.
+Screenshots are captured from the actual app. [Screenshot notes](screenshots.md) records their version and capture details.
 
 Maintainers: update these pages when labels or behavior change. See [the documentation capture workflow](maintaining-the-guide.md) for refreshing images without running an emulator on every APK build.

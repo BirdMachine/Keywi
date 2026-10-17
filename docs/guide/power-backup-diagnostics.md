@@ -4,6 +4,8 @@
 
 ## Power options
 
+<img src="images/power-options.png" width="360" alt="Power choices with Conserved selected" />
+
 Open **Settings → Power options** and tap a mode; it saves immediately.
 
 | Mode | Behavior |
@@ -15,6 +17,8 @@ Open **Settings → Power options** and tap a mode; it saves immediately.
 These are Keywi's own modes. Android's system battery settings can impose additional restrictions.
 
 ## What a backup includes
+
+<img src="images/backup-restore.png" width="360" alt="Backup database, Restore database and Reset to defaults controls" />
 
 **Settings → Backup and restore → Backup database** exports the Room database through Android's file picker. **Restore database** replaces the current database; the screen explicitly warns that existing database content will be cleared.
 

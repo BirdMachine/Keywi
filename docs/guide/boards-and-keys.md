@@ -4,6 +4,8 @@
 
 ## Create a custom board
 
+<img src="images/boards.png" width="360" alt="Boards screen before any custom boards are created" />
+
 Open **Settings → Board management → + Add board**. Choose a blank board, Emoji or Unicode template, enter a name, then tap **Create board**.
 
 Each custom board has **Side A** and **Side B**, each with nine editable keys. Tap a cell, then choose **Tap**, **Swipes** or **Hold**. For a swipe, choose its direction. Select the action in the action dropdown; for text insertion, enter **Text to insert**. These changes save automatically.
@@ -23,6 +25,8 @@ The navigation row stays available. In ME-Like, swipe right on **#/ABC** to visi
 Toolbar panels such as Kaomoji are separate from custom boards.
 
 ## Remap a character-layout key
+
+<img src="images/key-remapper.png" width="360" alt="Actual matrix remapper showing layer selection and editable key positions" />
 
 Open **Settings → Key & Word Selection**. The matrix remapper operates on the selected saved character layout.
 

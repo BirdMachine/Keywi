@@ -10,6 +10,8 @@ Use the **Settings guide screenshots** Actions workflow. It is manual after merg
 
 The workflow builds a disposable debug APK, installs it on a fresh API 34 Pixel 6 emulator, enables the IME, and opens existing `startRoute` destinations. It captures settings screens without pretending to test a live IME. No phone or personal data is used, and no release is published.
 
+The default capture set excludes Theme manager and Advanced theme editor: the emulator disconnected repeatedly on Theme manager in runs 39051830777 and 39052226967. The manual **include_theme_previews** option attempts those pages last for investigation. Exclusions are recorded in the manifest; a successful default run does not verify either theme-preview page. Their guide instructions are source-reviewed, with screenshots pending a stable capture.
+
 Download the `settings-guide-captures` artifact. For each candidate image:
 
 1. Check `manifest.json` for the source commit, emulator configuration and expected-page verification.

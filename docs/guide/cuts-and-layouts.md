@@ -6,6 +6,10 @@
 
 Open **Settings → Gem cuts** and tap a choice. Selection saves immediately.
 
+<img src="images/gem-cuts.png" width="360" alt="Gem cuts settings showing ME-Like selected, the experimental HK-Like option and the beginning of the live preview" />
+
+Actual emulator capture; the live preview continues below the visible area. [Capture provenance](screenshots.md).
+
 | Cut | Arrangement | Current scope |
 | --- | --- | --- |
 | ME-Like | Central 3×3 swipe surface with surrounding controls | Preview follows the selected character layout and modified keys |

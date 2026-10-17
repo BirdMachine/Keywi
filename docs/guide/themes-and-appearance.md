@@ -32,13 +32,26 @@ Expand a section to edit its details. **Choose media / Change media** copies sel
 
 The toolbar backdrop, suggestion lozenges, current-word chip and key borders are separate settings. The suggestion toggle uses the key border styling; changing a lozenge outline alone will not change that border.
 
+For the main backdrop and toolbar backdrop, choose a mode:
+
+| Mode | What appears |
+| --- | --- |
+| Colorful | A gradient; opens the gradient controls |
+| Image | The selected still image |
+| Gif | The selected animation, subject to power mode |
+| None | No custom backdrop on that surface |
+
+Backdrop opacity changes that surface independently. Transparent key faces and transparent lozenge faces have their own **None** settings; neither removes the main backdrop.
+
 ## Colors and gradients
 
 Open **Edit color** to expose the color picker. The large field controls saturation horizontally and brightness vertically. The hue strip chooses the color family. **Opacity** controls alpha; **RGB channels** exposes individual channel sliders.
 
-For gradients, choose a **GRADIENT PRESET** or **＋ New gradient**, then expand **Edit gradient**. Adjust the angle and expand the color-stop list to change each stop's position and color. Add stops with **＋ Add stop**; delete is available while more than two stops remain. **Save as** in this section saves a gradient preset, not a complete keyboard theme.
+For backdrop gradients, first select **Colorful**; for key or lozenge gradients, select **Gradient**. Choose a **GRADIENT PRESET** or **＋ New gradient**, then expand **Edit gradient**. Adjust the angle and expand the color-stop list to change each stop's position and color. Add stops with **＋ Add stop**; delete is available while more than two stops remain. **Save as** in this section saves a gradient preset, not a complete keyboard theme.
 
 ## Keyboard tuning
+
+<img src="images/keyboard-tuning.png" width="360" alt="Keyboard tuning showing display mode, palette, position, padding and label visibility" />
 
 From Theme manager, open **Keyboard tuning** for display mode, base palette, position, padding, key sizing, border width, radius, label visibility, animation speeds, vibration and tap sound. Some size controls become available only after changing automatic sizing or non-square-key options.
 
