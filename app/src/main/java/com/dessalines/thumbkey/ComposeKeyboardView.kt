@@ -140,7 +140,10 @@ class ComposeKeyboardView(
                             val keyboardSettings = if (!keywiEnabled) settings else if (mainBackdrop.mode == BackdropMode.COLORFUL) settings?.copy(backdropEnabled = 1) else settings?.copy(backdropEnabled = 0)
                             Box(Modifier.align(Alignment.BottomCenter).onSizeChanged { if (it.height != keyboardHeightPx) keyboardHeightPx = it.height }) {
                                 when (GemCutPreferences.load(ctx)) {
-                                    FacetId.HK_LIKE -> MachineCutSkeleton()
+                                    FacetId.HK_LIKE -> MachineCutSkeleton(
+                                        keyBorderWidth = (settings?.keyBorderWidth ?: com.dessalines.thumbkey.db.DEFAULT_KEY_BORDER_WIDTH) / 10f,
+                                        keyRadius = settings?.keyRadius ?: com.dessalines.thumbkey.db.DEFAULT_KEY_RADIUS,
+                                    )
                                     FacetId.ME_LIKE -> KeyboardScreen(
                                     settings = keyboardSettings,
                                     onTyped = {

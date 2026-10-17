@@ -139,7 +139,11 @@ fun GemCutSettingsScreen(navController: NavController, appSettingsViewModel: App
                         // Keep the ambient keyboard palette; settings chrome does not apply a theme.
                         CompositionLocalProvider(LocalLayoutDirection provides LayoutDirection.Ltr) {
                             MaterialTheme(colorScheme = LocalKeyboardPreviewColorScheme.current ?: MaterialTheme.colorScheme) {
-                                GemCutPreviewScreen(facet, definition)
+                                GemCutPreviewScreen(
+                                    facet, definition,
+                                    keyBorderWidth = (settings?.keyBorderWidth ?: com.dessalines.thumbkey.db.DEFAULT_KEY_BORDER_WIDTH) / 10f,
+                                    keyRadius = settings?.keyRadius ?: com.dessalines.thumbkey.db.DEFAULT_KEY_RADIUS,
+                                )
                             }
                         }
                     }

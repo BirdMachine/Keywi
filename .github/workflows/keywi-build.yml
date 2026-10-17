@@ -58,6 +58,15 @@ jobs:
       - name: Test custom board behavior
         run: ./gradlew testDebugUnitTest
 
+      - name: Upload HK render review
+        if: always()
+        uses: actions/upload-artifact@v6
+        with:
+          name: hk-render-review
+          path: app/build/outputs/hk-review/
+          if-no-files-found: ignore
+          retention-days: 14
+
       - name: Run Android lint
         run: ./gradlew lint
 
