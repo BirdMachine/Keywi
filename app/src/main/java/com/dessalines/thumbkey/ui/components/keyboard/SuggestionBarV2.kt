@@ -22,12 +22,20 @@ import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.horizontalScroll
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.background
+import androidx.compose.foundation.border
+import androidx.compose.ui.draw.drawWithContent
+import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -338,7 +346,31 @@ private fun SuggestionLozengeSlot(
 }
 
 @Composable
-fun SuggestionBarV2(ime: IMEService) {
+private fun GemToolbarAction(
+    label: String,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    // Use the same gem material as keys, without a separate opaque rectangle.
+    PaletteKeySurface(
+        onClick = onClick,
+        modifier = modifier.height(34.dp),
+        radius = 0,
+    ) {
+        Box(contentAlignment = Alignment.Center) {
+            Text(
+                label,
+                maxLines = 1,
+                style = MaterialTheme.typography.labelLarge,
+                fontWeight = FontWeight.Bold,
+                modifier = Modifier.padding(horizontal = 8.dp, vertical = 5.dp),
+            )
+        }
+    }
+}
+
+@Composable
+fun SuggestionBarV2(ime: IMEService, onKaomoji: () -> Unit = {}, onFancyOpen: () -> Unit = {}) {
     var enabled by remember { mutableStateOf(SuggestionPreferences.enabled(ime)) }
     var currentToken by remember { mutableStateOf("") }
     var prefix by remember { mutableStateOf("") }
@@ -436,14 +468,69 @@ fun SuggestionBarV2(ime: IMEService) {
         ((if (currentWordVisible) listOf(currentToken) else emptyList()) + orderedSuggestions)
             .take(MAX_VISIBLE_SUGGESTIONS)
 
+    Column(modifier = Modifier.fillMaxWidth()) {
     Surface(
         color = MaterialTheme.colorScheme.surface.copy(alpha = if (enabled) 0.30f else 0.20f),
         modifier = Modifier.fillMaxWidth().height(BAR_HEIGHT_DP.dp),
     ) {
         Row(
-            modifier = Modifier.fillMaxSize().padding(horizontal = 6.dp, vertical = 4.dp),
+            modifier = Modifier.fillMaxSize().padding(start = 6.dp, end = 0.dp, top = 4.dp, bottom = 4.dp),
             verticalAlignment = Alignment.CenterVertically,
         ) {
+            // Active diamond uses the configured active/current-word lozenge background.
+            // Toggle face uses the lozenge fill; its outline uses the KEY theme.
+            val toggleShape = RoundedCornerShape(18.dp)
+            val toggleKeyTheme = KeyThemePreferences.current
+            val toggleModifier =
+                Modifier
+                    .padding(start = 5.dp)
+                    .clip(toggleShape)
+                    .then(
+                        if (!enabled && lozengeTheme.surfaceStyle == SuggestionLozengeSurfaceStyle.GRADIENT) {
+                            Modifier.keyboardGradientBackground(lozengeTheme.surfaceGradient)
+                        } else {
+                            Modifier
+                        },
+                    )
+            Surface(
+                shape = toggleShape,
+                color = if (enabled) {
+                    lozengeTheme.currentWordBackgroundColor
+                } else if (lozengeTheme.surfaceStyle == SuggestionLozengeSurfaceStyle.SOLID) {
+                    lozengeTheme.surfaceColor
+                } else {
+                    Color.Transparent
+                },
+                // Draw the outline on the outermost modifier so the active fill cannot paint over it.
+                border = null,
+                tonalElevation = 0.dp,
+                shadowElevation = 1.dp,
+                modifier = toggleModifier
+                    .clickable {
+                        enabled = !enabled
+                        SuggestionPreferences.setEnabled(ime, enabled)
+                    },
+            ) {
+                Box(
+                    Modifier.drawWithContent {
+                        drawContent()
+                        // Draw on top of the active face, inset by half the stroke width.
+                        // A Surface border underneath a themed fill can disappear.
+                        val stroke = 2.dp.toPx()
+                        drawCircle(
+                            color = toggleKeyTheme.borderColor,
+                            radius = (size.minDimension - stroke) / 2f,
+                            style = Stroke(width = stroke),
+                        )
+                    },
+                    contentAlignment = Alignment.Center,
+                ) {
+                Text(
+                    text = if (enabled) "◈" else "◇",
+                    modifier = Modifier.padding(horizontal = 10.dp, vertical = 6.dp),
+                )
+                }
+            }
             Box(
                 modifier = Modifier.weight(1f).fillMaxSize(),
                 contentAlignment = Alignment.Center,
@@ -526,79 +613,24 @@ fun SuggestionBarV2(ime: IMEService) {
                 }
             }
 
-            val toggleShape = RoundedCornerShape(18.dp)
-            val toggleModifier =
-                Modifier
-                    .padding(start = 5.dp)
-                    .clip(toggleShape)
-                    .then(
-                        when (lozengeTheme.surfaceStyle) {
-                            SuggestionLozengeSurfaceStyle.GRADIENT -> {
-                                Modifier.keyboardGradientBackground(lozengeTheme.surfaceGradient)
-                            }
 
-                            SuggestionLozengeSurfaceStyle.SOLID,
-                            SuggestionLozengeSurfaceStyle.NONE,
-                            -> {
-                                Modifier
-                            }
-                        },
-                    ).then(
-                        when (lozengeTheme.borderStyle) {
-                            SuggestionLozengeBorderStyle.GRADIENT -> {
-                                Modifier.keyboardGradientBorder(
-                                    backdrop = lozengeTheme.borderGradient,
-                                    width = lozengeTheme.borderWidth.dp,
-                                    radius = 18.dp,
-                                )
-                            }
-
-                            SuggestionLozengeBorderStyle.SOLID,
-                            SuggestionLozengeBorderStyle.NONE,
-                            -> {
-                                Modifier
-                            }
-                        },
-                    )
-            Surface(
-                shape = toggleShape,
-                color =
-                    when (lozengeTheme.surfaceStyle) {
-                        SuggestionLozengeSurfaceStyle.SOLID -> {
-                            lozengeTheme.surfaceColor
-                        }
-
-                        SuggestionLozengeSurfaceStyle.GRADIENT,
-                        SuggestionLozengeSurfaceStyle.NONE,
-                        -> {
-                            Color.Transparent
-                        }
-                    },
-                tonalElevation = if (enabled) 2.dp else 0.dp,
-                shadowElevation = 1.dp,
-                border =
-                    when (lozengeTheme.borderStyle) {
-                        SuggestionLozengeBorderStyle.SOLID -> {
-                            BorderStroke(lozengeTheme.borderWidth.dp, lozengeTheme.borderColor)
-                        }
-
-                        SuggestionLozengeBorderStyle.GRADIENT,
-                        SuggestionLozengeBorderStyle.NONE,
-                        -> {
-                            null
-                        }
-                    },
-                modifier =
-                    toggleModifier.clickable {
-                        enabled = !enabled
-                        SuggestionPreferences.setEnabled(ime, enabled)
-                    },
+            // Fixed rectangular tools share one solid segment, separate from scrolling suggestions.
+            Row(
+                modifier = Modifier.padding(end = 0.dp),
+                horizontalArrangement = androidx.compose.foundation.layout.Arrangement.spacedBy(0.dp),
+                verticalAlignment = Alignment.CenterVertically,
             ) {
-                Text(
-                    text = if (enabled) "✨" else "○",
-                    modifier = Modifier.padding(horizontal = 10.dp, vertical = 6.dp),
+                GemToolbarAction(
+                    label = "𝕱",
+                    onClick = onFancyOpen,
+                )
+                GemToolbarAction(
+                    label = "(｡•̀ᴗ-)✧",
+                    onClick = onKaomoji,
                 )
             }
+
         }
+    }
     }
 }

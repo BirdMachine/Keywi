@@ -73,10 +73,10 @@ class ThemeManagerCompositionTest {
             assertEquals(customJson, ThemeEngine.export(ThemeEngine.loadCustom(context)))
             assertEquals(savedJson, ThemeEngine.export(requireNotNull(ThemeEngine.loadTheme(context, saved.id))))
         }
-        compose.onNodeWithText("Theme: Pondly regression  ▾").performScrollTo().performClick()
-        compose.onNodeWithText("Pondly regression").assertIsDisplayed().performClick()
+        compose.onNodeWithText("Pondly regression").performScrollTo().assertIsDisplayed()
         compose.onNodeWithText("Advanced theme editor").performScrollTo().performClick()
         compose.onNodeWithText("Enable custom keyboard backgrounds").assertIsDisplayed()
+        compose.onNodeWithText("Suggestion bar").performScrollTo().performClick()
         compose.onNodeWithText("Current / unfinished word chip").performScrollTo().assertIsDisplayed()
         compose.onNodeWithText("Current-word background", substring = true).performScrollTo().assertIsDisplayed()
         compose.onNodeWithText("Current-word highlight", substring = true).performScrollTo().assertIsDisplayed()

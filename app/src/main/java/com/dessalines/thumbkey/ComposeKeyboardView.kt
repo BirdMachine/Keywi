@@ -35,6 +35,8 @@ import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.zIndex
 import androidx.lifecycle.lifecycleScope
+import com.dessalines.thumbkey.db.DEFAULT_KEY_BORDER_WIDTH
+import com.dessalines.thumbkey.db.DEFAULT_KEY_RADIUS
 import com.dessalines.thumbkey.db.AppSettingsRepository
 import com.dessalines.thumbkey.db.ClipboardRepository
 import com.dessalines.thumbkey.db.DEFAULT_SOUND_ON_TAP
@@ -43,6 +45,7 @@ import com.dessalines.thumbkey.diagnostics.KeywiDiagnostics
 import com.dessalines.thumbkey.ui.components.keyboard.BackdropMode
 import com.dessalines.thumbkey.ui.components.keyboard.BackdropThemePreferences
 import com.dessalines.thumbkey.ui.components.keyboard.BackdropVisualLayer
+import com.dessalines.thumbkey.ui.components.keyboard.FancyTextFormatter
 import com.dessalines.thumbkey.ui.components.keyboard.ExpandedInputPaletteHost
 import com.dessalines.thumbkey.ui.components.keyboard.InputPalette
 import com.dessalines.thumbkey.ui.components.keyboard.KeyboardScreen
@@ -90,21 +93,36 @@ class ComposeKeyboardView(
             CompositionLocalProvider(LocalLayoutDirection provides LayoutDirection.Ltr) {
                 MaterialTheme(colorScheme = keyboardColorScheme) {
                     Column(modifier = Modifier.fillMaxWidth()) {
+                        val applyFancyText: (String) -> Unit = { style ->
+                            val connection = ctx.activeInputConnectionOrNull()
+                            val selected = connection?.getSelectedText(0)?.toString().orEmpty()
+                            if (selected.isNotEmpty()) {
+                                connection?.commitText(FancyTextFormatter.transform(selected, style), 1)
+                            } else {
+                                Toast.makeText(ctx, "Select text to format", Toast.LENGTH_SHORT).show()
+                            }
+                        }
                         if (keywiEnabled) {
-                            Box(Modifier.fillMaxWidth().height(42.dp).clipToBounds().zIndex(1f)) {
+
+                            Box(Modifier.fillMaxWidth().zIndex(1f)) {
                                 if (toolbarBackdrop.mode != BackdropMode.NONE) BackdropVisualLayer(toolbarBackdrop, Modifier.fillMaxWidth().height(42.dp))
-                                SuggestionBarV2(ctx)
-                                Surface(
-                                    onClick = {
-                                        if (activePalette == InputPalette.KAOMOJI) { PaletteSearchCapture.release(clear = true); activePalette = null }
-                                        else activePalette = InputPalette.KAOMOJI
+                                SuggestionBarV2(
+                                    ctx,
+                                    onKaomoji = {
+                                        if (activePalette == InputPalette.KAOMOJI) {
+                                            PaletteSearchCapture.release(clear = true)
+                                            activePalette = null
+                                        } else {
+                                            PaletteSearchCapture.release(clear = true)
+                                            activePalette = InputPalette.KAOMOJI
+                                        }
                                     },
-                                    shape = RoundedCornerShape(18.dp),
-                                    color = MaterialTheme.colorScheme.surface.copy(alpha = 0.88f),
-                                    tonalElevation = 2.dp,
-                                    shadowElevation = 1.dp,
-                                    modifier = Modifier.align(Alignment.CenterEnd).padding(end = 48.dp).zIndex(3f),
-                                ) { Text("☺", Modifier.padding(horizontal = 10.dp, vertical = 6.dp)) }
+                                    onFancyOpen = {
+                                        PaletteSearchCapture.release(clear = true)
+                                        activePalette =
+                                            if (activePalette == InputPalette.FANCY_TEXT) null else InputPalette.FANCY_TEXT
+                                    },
+                                )
                                 val width = ToolbarBorderPreferences.loadWidth(ctx)
                                 val color = ToolbarBorderPreferences.loadColor(ctx)
                                 if (width > 0f) Canvas(Modifier.fillMaxWidth().height(42.dp)) {
@@ -124,7 +142,10 @@ class ComposeKeyboardView(
                             val keyboardSettings = if (!keywiEnabled) settings else if (mainBackdrop.mode == BackdropMode.COLORFUL) settings?.copy(backdropEnabled = 1) else settings?.copy(backdropEnabled = 0)
                             Box(Modifier.align(Alignment.BottomCenter).onSizeChanged { if (it.height != keyboardHeightPx) keyboardHeightPx = it.height }) {
                                 when (GemCutPreferences.load(ctx)) {
-                                    FacetId.HK_LIKE -> MachineCutSkeleton()
+                                    FacetId.HK_LIKE -> MachineCutSkeleton(
+                                        keyBorderWidth = (settings?.keyBorderWidth ?: DEFAULT_KEY_BORDER_WIDTH) / 10f,
+                                        keyRadius = settings?.keyRadius ?: DEFAULT_KEY_RADIUS,
+                                    )
                                     FacetId.ME_LIKE -> KeyboardScreen(
                                     settings = keyboardSettings,
                                     onTyped = {
@@ -166,12 +187,21 @@ class ComposeKeyboardView(
                             )
                             activePalette?.let { palette ->
                                 ExpandedInputPaletteHost(
-                                    palette, ctx,
-                                    (settings?.vibrateOnTap ?: DEFAULT_VIBRATE_ON_TAP).toBool(),
-                                    (settings?.soundOnTap ?: DEFAULT_SOUND_ON_TAP).toBool(),
-                                    { PaletteSearchCapture.release(clear = true); activePalette = null },
-                                    with(density) { keyboardHeightPx.toDp() },
-                                    Modifier.align(Alignment.BottomCenter).zIndex(5f),
+                                    palette = palette,
+                                    ime = ctx,
+                                    vibrateOnTap = (settings?.vibrateOnTap ?: DEFAULT_VIBRATE_ON_TAP).toBool(),
+                                    soundOnTap = (settings?.soundOnTap ?: DEFAULT_SOUND_ON_TAP).toBool(),
+                                    onDismiss = {
+                                        PaletteSearchCapture.release(clear = true)
+                                        activePalette = null
+                                    },
+                                    keyboardHeight = with(density) { keyboardHeightPx.toDp() },
+                                    modifier = Modifier.align(Alignment.BottomCenter).zIndex(5f),
+                                    onFancyApply = applyFancyText,
+                                    onSwitchPalette = { next ->
+                                        PaletteSearchCapture.release(clear = true)
+                                        activePalette = next
+                                    },
                                 )
                             }
                         }

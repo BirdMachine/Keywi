@@ -30,21 +30,21 @@ object MachineCutLayouts {
         "qwertyuiop".map { it.toString() },
         "asdfghjkl".map { it.toString() },
         listOf("⇧") + "zxcvbnm".map { it.toString() } + listOf("⌫"),
-        listOf("?123", ",", "☺", "Space", ".", "↵", "⌘"),
+        listOf("?123", ",", "☺", "Space", ".", "⚙", "↵", "⌘"),
     ))
     val touchSymbols = touchLayout("touch-symbols", listOf(
         "1234567890".map { it.toString() },
         listOf("@", "#", "$", "%", "&", "-", "+", "(", ")", "/"),
         listOf("*", "\"", "'", ":", ";", "!", "?", "=", "_"),
         listOf("ABC", "[", "]", "{", "}", "<", ">", "⌫"),
-        listOf("ABC", ",", "☺", "Space", ".", "↵", "⌘"),
+        listOf("ABC", ",", "☺", "Space", ".", "⚙", "↵", "⌘"),
     ))
     val touchAdvanced = touchLayout("touch-advanced", listOf(
         (1..12).map { "F$it" },
         listOf("Esc", "Tab", "Ctrl", "Alt", "Win", "Del", "Home", "End"),
         listOf("PgUp", "PgDn", "Ins", "↑", "←", "↓", "→", "⌫"),
         listOf("⇧") + "qwertyuiop".map { it.toString() },
-        listOf("ABC", "☺", "Space", "↵", "⌘"),
+        listOf("ABC", "☺", "Space", "⚙", "↵", "⌘"),
     ))
 
     private fun touchLayout(id: String, rows: List<List<String>>) = MachineCutLayout(

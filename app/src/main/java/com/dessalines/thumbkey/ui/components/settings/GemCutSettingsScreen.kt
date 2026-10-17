@@ -51,6 +51,8 @@ import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
+import com.dessalines.thumbkey.db.DEFAULT_KEY_BORDER_WIDTH
+import com.dessalines.thumbkey.db.DEFAULT_KEY_RADIUS
 import com.dessalines.thumbkey.db.AppSettingsViewModel
 import com.dessalines.thumbkey.db.DEFAULT_KEYBOARD_LAYOUT
 import com.dessalines.thumbkey.ui.components.keyboard.FacetId
@@ -139,7 +141,11 @@ fun GemCutSettingsScreen(navController: NavController, appSettingsViewModel: App
                         // Keep the ambient keyboard palette; settings chrome does not apply a theme.
                         CompositionLocalProvider(LocalLayoutDirection provides LayoutDirection.Ltr) {
                             MaterialTheme(colorScheme = LocalKeyboardPreviewColorScheme.current ?: MaterialTheme.colorScheme) {
-                                GemCutPreviewScreen(facet, definition)
+                                GemCutPreviewScreen(
+                                    facet, definition,
+                                    keyBorderWidth = (settings?.keyBorderWidth ?: DEFAULT_KEY_BORDER_WIDTH) / 10f,
+                                    keyRadius = settings?.keyRadius ?: DEFAULT_KEY_RADIUS,
+                                )
                             }
                         }
                     }

@@ -84,29 +84,18 @@ val GOOGLE_POLICY_MARKDOWN = """
 fun SettingsNoticeBanners(versionCode: Int, lastViewedVersion: Int?, onWelcomeViewed: () -> Unit) {
     val context = LocalContext.current
     val prefs = remember(context) { context.getSharedPreferences("keywi_notices", 0) }
+    // Notices are opt-in via their persistent banners, never opened automatically.
     var openNotice by rememberSaveable(versionCode) { mutableStateOf<String?>(null) }
-    var introducedThisSession by rememberSaveable(versionCode) { mutableStateOf(false) }
-    var policyIntroducedThisSession by rememberSaveable(versionCode) { mutableStateOf(false) }
-
-    fun needsPolicy() = prefs.getInt("policy_seen_version", -1) != versionCode && !policyIntroducedThisSession
-    fun openPolicy() { policyIntroducedThisSession = true; openNotice = "policy" }
+    fun openPolicy() { openNotice = "policy" }
     fun closeNotice() {
         if (openNotice == "welcome") {
             onWelcomeViewed()
-            if (needsPolicy()) { openPolicy(); return }
         } else if (openNotice == "policy") {
             prefs.edit().putInt("policy_seen_version", versionCode).apply()
         }
         openNotice = null
     }
 
-    LaunchedEffect(versionCode, lastViewedVersion) {
-        if (lastViewedVersion != null && !introducedThisSession && openNotice == null) {
-            introducedThisSession = true
-            if (lastViewedVersion != versionCode) openNotice = "welcome"
-            else if (needsPolicy()) openPolicy()
-        }
-    }
 
     Column(Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 8.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
         NoticeBanner("Welcome to Keywi", "Build $versionCode · tap for what's changed", Icons.Outlined.Diamond) { openNotice = "welcome" }

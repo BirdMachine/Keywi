@@ -5,7 +5,11 @@ import android.content.Intent
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.BorderStroke
+import androidx.compose.material3.Surface
+import androidx.compose.runtime.mutableStateMapOf
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -31,6 +35,8 @@ import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.key
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
@@ -38,6 +44,9 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import com.dessalines.thumbkey.ui.components.keyboard.ThemeAssetStore
+import com.dessalines.thumbkey.ui.components.keyboard.ThemeEngine
+import com.dessalines.thumbkey.ui.components.keyboard.CUSTOM_THEME_ID
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -83,8 +92,11 @@ fun AdvancedLookAndFeelScreen(navController: NavController) {
     val scrollState = rememberScrollState()
     val context = LocalContext.current
     var keywiEnabled by remember { mutableStateOf(KeywiAppearancePreferences.load(context)) }
+    val openingTheme = remember(context) { ThemeEngine.captureCurrent(context, "Opening appearance", CUSTOM_THEME_ID) }
+    var editNotice by remember { mutableStateOf<String?>(null) }
+    var editorRevision by remember { mutableIntStateOf(0) }
 
-    Scaffold(topBar = { SimpleTopAppBar(text = "Advanced look & feel", navController = navController) }) { padding ->
+    Scaffold(topBar = { SimpleTopAppBar(text = "Theme editor", navController = navController) }) { padding ->
         Column(Modifier.padding(padding).verticalScroll(scrollState).background(MaterialTheme.colorScheme.surface).imePadding()) {
             Row(gemSectionModifier(), Arrangement.SpaceBetween, Alignment.CenterVertically) {
                 Column(Modifier.weight(1f).padding(end = 12.dp)) {
@@ -94,11 +106,41 @@ fun AdvancedLookAndFeelScreen(navController: NavController) {
                 Switch(checked = keywiEnabled, onCheckedChange = { keywiEnabled = it; KeywiAppearancePreferences.save(context, it) })
             }
             if (keywiEnabled) {
-                SurfaceThemeSection("Main backdrop", "The large space behind and around the keys.", BackdropThemePreferences::load, BackdropThemePreferences::save)
-                SurfaceThemeSection("Suggestion toolbar", "The strip behind suggestion lozenges and the ✨ toggle.", ToolbarThemePreferences::load, ToolbarThemePreferences::save, true)
-                SuggestionLozengeAppearanceSection()
-                KeyAppearanceSection()
-                FontAndSuggestionSection()
+                Row(
+                    Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 8.dp),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                ) {
+                    Button(onClick = {
+                        ThemeEngine.saveCustom(context, ThemeEngine.captureCurrent(context, "Custom", CUSTOM_THEME_ID))
+                        editNotice = "Saved to Custom. Use Save as… in Theme manager to add it to the library."
+                    }, modifier = Modifier.weight(1f)) { Text("Save") }
+                    OutlinedButton(onClick = {
+                        ThemeEngine.apply(context, openingTheme)
+                        editorRevision++
+                        editNotice = "Reverted. All appearance controls have been refreshed."
+                    }, modifier = Modifier.weight(1f)) { Text("Revert") }
+                }
+                editNotice?.let { Text(it, Modifier.padding(horizontal = 16.dp), style = MaterialTheme.typography.bodySmall) }
+                key(editorRevision) { KeywiThemeTestBench() }
+                Text("✦ Live theme tuning", Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
+                    style = MaterialTheme.typography.titleMedium)
+                Text("Use the test keyboard in Theme manager to inspect the actual geometry.",
+                    Modifier.padding(horizontal = 16.dp), style = MaterialTheme.typography.bodySmall)
+                key(editorRevision) {
+                ThemeEditorFold("Keyboard background", "Image, GIF, opacity and gradients", true) {
+                    SurfaceThemeSection("Main backdrop", "The large space behind and around the keys.", BackdropThemePreferences::load, BackdropThemePreferences::save)
+                }
+                ThemeEditorFold("Suggestion bar", "Toolbar, lozenges and current-word highlight") {
+                    SurfaceThemeSection("Suggestion toolbar", "The strip behind suggestion lozenges and the ✨ toggle.", ToolbarThemePreferences::load, ToolbarThemePreferences::save, true)
+                    SuggestionLozengeAppearanceSection()
+                }
+                ThemeEditorFold("Keys", "Fill, borders, shadows and key surfaces", true) {
+                    KeyAppearanceSection()
+                }
+                ThemeEditorFold("Typography", "Key labels, fonts and suggestion text") {
+                    FontAndSuggestionSection()
+                }
+                }
                 Text("Planned surface slot: one-shot key-press overlays (GIF/image effects).", Modifier.padding(16.dp), style = MaterialTheme.typography.bodySmall)
             } else {
                 Column(Modifier.fillMaxWidth().alpha(0.42f).padding(horizontal = 16.dp, vertical = 10.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
@@ -159,7 +201,7 @@ private fun ManagedGradientEditor(title: String, gradient: KeyboardBackdrop, onG
     var gradients by remember { mutableStateOf(GradientLibrary.load(context)) }; var menuOpen by remember { mutableStateOf(false) }; var selectedName by remember { mutableStateOf("Current gradient") }; var saveName by remember { mutableStateOf("") }; var expanded by remember { mutableStateOf(false) }
     Column(verticalArrangement = Arrangement.spacedBy(5.dp)) {
         Row(Modifier.fillMaxWidth(), Arrangement.SpaceBetween, Alignment.CenterVertically) { Text(title, style = MaterialTheme.typography.titleSmall); Text(if (expanded) "Hide details  ▲" else "Edit gradient  ▼", style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.primary, modifier = Modifier.clickable { expanded = !expanded }.padding(6.dp)) }
-        Box { Button(onClick = { menuOpen = true }, modifier = Modifier.fillMaxWidth()) { Text(selectedName, fontSize = 13.sp) }; DropdownMenu(menuOpen, { menuOpen = false }) {
+        Box { Row(Modifier.fillMaxWidth().clip(RoundedCornerShape(10.dp)).border(1.dp, MaterialTheme.colorScheme.outline, RoundedCornerShape(10.dp)).clickable { menuOpen = true }.padding(horizontal = 14.dp, vertical = 10.dp), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) { Column { Text("GRADIENT PRESET", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant); Text(selectedName, style = MaterialTheme.typography.bodyMedium) }; Text("⌄", style = MaterialTheme.typography.titleLarge, color = MaterialTheme.colorScheme.primary) }; DropdownMenu(menuOpen, { menuOpen = false }) {
             gradients.forEach { saved -> DropdownMenuItem({ Text(saved.name) }, { selectedName = saved.name; menuOpen = false; onGradientChange(saved.toBackdrop()) }) }
             DropdownMenuItem({ Text("＋ New gradient") }, { selectedName = "New gradient"; menuOpen = false; expanded = true; onGradientChange(KeyboardBackdrop(listOf(KeyboardGradientStop(0f, Color(0xFF151A2C)), KeyboardGradientStop(1f, Color(0xFFB5D8FF))), 0f)) })
         } }
@@ -231,6 +273,75 @@ private fun GradientEditor(label: String, gradient: KeyboardBackdrop, onChange: 
 }
 
 @Composable
-private fun ColorEditor(label: String, color: Color, onChange: (Color) -> Unit) { Column(Modifier.fillMaxWidth().padding(vertical = 2.dp)) { Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) { Box(Modifier.size(22.dp).clip(RoundedCornerShape(7.dp)).background(color)); Text("$label • A ${(color.alpha * 100).roundToInt()}%", style = MaterialTheme.typography.labelMedium) }; Channel("R", color.red) { onChange(Color(it, color.green, color.blue, color.alpha)) }; Channel("G", color.green) { onChange(Color(color.red, it, color.blue, color.alpha)) }; Channel("B", color.blue) { onChange(Color(color.red, color.green, it, color.alpha)) }; Channel("A", color.alpha) { onChange(Color(color.red, color.green, color.blue, it)) } } }
+private fun ColorEditor(label: String, color: Color, onChange: (Color) -> Unit) {
+    var showChannels by remember { mutableStateOf(false) }
+    var pickerExpanded by remember { mutableStateOf(false) }
+    val hexColor = String.format(java.util.Locale.US, "#%02X%02X%02X", (color.red * 255).roundToInt(), (color.green * 255).roundToInt(), (color.blue * 255).roundToInt())
+    val hsv = remember(color) {
+        FloatArray(3).also { android.graphics.Color.colorToHSV(
+            android.graphics.Color.rgb((color.red * 255).toInt(), (color.green * 255).toInt(), (color.blue * 255).toInt()), it
+        ) }
+    }
+    fun changeHsv(hue: Float = hsv[0], saturation: Float = hsv[1], value: Float = hsv[2]) {
+        val rgb = android.graphics.Color.HSVToColor(floatArrayOf(hue, saturation, value))
+        onChange(Color(android.graphics.Color.red(rgb) / 255f, android.graphics.Color.green(rgb) / 255f, android.graphics.Color.blue(rgb) / 255f, color.alpha))
+    }
+    Column(Modifier.fillMaxWidth().padding(vertical = 4.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
+        Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
+            Box(Modifier.size(32.dp).clip(RoundedCornerShape(8.dp)).background(color))
+            Column(Modifier.weight(1f)) {
+                Text(label, style = MaterialTheme.typography.labelMedium)
+                Text(hexColor, style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+            }
+            Text(if (pickerExpanded) "Close ▲" else "Edit color ▼", modifier = Modifier.clickable { pickerExpanded = !pickerExpanded }, color = MaterialTheme.colorScheme.primary, style = MaterialTheme.typography.labelMedium)
+        }
+        if (pickerExpanded) {
+        ColorFieldPicker(
+            hue = hsv[0],
+            saturation = hsv[1],
+            value = hsv[2],
+            onColorChange = { h, sat, v -> changeHsv(hue = h, saturation = sat, value = v) },
+        )
+        Text("RGB channels ${if (showChannels) "▲" else "▼"}", modifier = Modifier.clickable { showChannels = !showChannels }, style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.primary)
+        if (showChannels) {
+            Channel("R", color.red) { onChange(Color(it, color.green, color.blue, color.alpha)) }
+            Channel("G", color.green) { onChange(Color(color.red, it, color.blue, color.alpha)) }
+            Channel("B", color.blue) { onChange(Color(color.red, color.green, it, color.alpha)) }
+        }
+        Text("Opacity • ${(color.alpha * 100).roundToInt()}%", style = MaterialTheme.typography.labelSmall)
+        Slider(color.alpha, { onChange(Color(color.red, color.green, color.blue, it)) }, valueRange = 0f..1f)
+        }
+    }
+}
 @Composable
 private fun Channel(label: String, value: Float, onChange: (Float) -> Unit) { Text("$label ${(value * 255).roundToInt()}", style = MaterialTheme.typography.labelSmall); Slider(value, onChange, valueRange = 0f..1f) }
+
+/** Compact, independently expandable editor sections; advanced controls stay intact. */
+@Composable
+private fun ThemeEditorFold(
+    title: String,
+    subtitle: String,
+    initiallyExpanded: Boolean = false,
+    content: @Composable () -> Unit,
+) {
+    var expanded by remember { mutableStateOf(initiallyExpanded) }
+    Column(Modifier.fillMaxWidth().padding(horizontal = 12.dp, vertical = 4.dp)) {
+        Surface(
+            onClick = { expanded = !expanded },
+            shape = RoundedCornerShape(14.dp),
+            color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.55f),
+            border = BorderStroke(1.dp, MaterialTheme.colorScheme.primary.copy(alpha = 0.22f)),
+        ) {
+            Row(Modifier.fillMaxWidth().padding(14.dp),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically) {
+                Column(Modifier.weight(1f)) {
+                    Text(title, style = MaterialTheme.typography.titleSmall)
+                    Text(subtitle, style = MaterialTheme.typography.bodySmall)
+                }
+                Text(if (expanded) "⌃" else "›", style = MaterialTheme.typography.titleLarge)
+            }
+        }
+        if (expanded) content()
+    }
+}

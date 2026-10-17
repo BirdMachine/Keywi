@@ -7,6 +7,8 @@ import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -27,6 +29,7 @@ import com.dessalines.thumbkey.inputcontext.ContextEnginePreferences
 /** Browsable input surfaces that are deliberately opened instead of cycled as keyboard modes. */
 enum class InputPalette {
     KAOMOJI,
+    FANCY_TEXT,
 }
 
 @Composable
@@ -38,6 +41,8 @@ fun ExpandedInputPaletteHost(
     onDismiss: () -> Unit,
     keyboardHeight: Dp,
     modifier: Modifier = Modifier,
+    onFancyApply: (String) -> Unit = {},
+    onSwitchPalette: (InputPalette) -> Unit = {},
 ) {
     val capabilities =
         ContextEnginePolicy.evaluate(
@@ -49,7 +54,7 @@ fun ExpandedInputPaletteHost(
     val configuration = LocalConfiguration.current
     val view = LocalView.current
     val audioManager = ime.getSystemService(Context.AUDIO_SERVICE) as AudioManager
-    val searchActive = PaletteSearchCapture.active
+    val searchActive = palette == InputPalette.KAOMOJI && PaletteSearchCapture.active
     val browseHeight =
         (configuration.screenHeightDp * 0.62f)
             .coerceIn(380f, 680f)
@@ -106,7 +111,12 @@ fun ExpandedInputPaletteHost(
                 )
             }
 
+            Column(modifier = Modifier.fillMaxSize()) {
+                PaletteWorkspaceHeader(palette, onSwitchPalette, onDismiss)
             when (palette) {
+                InputPalette.FANCY_TEXT -> {
+                    FancyTextWorkspace(onApply = onFancyApply, modifier = Modifier.fillMaxSize())
+                }
                 InputPalette.KAOMOJI -> {
                     KaomojiRoom(
                         onCommit = { text ->
@@ -118,9 +128,11 @@ fun ExpandedInputPaletteHost(
                         },
                         onBackToLetters = onDismiss,
                         onGoToEmoji = null,
+                        showDismissButton = false,
                         modifier = Modifier.fillMaxSize(),
                     )
                 }
+            }
             }
         }
     }
