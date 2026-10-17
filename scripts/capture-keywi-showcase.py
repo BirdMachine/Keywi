@@ -1,4 +1,4 @@
-"""Capture the installed Keywi IME through its existing settings test field."""
+"""Capture the themed Keywi IME through its existing settings test field."""
 import pathlib
 import re
 import subprocess

@@ -125,6 +125,7 @@ fun MachineCutSkeleton(
     }
 
     BoxWithConstraints(modifier.fillMaxWidth()) {
+        val keyboardWidth = maxWidth
         val canvasWidth = with(density) { (maxWidth - 6.dp).toPx() }
         val canvasHeight = with(density) { (rows.size * 53 - 2).dp.toPx() }
         Column(
@@ -134,7 +135,7 @@ fun MachineCutSkeleton(
             rows.forEachIndexed { index, row ->
                 val bottomRow = index == rows.lastIndex
                 val height = if (bottomRow) 48.dp else 50.dp
-                val availableWidth = maxWidth - 6.dp - 3.dp * (row.size - 1)
+                val availableWidth = keyboardWidth - 6.dp - 3.dp * (row.size - 1)
                 val totalWeight = row.sumOf { it.width.toDouble() }.toFloat()
                 Row(
                     modifier = Modifier.fillMaxWidth(),
