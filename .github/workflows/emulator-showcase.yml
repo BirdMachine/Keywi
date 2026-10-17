@@ -1,0 +1,60 @@
+name: Keywi Emulator Showcase
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - feature/emulator-showcase-capture
+    paths:
+      - .github/workflows/emulator-showcase.yml
+      - scripts/capture-keywi-showcase.py
+
+permissions:
+  contents: read
+
+jobs:
+  capture:
+    name: Capture actual Keywi keyboard
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    env:
+      KEYWI_DEBUG_STORE_FILE: ${{ github.workspace }}/.github/keywi-debug.keystore
+      KEYWI_DEBUG_STORE_PASSWORD: keywi-debug
+      KEYWI_DEBUG_KEY_ALIAS: keywi-debug
+      KEYWI_DEBUG_KEY_PASSWORD: keywi-debug
+    steps:
+      - uses: actions/checkout@v6
+      - name: Restore stable signing key
+        run: |
+          base64 --decode .github/keywi-debug.keystore.b64 > .github/keywi-debug.keystore
+          chmod 600 .github/keywi-debug.keystore
+      - uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: '21'
+      - uses: gradle/actions/setup-gradle@v6
+      - name: Enable KVM
+        run: |
+          echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
+          sudo udevadm control --reload-rules
+          sudo udevadm trigger --name-match=kvm
+      - name: Build Keywi
+        run: ./gradlew assembleDebug
+      - name: Capture real keyboard
+        uses: reactivecircus/android-emulator-runner@v2
+        with:
+          api-level: 34
+          target: google_apis
+          arch: x86_64
+          profile: pixel_6
+          disable-animations: true
+          emulator-options: -no-window -gpu swiftshader_indirect -no-snapshot -noaudio -no-boot-anim
+          script: python3 scripts/capture-keywi-showcase.py
+      - name: Upload captures and verification
+        if: always()
+        uses: actions/upload-artifact@v6
+        with:
+          name: keywi-emulator-showcase
+          path: showcase/
+          if-no-files-found: warn
+          retention-days: 14
