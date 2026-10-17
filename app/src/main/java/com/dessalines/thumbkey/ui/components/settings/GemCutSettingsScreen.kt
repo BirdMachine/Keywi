@@ -51,6 +51,8 @@ import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
+import com.dessalines.thumbkey.db.DEFAULT_KEY_BORDER_WIDTH
+import com.dessalines.thumbkey.db.DEFAULT_KEY_RADIUS
 import com.dessalines.thumbkey.db.AppSettingsViewModel
 import com.dessalines.thumbkey.db.DEFAULT_KEYBOARD_LAYOUT
 import com.dessalines.thumbkey.ui.components.keyboard.FacetId
@@ -141,8 +143,8 @@ fun GemCutSettingsScreen(navController: NavController, appSettingsViewModel: App
                             MaterialTheme(colorScheme = LocalKeyboardPreviewColorScheme.current ?: MaterialTheme.colorScheme) {
                                 GemCutPreviewScreen(
                                     facet, definition,
-                                    keyBorderWidth = (settings?.keyBorderWidth ?: com.dessalines.thumbkey.db.DEFAULT_KEY_BORDER_WIDTH) / 10f,
-                                    keyRadius = settings?.keyRadius ?: com.dessalines.thumbkey.db.DEFAULT_KEY_RADIUS,
+                                    keyBorderWidth = (settings?.keyBorderWidth ?: DEFAULT_KEY_BORDER_WIDTH) / 10f,
+                                    keyRadius = settings?.keyRadius ?: DEFAULT_KEY_RADIUS,
                                 )
                             }
                         }
