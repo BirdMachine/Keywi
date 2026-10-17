@@ -55,6 +55,7 @@ def main():
     records = []
     try:
         for route, expected in PAGES:
+            print(f"Capturing {route}", flush=True)
             # Restart the activity so startRoute is read for each page. Selection
             # is unnecessary: these captures document settings, not the live IME.
             shell("am", "start", "-S", "-n", ACTIVITY, "--es", "startRoute", route)
@@ -76,13 +77,17 @@ def main():
             with (OUT / f"{route}.png").open("wb") as image:
                 adb("exec-out", "screencap", "-p", stdout=image)
             records.append({"route": route, "expected": expected, "verified": verified})
+            print(f"Page verified: {verified}", flush=True)
     finally:
         (OUT / "manifest.json").write_text(json.dumps({
             "commit": subprocess.check_output(["git", "rev-parse", "HEAD"], text=True).strip(),
             "device": "Pixel 6 emulator, API 34, 1080x2400, density 420",
             "pages": records,
         }, indent=2))
-        (OUT / "logcat.txt").write_text(shell("logcat", "-d", "-t", "500"))
+        try:
+            (OUT / "logcat.txt").write_text(shell("logcat", "-d", "-t", "500"))
+        except subprocess.SubprocessError:
+            print("Emulator disconnected; retaining completed captures and manifest", flush=True)
     if not all(record["verified"] for record in records):
         raise RuntimeError("Some page titles did not match; inspect manifest and images before publishing")
 

@@ -28,7 +28,9 @@ jobs:
           sudo udevadm control --reload-rules
           sudo udevadm trigger --name-match=kvm
       - name: Build disposable documentation APK
-        run: ./gradlew assembleDebug
+        run: |
+          ./gradlew assembleDebug
+          ./gradlew --stop
       - uses: reactivecircus/android-emulator-runner@v2
         with:
           api-level: 34
@@ -36,7 +38,9 @@ jobs:
           arch: x86_64
           profile: pixel_6
           disable-animations: true
-          emulator-options: -no-window -gpu swiftshader_indirect -no-snapshot -noaudio -no-boot-anim
+          ram-size: 2048M
+          cores: 2
+          emulator-options: -no-window -gpu swiftshader_indirect -feature -Vulkan -no-snapshot -noaudio -no-boot-anim
           script: python3 scripts/capture-settings-guide.py
       - uses: actions/upload-artifact@v6
         if: always()
