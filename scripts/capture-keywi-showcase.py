@@ -42,7 +42,7 @@ adb("wait-for-device")
 shell("wm", "size", "1080x2400")
 shell("wm", "density", "420")
 adb("install", "-r", "app/build/outputs/apk/debug/app-debug.apk")
-ime = next(line.strip() for line in shell("ime", "list", "-s").splitlines() if PKG in line)
+ime = next(line.strip() for line in shell("ime", "list", "-a", "-s").splitlines() if PKG in line)
 shell("ime", "enable", ime)
 shell("ime", "set", ime)
 shell("am", "force-stop", PKG)
@@ -69,7 +69,13 @@ try:
     assert find("Keywi settings") is not None, "HK settings shortcut missing in live IME"
     for letter in "keywi":
         press(letter)
+    assert any(n.get("class") == "android.widget.EditText" and "keywi" in n.get("text", "").lower() for n in nodes()), "HK taps did not reach the editor"
     screenshot("hk-basic-live")
+    press("𝕱")
+    screenshot("fancy-text-live")
+    press("(｡•̀ᴗ-)✧")
+    screenshot("kaomoji-live")
+    press("✕")
     press("?123")
     screenshot("hk-symbols-live")
     press("⌘")
