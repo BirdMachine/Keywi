@@ -16,8 +16,18 @@ def shell(*args):
     return adb("shell", *args, capture_output=True, text=True).stdout
 
 def nodes():
-    shell("uiautomator", "dump", "/sdcard/keywi-window.xml")
-    return list(ET.fromstring(shell("cat", "/sdcard/keywi-window.xml")).iter("node"))
+    for attempt in range(5):
+        result = shell("uiautomator", "dump", "--compressed", "/sdcard/keywi-window.xml")
+        (OUT / "ui-dump-log.txt").write_text(result)
+        try:
+            xml = shell("cat", "/sdcard/keywi-window.xml")
+            return list(ET.fromstring(xml).iter("node"))
+        except (subprocess.CalledProcessError, ET.ParseError):
+            time.sleep(2)
+    with (OUT / "ui-dump-failure.png").open("wb") as file:
+        adb("exec-out", "screencap", "-p", stdout=file)
+    (OUT / "logcat.txt").write_text(shell("logcat", "-d", "-t", "1000"))
+    raise RuntimeError("Could not dump Android UI hierarchy; see screenshot and logs")
 
 def tap(node):
     x1, y1, x2, y2 = map(int, re.findall(r"\d+", node.attrib["bounds"]))
@@ -63,7 +73,9 @@ shell("run-as", PKG, "mkdir", "-p", "shared_prefs")
 prefs = '<?xml version="1.0" encoding="utf-8"?><map><string name="active_facet">HK_LIKE</string></map>'
 adb("shell", f"run-as {PKG} sh -c 'cat > shared_prefs/keywi_gem_cut_preferences.xml'", input=prefs, text=True)
 shell("am", "start", "-n", f"{PKG}/com.dessalines.thumbkey.MainActivity", "--es", "startRoute", "settings")
-time.sleep(4)
+time.sleep(8)
+with (OUT / "settings-open.png").open("wb") as file:
+    adb("exec-out", "screencap", "-p", stdout=file)
 
 for attempt in range(12):
     current = nodes()
