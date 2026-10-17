@@ -4,6 +4,14 @@
 
 The canonical guide lives in `docs/guide/` alongside the code. It renders directly on GitHub without a separate wiki repository or publishing service. The README links here. Keep navigation labels literal and explain the effect, persistence and dependencies of each setting.
 
+## Handbook website
+
+The GitHub Pages website is generated from these same Markdown files. Edit the guide once; the **Keywi handbook website** workflow builds the site on pull requests and publishes changes from `main`. It does not launch an emulator or build an APK.
+
+To enable hosting, open the repository's **Settings → Pages** and select **GitHub Actions** as the source. This one-time repository setting needs an administrator; it cannot be enabled with the workflow's ordinary `GITHUB_TOKEN`. After enabling, run **Keywi handbook website** from the Actions tab if the initial deployment has already failed. The expected project address is `https://birdmachine.github.io/Keywi/` unless a custom domain is configured.
+
+For a local build, use Node 22 or newer, run `npm ci --prefix docs/site`, then `node docs/site/build.mjs` from the repository root. Check the output with `python3 scripts/check-handbook.py` and serve `_site/` with a local HTTP server. The `_site/` output is generated and should not be committed. Site styling and search live in `docs/site/`.
+
 ## Refresh real screenshots
 
 Use the **Settings guide screenshots** Actions workflow. It is manual after merge; its initial documentation branch also runs when the capture script/workflow changes. Ordinary APK builds do not launch it.

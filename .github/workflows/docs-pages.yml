@@ -1,0 +1,61 @@
+name: Keywi handbook website
+
+on:
+  push:
+    branches: [main]
+    paths: [docs/guide/**, docs/site/**, .github/workflows/docs-pages.yml]
+  pull_request:
+    paths: [docs/guide/**, docs/site/**, .github/workflows/docs-pages.yml]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: handbook-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-node@v6
+        with:
+          node-version: '22'
+      - run: npm ci --ignore-scripts --no-audit --no-fund
+        working-directory: docs/site
+      - run: npm run build
+        working-directory: docs/site
+      - run: python3 scripts/check-handbook.py
+      - name: Install browser for website checks
+        run: npx playwright install --with-deps chromium
+        working-directory: docs/site
+      - name: Check website and capture previews
+        run: |
+          python3 -m http.server 8765 --bind 127.0.0.1 --directory _site &
+          handbook_server_pid=$!
+          trap 'kill "$handbook_server_pid"' EXIT
+          node docs/site/smoke.mjs
+      - uses: actions/upload-artifact@v6
+        if: always()
+        with:
+          name: handbook-preview
+          path: handbook-preview/
+      - uses: actions/upload-pages-artifact@v4
+        with:
+          path: _site
+  deploy:
+    if: github.ref == 'refs/heads/main'
+    needs: build
+    runs-on: ubuntu-latest
+    permissions:
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Deploy handbook
+        id: deployment
+        uses: actions/deploy-pages@v4
