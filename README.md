@@ -6,9 +6,11 @@
 
 ### 🌈 A violently chromatic keyboard mutated for me 🩷✨
 
-## Buffering... ✨
+## Make yourself at home ✨
 
-Details later — README currently under construction. 🩷
+**[Settings guide & user handbook](docs/guide/README.md)** · [Troubleshooting](docs/guide/troubleshooting.md)
+
+Choose a gem cut, tune your theme, build a board, and make the keyboard yours.
 
 ### [⬇️ Click to download the latest release](https://github.com/BirdMachine/Keywi/releases/latest)
 
