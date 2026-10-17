@@ -23,6 +23,8 @@ fun GemCutPreviewScreen(
     facet: FacetId,
     definition: KeyboardDefinition,
     modifier: Modifier = Modifier,
+    keyBorderWidth: Float = com.dessalines.thumbkey.db.DEFAULT_KEY_BORDER_WIDTH / 10f,
+    keyRadius: Int = com.dessalines.thumbkey.db.DEFAULT_KEY_RADIUS,
 ) {
     Column(modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(6.dp)) {
         if (facet == FacetId.ME_LIKE) {
@@ -40,7 +42,7 @@ fun GemCutPreviewScreen(
             GemCutGeometryPreview(facet, keyboard, Modifier.fillMaxWidth())
             Text(definition.title, style = MaterialTheme.typography.labelSmall)
         } else {
-            MachineCutSkeleton()
+            MachineCutSkeleton(keyBorderWidth = keyBorderWidth, keyRadius = keyRadius)
             Text("Try ⇧, ?123 or ⌘ to explore the HK layers.", style = MaterialTheme.typography.bodySmall)
         }
     }

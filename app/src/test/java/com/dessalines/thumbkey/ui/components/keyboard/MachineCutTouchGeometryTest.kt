@@ -8,9 +8,9 @@ class MachineCutTouchGeometryTest {
     @Test
     fun thumbnailsUseTheActualFiveRowTouchTopology() {
         val rows = MachineCutLayouts.touchMain.rows
-        assertEquals(listOf(10, 10, 9, 9, 7), rows.map { it.size })
+        assertEquals(listOf(10, 10, 9, 9, 8), rows.map { it.size })
         assertEquals("qwertyuiop", rows[1].joinToString("") { it.label })
-        assertEquals(listOf("?123", ",", "☺", "Space", ".", "↵", "⌘"), rows.last().map { it.label })
+        assertEquals(listOf("?123", ",", "☺", "Space", ".", "⚙", "↵", "⌘"), rows.last().map { it.label })
     }
 
     @Test
@@ -20,6 +20,7 @@ class MachineCutTouchGeometryTest {
                 assertEquals(5, layout.rows.size)
                 assertTrue(layout.rows.flatten().all { it.width > 0f })
                 val cells = layout.rows.flatten()
+                assertEquals(1, cells.count { it.label == "⚙" })
                 assertEquals(4.4f, cells.first { it.label == "Space" }.width, 0f)
                 assertEquals(1.5f, cells.first { it.label == "⌫" }.width, 0f)
             }
