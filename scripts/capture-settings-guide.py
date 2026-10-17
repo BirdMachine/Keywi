@@ -39,8 +39,18 @@ def main():
     shell("wm", "density", "420")
     adb("install", "-r", "app/build/outputs/apk/debug/app-debug.apk")
     shell("am", "start", "-n", ACTIVITY)
-    time.sleep(3)
-    ime = next(line.strip() for line in shell("ime", "list", "-a", "-s").splitlines() if PKG in line)
+    ime = None
+    for attempt in range(15):
+        listing = shell("ime", "list", "-a", "-s")
+        (OUT / "ime-list.txt").write_text(listing)
+        ime = next((line.strip() for line in listing.splitlines() if PKG in line), None)
+        if ime:
+            break
+        time.sleep(2)
+    if not ime:
+        (OUT / "package.txt").write_text(shell("dumpsys", "package", PKG))
+        (OUT / "logcat.txt").write_text(shell("logcat", "-d", "-t", "500"))
+        raise RuntimeError("Keywi IME did not register after installation; see diagnostics")
     shell("ime", "enable", ime)
     records = []
     try:
