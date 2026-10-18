@@ -179,10 +179,10 @@ private fun SurfaceThemeSection(title: String, subtitle: String, load: (android.
         if (showToolbarBorder) {
             var borderWidth by remember { mutableStateOf(ToolbarBorderPreferences.loadWidth(context)) }
             var toolbarGap by remember { mutableStateOf(ToolbarLayoutPreferences.loadKeyboardGap(context)) }
-            var borderColorText by remember { mutableStateOf(String.format("#%08X", ToolbarBorderPreferences.loadColor(context).value.toLong())) }
+            var borderColor by remember { mutableStateOf(ToolbarBorderPreferences.loadColor(context)) }
             Text("Toolbar border: ${String.format("%.1f", borderWidth)} px", style = MaterialTheme.typography.titleSmall)
             Slider(borderWidth, { borderWidth = it; ToolbarBorderPreferences.saveWidth(context, it) }, valueRange = 0f..3f)
-            OutlinedTextField(borderColorText, { text -> borderColorText = text; runCatching { Color(android.graphics.Color.parseColor(text)) }.getOrNull()?.let { ToolbarBorderPreferences.saveColor(context, it) } }, label = { Text("Border color (#AARRGGBB or #RRGGBB)") }, singleLine = true, modifier = Modifier.fillMaxWidth())
+            ColorEditor("Toolbar border color", borderColor) { borderColor = it; ToolbarBorderPreferences.saveColor(context, it) }
             Text("Toolbar → keys gap: ${String.format("%.1f", toolbarGap)} dp", style = MaterialTheme.typography.titleSmall)
             Slider(toolbarGap, { toolbarGap = it; ToolbarLayoutPreferences.saveKeyboardGap(context, it) }, valueRange = 0f..24f)
         }
@@ -271,50 +271,6 @@ private fun GradientEditor(label: String, gradient: KeyboardBackdrop, onChange: 
     var stopsExpanded by remember { mutableStateOf(false) }; Text("$label angle • ${gradient.angleDegrees.roundToInt()}°", style = MaterialTheme.typography.labelMedium); Slider(gradient.angleDegrees, { onChange(gradient.copy(angleDegrees = it)) }, valueRange = 0f..360f); Text("${gradient.stops.size} color stops  ${if (stopsExpanded) "▲" else "▼"}", style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.primary, modifier = Modifier.clickable { stopsExpanded = !stopsExpanded }.padding(vertical = 4.dp))
     if (stopsExpanded) { gradient.stops.forEachIndexed { index, stop -> Column(Modifier.fillMaxWidth().background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.30f), RoundedCornerShape(10.dp)).padding(7.dp), verticalArrangement = Arrangement.spacedBy(2.dp)) { Row(Modifier.fillMaxWidth(), Arrangement.SpaceBetween, Alignment.CenterVertically) { Text("Stop ${index + 1} • ${(stop.position * 100).roundToInt()}%", style = MaterialTheme.typography.labelSmall); Button(enabled = gradient.stops.size > 2, onClick = { val next = gradient.stops.toMutableList().also { it.removeAt(index) }; onChange(gradient.copy(stops = next)) }) { Text("Delete", fontSize = 11.sp) } }; Slider(stop.position, { position -> val next = gradient.stops.toMutableList().also { it[index] = stop.copy(position = position) }.sortedBy { it.position }; onChange(gradient.copy(stops = next)) }, valueRange = 0f..1f); ColorEditor("Color", stop.color) { color -> val next = gradient.stops.toMutableList().also { it[index] = stop.copy(color = color) }; onChange(gradient.copy(stops = next)) } } }; Button(onClick = { val color = gradient.stops.firstOrNull()?.color ?: Color.White; onChange(gradient.copy(stops = (gradient.stops + KeyboardGradientStop(0.5f, color)).sortedBy { it.position })) }, modifier = Modifier.fillMaxWidth()) { Text("＋ Add stop", fontSize = 12.sp) } }
 }
-
-@Composable
-private fun ColorEditor(label: String, color: Color, onChange: (Color) -> Unit) {
-    var showChannels by remember { mutableStateOf(false) }
-    var pickerExpanded by remember { mutableStateOf(false) }
-    val hexColor = String.format(java.util.Locale.US, "#%02X%02X%02X", (color.red * 255).roundToInt(), (color.green * 255).roundToInt(), (color.blue * 255).roundToInt())
-    val hsv = remember(color) {
-        FloatArray(3).also { android.graphics.Color.colorToHSV(
-            android.graphics.Color.rgb((color.red * 255).toInt(), (color.green * 255).toInt(), (color.blue * 255).toInt()), it
-        ) }
-    }
-    fun changeHsv(hue: Float = hsv[0], saturation: Float = hsv[1], value: Float = hsv[2]) {
-        val rgb = android.graphics.Color.HSVToColor(floatArrayOf(hue, saturation, value))
-        onChange(Color(android.graphics.Color.red(rgb) / 255f, android.graphics.Color.green(rgb) / 255f, android.graphics.Color.blue(rgb) / 255f, color.alpha))
-    }
-    Column(Modifier.fillMaxWidth().padding(vertical = 4.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
-        Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
-            Box(Modifier.size(32.dp).clip(RoundedCornerShape(8.dp)).background(color))
-            Column(Modifier.weight(1f)) {
-                Text(label, style = MaterialTheme.typography.labelMedium)
-                Text(hexColor, style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
-            }
-            Text(if (pickerExpanded) "Close ▲" else "Edit color ▼", modifier = Modifier.clickable { pickerExpanded = !pickerExpanded }, color = MaterialTheme.colorScheme.primary, style = MaterialTheme.typography.labelMedium)
-        }
-        if (pickerExpanded) {
-        ColorFieldPicker(
-            hue = hsv[0],
-            saturation = hsv[1],
-            value = hsv[2],
-            onColorChange = { h, sat, v -> changeHsv(hue = h, saturation = sat, value = v) },
-        )
-        Text("RGB channels ${if (showChannels) "▲" else "▼"}", modifier = Modifier.clickable { showChannels = !showChannels }, style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.primary)
-        if (showChannels) {
-            Channel("R", color.red) { onChange(Color(it, color.green, color.blue, color.alpha)) }
-            Channel("G", color.green) { onChange(Color(color.red, it, color.blue, color.alpha)) }
-            Channel("B", color.blue) { onChange(Color(color.red, color.green, it, color.alpha)) }
-        }
-        Text("Opacity • ${(color.alpha * 100).roundToInt()}%", style = MaterialTheme.typography.labelSmall)
-        Slider(color.alpha, { onChange(Color(color.red, color.green, color.blue, it)) }, valueRange = 0f..1f)
-        }
-    }
-}
-@Composable
-private fun Channel(label: String, value: Float, onChange: (Float) -> Unit) { Text("$label ${(value * 255).roundToInt()}", style = MaterialTheme.typography.labelSmall); Slider(value, onChange, valueRange = 0f..1f) }
 
 /** Compact, independently expandable editor sections; advanced controls stay intact. */
 @Composable
