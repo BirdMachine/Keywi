@@ -1,6 +1,5 @@
 package com.dessalines.thumbkey.ui.components.settings.other
 
-import com.dessalines.thumbkey.ui.components.settings.gemPreferenceModifier
 import android.util.Log
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Column
@@ -28,16 +27,20 @@ import com.dessalines.thumbkey.R
 import com.dessalines.thumbkey.db.AppSettingsViewModel
 import com.dessalines.thumbkey.db.DEFAULT_SHOW_ON_SCREEN_KEYBOARD
 import com.dessalines.thumbkey.db.OtherSettingsUpdate
-import com.dessalines.thumbkey.ui.components.settings.GemSettingsTopAppBar as SimpleTopAppBar
+import com.dessalines.thumbkey.ui.components.settings.gemPreferenceModifier
 import com.dessalines.thumbkey.utils.TAG
 import com.dessalines.thumbkey.utils.toBool
 import com.dessalines.thumbkey.utils.toInt
 import me.zhanghai.compose.preference.ProvidePreferenceTheme
 import me.zhanghai.compose.preference.SwitchPreference
+import com.dessalines.thumbkey.ui.components.settings.GemSettingsTopAppBar as SimpleTopAppBar
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun OtherSettingsScreen(navController: NavController, appSettingsViewModel: AppSettingsViewModel) {
+fun OtherSettingsScreen(
+    navController: NavController,
+    appSettingsViewModel: AppSettingsViewModel,
+) {
     Log.d(TAG, "Got to 'other' settings activity")
     val settings by appSettingsViewModel.appSettings.observeAsState()
     var showOnScreenKeyboardState = (settings?.showOnScreenKeyboard ?: DEFAULT_SHOW_ON_SCREEN_KEYBOARD).toBool()
@@ -51,11 +54,31 @@ fun OtherSettingsScreen(navController: NavController, appSettingsViewModel: AppS
     }
 
     Scaffold(
+        containerColor =
+            if (com.dessalines.thumbkey.ui.components.settings.LocalSettingsDrip.current !=
+                null
+            ) {
+                androidx.compose.ui.graphics.Color.Transparent
+            } else {
+                MaterialTheme.colorScheme.background
+            },
         snackbarHost = { SnackbarHost(snackbarHostState) },
         topBar = { SimpleTopAppBar(text = "Hardware keyboard compatibility", navController = navController) },
     ) { padding ->
         Column(
-            modifier = Modifier.padding(padding).verticalScroll(scrollState).background(MaterialTheme.colorScheme.surface).imePadding(),
+            modifier =
+                Modifier
+                    .padding(padding)
+                    .verticalScroll(scrollState)
+                    .background(
+                        if (com.dessalines.thumbkey.ui.components.settings.LocalSettingsDrip.current !=
+                            null
+                        ) {
+                            androidx.compose.ui.graphics.Color.Transparent
+                        } else {
+                            MaterialTheme.colorScheme.surface
+                        },
+                    ).imePadding(),
         ) {
             ProvidePreferenceTheme {
                 SwitchPreference(

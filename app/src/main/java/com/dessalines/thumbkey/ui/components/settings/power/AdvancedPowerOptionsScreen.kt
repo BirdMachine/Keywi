@@ -5,6 +5,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.RadioButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
@@ -18,9 +19,9 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.navigation.NavController
 import com.dessalines.thumbkey.ui.components.keyboard.KeywiPowerMode
 import com.dessalines.thumbkey.ui.components.keyboard.KeywiPowerPreferences
-import com.dessalines.thumbkey.ui.components.settings.GemSettingsTopAppBar as SimpleTopAppBar
-import com.dessalines.thumbkey.ui.components.settings.GemNavigationPreference as Preference
 import me.zhanghai.compose.preference.ProvidePreferenceTheme
+import com.dessalines.thumbkey.ui.components.settings.GemNavigationPreference as Preference
+import com.dessalines.thumbkey.ui.components.settings.GemSettingsTopAppBar as SimpleTopAppBar
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -34,6 +35,14 @@ fun AdvancedPowerOptionsScreen(navController: NavController) {
     }
 
     Scaffold(
+        containerColor =
+            if (com.dessalines.thumbkey.ui.components.settings.LocalSettingsDrip.current !=
+                null
+            ) {
+                androidx.compose.ui.graphics.Color.Transparent
+            } else {
+                MaterialTheme.colorScheme.background
+            },
         topBar = {
             SimpleTopAppBar(text = "Advanced Power Options", navController = navController)
         },
@@ -50,7 +59,7 @@ fun AdvancedPowerOptionsScreen(navController: NavController) {
                     showChevron = false,
                     title = { Text("Unbridled") },
                     summary = {
-                        Text("No Keywi power limits. Full motion, GIF playback, and fastest suggestion refresh.")
+                        Text("Full motion, GIF playback, fastest suggestions, and settings glass blur/refraction on supported devices.")
                     },
                     icon = {
                         RadioButton(
