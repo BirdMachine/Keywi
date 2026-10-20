@@ -9,6 +9,7 @@ import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
+import androidx.compose.ui.test.performScrollTo
 import com.dessalines.thumbkey.effects.ActionSoundConfig
 import com.dessalines.thumbkey.effects.ActionSoundPreferences
 import org.junit.Assert.assertEquals
@@ -79,14 +80,14 @@ class QuickSettingsWorkspaceTest {
     @Test fun controlsStayReachableWhenHoldIsDisabled() {
         show()
         ToolbarViewPreferences.setAction(context, ToolbarGesture.HOLD, ToolbarGestureAction.NONE)
-        compose.onNodeWithText("Toolbar controls").performClick()
+        compose.onNodeWithText("Toolbar controls").performScrollTo().performClick()
         compose.onNodeWithText("Hold: Do nothing").assertExists()
         compose.onNodeWithText("Done").performClick()
     }
 
     @Test fun themeNavigationUsesExistingDestination() {
         show()
-        compose.onNodeWithText("Themes & appearance").performClick()
+        compose.onNodeWithText("Themes & appearance").performScrollTo().performClick()
         compose.runOnIdle { assertEquals("advancedLookAndFeel", route) }
     }
 }
