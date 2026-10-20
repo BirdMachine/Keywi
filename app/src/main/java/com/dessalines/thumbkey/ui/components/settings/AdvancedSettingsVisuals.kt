@@ -9,8 +9,8 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.shape.CutCornerShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
@@ -81,10 +81,11 @@ fun AdvancedSettingsCard(
         modifier = modifier.fillMaxWidth().then(clickableModifier),
         shape = shape,
         color = if (selected) colors.surfaceRaised else colors.surface,
-        border = BorderStroke(
-            width = if (selected) 1.5.dp else 1.dp,
-            color = if (selected) colors.accent else colors.outline,
-        ),
+        border =
+            BorderStroke(
+                width = if (selected) 1.5.dp else 1.dp,
+                color = if (selected) colors.accent else colors.outline,
+            ),
     ) {
         Column(Modifier.padding(16.dp)) {
             content()
@@ -104,15 +105,15 @@ fun AdvancedSettingsChoice(
     Text(
         text = label,
         color = if (selected) colors.onAccent else colors.text,
-        modifier = modifier
-            .background(if (selected) colors.accent else colors.surfaceRaised, shape)
-            .border(
-                width = 1.dp,
-                color = if (selected) colors.accent else colors.outline,
-                shape = shape,
-            )
-            .clickable(onClick = onClick)
-            .padding(horizontal = 14.dp, vertical = 11.dp),
+        modifier =
+            modifier
+                .background(if (selected) colors.accent else colors.surfaceRaised, shape)
+                .border(
+                    width = 1.dp,
+                    color = if (selected) colors.accent else colors.outline,
+                    shape = shape,
+                ).clickable(onClick = onClick)
+                .padding(horizontal = 14.dp, vertical = 11.dp),
         style = MaterialTheme.typography.labelLarge,
     )
 }

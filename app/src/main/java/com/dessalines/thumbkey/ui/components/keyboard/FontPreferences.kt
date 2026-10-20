@@ -44,11 +44,21 @@ object FontPreferences {
         return prefs.getString(KEY_FILE, null)?.let { ThemeFont(Uri.fromFile(File(it)).toString(), displayName(context)) }
     }
 
-    fun applyTheme(context: Context, font: ThemeFont?) {
-        if (font == null) { clear(context); return }
+    fun applyTheme(
+        context: Context,
+        font: ThemeFont?,
+    ) {
+        if (font == null) {
+            clear(context)
+            return
+        }
         val path = Uri.parse(font.asset).path ?: return
-        context.getSharedPreferences(PREFS, Context.MODE_PRIVATE).edit()
-            .putString(KEY_FILE, path).putString(KEY_NAME, font.name).apply()
+        context
+            .getSharedPreferences(PREFS, Context.MODE_PRIVATE)
+            .edit()
+            .putString(KEY_FILE, path)
+            .putString(KEY_NAME, font.name)
+            .apply()
     }
 
     fun typeface(context: Context): Typeface? {

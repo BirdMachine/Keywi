@@ -143,6 +143,7 @@ fun SettingsScreen(
                         icon = { Icon(Icons.Outlined.DashboardCustomize, contentDescription = null) },
                         onClick = { navController.navigate("advancedBoards") },
                     )
+                    SettingsAppearancePreference()
                     Preference(
                         title = { Text("Key & Word Selection") },
                         summary = { Text("Matrix remapper, unfinished-word chip, and personal dictionary") },
@@ -154,6 +155,12 @@ fun SettingsScreen(
                         summary = { Text("Gestures, typing behavior, context, characters and hardware keyboard options") },
                         icon = { Icon(Icons.Outlined.Tune, contentDescription = null) },
                         onClick = { navController.navigate("advancedInput") },
+                    )
+                    Preference(
+                        title = { Text("Keypress effects") },
+                        summary = { Text("Sound packs, action assignments and touch-through GIF / PNG overlays") },
+                        icon = { Icon(Icons.Outlined.TouchApp, contentDescription = null) },
+                        onClick = { navController.navigate("keypressEffects") },
                     )
                     Preference(
                         title = { Text("Power options") },

@@ -87,7 +87,9 @@ fun GemSettingsTheme(
     }
     val keyboardScheme = MaterialTheme.colorScheme
     val dark = keyboardScheme.background.luminance() < .5f
-    val drip = if (dripEnabled) rememberSettingsDrip() else null
+    val followsKeyboard = rememberSettingsFollowKeyboard()
+    // Removing the media composition also disposes animation callbacks and optics.
+    val drip = if (dripEnabled && followsKeyboard) rememberSettingsDrip() else null
     val baseColors = gemSettingsColors(dark)
     val themeEdge =
         drip?.keys?.let { keys ->

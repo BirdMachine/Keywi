@@ -14,9 +14,25 @@ class GemSettingsIsolationTest {
 
     @Test
     fun settingsDestinationsShareGemChrome() {
-        listOf("settings", "gemCuts", "advancedBoards", "advancedLookAndFeel", "advancedLookAndFeelEditor",
-            "lookAndFeel", "behavior", "clipboardSettings", "advancedInput", "contextEngine",
-            "advancedCharacters", "advancedPowerOptions", "advancedDebug", "modifyKeys", "about",
-            "backupAndRestore", "otherSettings", "typingOverlay").forEach { assertTrue(usesGemSettingsTheme(it)) }
+        listOf(
+            "settings",
+            "gemCuts",
+            "advancedBoards",
+            "advancedLookAndFeel",
+            "advancedLookAndFeelEditor",
+            "lookAndFeel",
+            "behavior",
+            "clipboardSettings",
+            "advancedInput",
+            "contextEngine",
+            "advancedCharacters",
+            "advancedPowerOptions",
+            "advancedDebug",
+            "modifyKeys",
+            "about",
+            "backupAndRestore",
+            "otherSettings",
+            "typingOverlay",
+        ).forEach { assertTrue(usesGemSettingsTheme(it)) }
     }
 }

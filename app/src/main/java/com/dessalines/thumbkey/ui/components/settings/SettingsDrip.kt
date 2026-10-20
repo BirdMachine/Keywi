@@ -36,6 +36,7 @@ import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.graphics.asComposeRenderEffect
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.graphics.drawscope.DrawScope
+import androidx.compose.ui.graphics.drawscope.clipRect
 import androidx.compose.ui.graphics.drawscope.drawIntoCanvas
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.nativeCanvas
@@ -70,6 +71,7 @@ fun usesSettingsDrip(route: String?): Boolean =
             "about",
             "otherSettings",
             "advancedInput",
+            "keypressEffects",
         )
 
 @androidx.annotation.ChecksSdkIntAtLeast(api = 31)
@@ -238,23 +240,28 @@ private fun DrawScope.drawThemeArtwork(
     style: SettingsDripStyle,
     alpha: Float,
 ) {
-    // Reading the frame on composition invalidates shared artwork surfaces during playback.
-    val drawable = style.animated
-    if (drawable == null) {
-        style.image?.let { drawThemeImage(it, alpha) }
-    } else {
-        val width = drawable.intrinsicWidth.coerceAtLeast(1)
-        val height = drawable.intrinsicHeight.coerceAtLeast(1)
-        val scale = max(size.width / width, size.height / height)
-        drawIntoCanvas { canvas ->
-            val native = canvas.nativeCanvas
-            val save = native.save()
-            native.translate((size.width - width * scale) / 2f, (size.height - height * scale) / 2f)
-            native.scale(scale, scale)
-            drawable.setBounds(0, 0, width, height)
-            drawable.alpha = (alpha * 255).toInt().coerceIn(0, 255)
-            drawable.draw(native)
-            native.restoreToCount(save)
+    // Cover-cropped portrait artwork extends well beyond short surfaces such as the
+    // top app bar. Clip the artwork itself: not every caller owns a clipping layer.
+    // Without this, the bar (drawn above scrolling content) paints raw media over rows.
+    clipRect {
+        // Reading the frame on composition invalidates shared artwork surfaces during playback.
+        val drawable = style.animated
+        if (drawable == null) {
+            style.image?.let { drawThemeImage(it, alpha) }
+        } else {
+            val width = drawable.intrinsicWidth.coerceAtLeast(1)
+            val height = drawable.intrinsicHeight.coerceAtLeast(1)
+            val scale = max(size.width / width, size.height / height)
+            drawIntoCanvas { canvas ->
+                val native = canvas.nativeCanvas
+                val save = native.save()
+                native.translate((size.width - width * scale) / 2f, (size.height - height * scale) / 2f)
+                native.scale(scale, scale)
+                drawable.setBounds(0, 0, width, height)
+                drawable.alpha = (alpha * 255).toInt().coerceIn(0, 255)
+                drawable.draw(native)
+                native.restoreToCount(save)
+            }
         }
     }
 }

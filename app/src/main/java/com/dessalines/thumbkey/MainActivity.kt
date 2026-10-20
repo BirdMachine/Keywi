@@ -124,6 +124,14 @@ class MainActivity : AppCompatActivity() {
                         com.dessalines.thumbkey.ui.components.settings.boards
                             .TypingOverlaySettingsScreen(navController)
                     }
+                    gemSettingsDestination("keypressEffects") {
+                        com.dessalines.thumbkey.ui.components.settings
+                            .KeypressEffectsScreen(navController)
+                    }
+                    gemSettingsDestination("keypressSounds") {
+                        com.dessalines.thumbkey.ui.components.settings
+                            .KeypressSoundSettingsScreen(navController)
+                    }
                     gemSettingsDestination("advancedLookAndFeel") { ThemeManagerScreen(navController) }
                     gemSettingsDestination("advancedLookAndFeelEditor") { AdvancedLookAndFeelScreen(navController) }
                     composable("advancedKeyWordSelection") { AdvancedKeyWordSelectionScreen(navController, appSettingsViewModel) }
