@@ -1,7 +1,8 @@
 package com.dessalines.thumbkey.ui.components.settings.modifykeys
 
 import androidx.compose.foundation.BorderStroke
-import androidx.compose.foundation.clickable
+import androidx.compose.foundation.ExperimentalFoundationApi
+import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -38,6 +39,10 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalFocusManager
+import androidx.compose.ui.platform.LocalSoftwareKeyboardController
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.semantics.stateDescription
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -79,6 +84,9 @@ fun AdvancedKeyWordSelectionScreen(
     val settings by appSettingsViewModel.appSettings.observeAsState()
     val context = androidx.compose.ui.platform.LocalContext.current
     val scrollState = rememberScrollState()
+    val focusManager = LocalFocusManager.current
+    val softwareKeyboard = LocalSoftwareKeyboardController.current
+    var styleMode by remember { mutableStateOf(true) }
     val layout =
         KeyboardLayout.entries.getOrElse(settings?.keyboardLayout ?: DEFAULT_KEYBOARD_LAYOUT) {
             KeyboardLayout.entries.first()
@@ -104,6 +112,36 @@ fun AdvancedKeyWordSelectionScreen(
     val selectedKey = keyboard?.arr?.getOrNull(selectedRow)?.getOrNull(selectedCol)
     val overrides = remember { mutableStateMapOf<VisualRemapSlot, String>() }
 
+    fun dismissKeyboard() {
+        focusManager.clearFocus()
+        softwareKeyboard?.hide()
+    }
+
+    fun selectKey(
+        row: Int,
+        col: Int,
+        longPress: Boolean = false,
+    ) {
+        dismissKeyboard()
+        selectedRow = row
+        selectedCol = col
+        val id = "$row:$col"
+        if (longPress) {
+            styleMode = true
+            designKeys = if (designGroupMode) designKeys + id else setOf(id)
+            designGroupMode = true
+        } else {
+            designKeys =
+                if (styleMode && designGroupMode) {
+                    if (id in designKeys) designKeys - id else designKeys + id
+                } else {
+                    setOf(id)
+                }
+        }
+        editorMessage = null
+    }
+    LaunchedEffect(Unit) { dismissKeyboard() }
+
     LaunchedEffect(layout.name, selectedMode, selectedRow, selectedCol, yaml) {
         overrides.clear()
         VisualRemapSlot.entries.forEach { slot ->
@@ -115,7 +153,7 @@ fun AdvancedKeyWordSelectionScreen(
     }
 
     Scaffold(
-        topBar = { SimpleTopAppBar(text = "Advanced Key & Word Selection", navController = navController) },
+        topBar = { SimpleTopAppBar(text = "Keys & groups", navController = navController) },
     ) { padding ->
         Column(
             modifier =
@@ -132,14 +170,14 @@ fun AdvancedKeyWordSelectionScreen(
             ) {
                 Column(Modifier.padding(14.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
                     Text(
-                        "KEYWI // MATRIX REMAPPER",
+                        "KEYWI // MATRIX EDITOR",
                         color = MATRIX_GREEN,
                         fontFamily = FontFamily.Monospace,
                         fontWeight = FontWeight.Bold,
                         letterSpacing = 1.5.sp,
                     )
                     Text(
-                        "Tap a key below, then override any of its nine MessageEase-style swipe positions. Blank fields inherit the original mapping.",
+                        "Choose a key, then edit its appearance or switch to actions and character values.",
                         color = MATRIX_GREEN.copy(alpha = 0.78f),
                         fontFamily = FontFamily.Monospace,
                         style = MaterialTheme.typography.bodySmall,
@@ -154,6 +192,7 @@ fun AdvancedKeyWordSelectionScreen(
                             FilterChip(
                                 selected = selectedMode == mode,
                                 onClick = {
+                                    dismissKeyboard()
                                     selectedMode = mode
                                     selectedRow = 0
                                     selectedCol = 0
@@ -166,18 +205,86 @@ fun AdvancedKeyWordSelectionScreen(
                 }
             }
 
-            SettingSwitchRow("Select a key group for appearance", designGroupMode, onCheckedChange = {
-                designGroupMode = it
-                designKeys = setOf("$selectedRow:$selectedCol")
-            })
+            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                FilterChip(
+                    selected = styleMode,
+                    onClick = {
+                        dismissKeyboard()
+                        styleMode = true
+                    },
+                    modifier = Modifier.weight(1f),
+                    label = { Text("Style keys & groups") },
+                )
+                FilterChip(
+                    selected = !styleMode,
+                    onClick = {
+                        dismissKeyboard()
+                        styleMode = false
+                    },
+                    modifier = Modifier.weight(1f),
+                    label = { Text("Actions & values") },
+                )
+            }
+            if (styleMode) {
+                SettingSwitchRow("Select multiple keys", designGroupMode, onCheckedChange = {
+                    dismissKeyboard()
+                    designGroupMode = it
+                    designKeys = setOf("$selectedRow:$selectedCol")
+                })
+                Text(
+                    "Long press a key, or enable Select multiple keys, then tap keys to style as a group.",
+                    style = MaterialTheme.typography.bodySmall,
+                )
+                Text(
+                    if (designGroupMode) {
+                        "${designKeys.size} keys selected · tap a highlighted key to deselect"
+                    } else {
+                        "Single-key selection · tap any key below"
+                    },
+                    style = MaterialTheme.typography.titleSmall,
+                    color = MaterialTheme.colorScheme.primary,
+                )
+                if (designGroupMode) {
+                    Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                        TextButton(onClick = {
+                            dismissKeyboard()
+                            designKeys = emptySet()
+                        }) { Text("Clear selection") }
+                        TextButton(onClick = {
+                            dismissKeyboard()
+                            designKeys =
+                                if (effectsHk) {
+                                    MachineCutLayouts.touchMain.rows
+                                        .flatMapIndexed { row, cells ->
+                                            cells.indices.map { col -> "$row:$col" }
+                                        }.toSet()
+                                } else {
+                                    keyboard
+                                        ?.arr
+                                        ?.flatMapIndexed { row, keys ->
+                                            keys.indices.map { col -> "$row:$col" }
+                                        }?.toSet()
+                                        .orEmpty()
+                                }
+                        }) { Text("Select all") }
+                    }
+                }
+            } else {
+                Text(
+                    "Actions edit one key at a time: choose its gesture, sound, GIF or Tasker task. Character fields change the text that key types.",
+                    style = MaterialTheme.typography.bodySmall,
+                )
+            }
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 FilterChip(selected = !effectsHk, onClick = {
+                    dismissKeyboard()
                     effectsHk = false
                     selectedRow = 0
                     selectedCol = 0
                     designKeys = setOf("0:0")
                 }, label = { Text("ME-Like matrix") })
                 FilterChip(selected = effectsHk, onClick = {
+                    dismissKeyboard()
                     effectsHk = true
                     selectedRow = 0
                     selectedCol = 0
@@ -186,158 +293,149 @@ fun AdvancedKeyWordSelectionScreen(
             }
             if (effectsHk) {
                 HkEffectsMatrix(
-                    selectedIds = if (designGroupMode) designKeys else setOf("$selectedRow:$selectedCol"),
-                ) { row, col ->
-                    selectedRow = row
-                    selectedCol = col
-                    val id = "$row:$col"
-                    designKeys =
-                        if (designGroupMode) {
-                            if (id in designKeys) designKeys - id else designKeys + id
-                        } else {
-                            setOf(id)
-                        }
-                    editorMessage = null
-                }
+                    selectedIds = if (styleMode && designGroupMode) designKeys else setOf("$selectedRow:$selectedCol"),
+                    onSelect = { row, col -> selectKey(row, col) },
+                    onLongSelect = { row, col -> selectKey(row, col, longPress = true) },
+                )
             } else {
                 keyboard?.let {
                     MatrixKeyboardPreview(
                         keyboard = it,
                         selectedRow = selectedRow,
                         selectedCol = selectedCol,
-                        selectedIds = if (designGroupMode) designKeys else setOf("$selectedRow:$selectedCol"),
-                        onSelect = { row, col ->
-                            selectedRow = row
-                            selectedCol = col
-                            val id = "$row:$col"
-                            designKeys =
-                                if (designGroupMode) {
-                                    if (id in designKeys) designKeys - id else designKeys + id
-                                } else {
-                                    setOf(id)
-                                }
-                            editorMessage = null
-                        },
+                        selectedIds = if (styleMode && designGroupMode) designKeys else setOf("$selectedRow:$selectedCol"),
+                        onSelect = { row, col -> selectKey(row, col) },
+                        onLongSelect = { row, col -> selectKey(row, col, longPress = true) },
                     )
                 }
             }
 
-            com.dessalines.thumbkey.ui.components.settings.lookandfeel.KeyDesignOverrideEditor(
-                selectedIds = if (designGroupMode) designKeys else setOf("$selectedRow:$selectedCol"),
-                groupMode = designGroupMode,
-                onSelectGroup = { ids ->
-                    designGroupMode = true
-                    designKeys = ids
-                },
-            )
+            if (styleMode) {
+                Text("Style selected keys", style = MaterialTheme.typography.titleMedium)
+                com.dessalines.thumbkey.ui.components.settings.lookandfeel.KeyDesignOverrideEditor(
+                    selectedIds = if (designGroupMode) designKeys else setOf("$selectedRow:$selectedCol"),
+                    groupMode = designGroupMode,
+                    onSelectGroup = { ids ->
+                        dismissKeyboard()
+                        designGroupMode = true
+                        designKeys = ids
+                    },
+                )
+            } else {
+                Text("Key actions & character values", style = MaterialTheme.typography.titleMedium)
+                KeyEffectsAssignments(
+                    keyId = if (effectsHk) "hk${selectedRow}_$selectedCol" else "key${selectedRow}_$selectedCol",
+                    navController = navController,
+                    hk = effectsHk,
+                )
 
-            KeyEffectsAssignments(
-                keyId = if (effectsHk) "hk${selectedRow}_$selectedCol" else "key${selectedRow}_$selectedCol",
-                navController = navController,
-                hk = effectsHk,
-            )
-
-            if (!effectsHk) {
-                selectedKey?.let { key ->
-                    Card(
-                        colors = CardDefaults.cardColors(containerColor = MATRIX_BLACK),
-                        border = BorderStroke(1.dp, MATRIX_GREEN),
-                    ) {
-                        Column(Modifier.padding(12.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                            Text(
-                                "EDIT key${selectedRow}_$selectedCol",
-                                color = MATRIX_GREEN,
-                                fontFamily = FontFamily.Monospace,
-                                fontWeight = FontWeight.Bold,
-                            )
-                            RemapEditorGrid(key, overrides)
-                            Row(
-                                modifier = Modifier.fillMaxWidth(),
-                                horizontalArrangement = Arrangement.spacedBy(8.dp),
-                            ) {
-                                Button(
-                                    modifier = Modifier.weight(1f),
-                                    onClick = {
-                                        runCatching {
-                                            var nextYaml = yaml
-                                            VisualRemapSlot.entries.forEach { slot ->
-                                                nextYaml =
-                                                    updateVisualTextOverride(
-                                                        yaml = nextYaml,
-                                                        layoutName = layout.name,
-                                                        mode = selectedMode,
-                                                        row = selectedRow,
-                                                        col = selectedCol,
-                                                        slot = slot,
-                                                        text = overrides[slot].orEmpty(),
-                                                    )
+                if (!effectsHk) {
+                    selectedKey?.let { key ->
+                        Card(
+                            colors = CardDefaults.cardColors(containerColor = MATRIX_BLACK),
+                            border = BorderStroke(1.dp, MATRIX_GREEN),
+                        ) {
+                            Column(Modifier.padding(12.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                                Text(
+                                    "CHARACTER VALUES // key${selectedRow}_$selectedCol",
+                                    color = MATRIX_GREEN,
+                                    fontFamily = FontFamily.Monospace,
+                                    fontWeight = FontWeight.Bold,
+                                )
+                                Text(
+                                    "Blank fields inherit the original character. Save values to apply text changes.",
+                                    color = MATRIX_GREEN,
+                                    style = MaterialTheme.typography.bodySmall,
+                                )
+                                RemapEditorGrid(key, overrides)
+                                Row(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                                ) {
+                                    Button(
+                                        modifier = Modifier.weight(1f),
+                                        onClick = {
+                                            runCatching {
+                                                var nextYaml = yaml
+                                                VisualRemapSlot.entries.forEach { slot ->
+                                                    nextYaml =
+                                                        updateVisualTextOverride(
+                                                            yaml = nextYaml,
+                                                            layoutName = layout.name,
+                                                            mode = selectedMode,
+                                                            row = selectedRow,
+                                                            col = selectedCol,
+                                                            slot = slot,
+                                                            text = overrides[slot].orEmpty(),
+                                                        )
+                                                }
+                                                appSettingsViewModel.updateKeyModifications(
+                                                    KeyModificationsUpdate(id = 1, keyModifications = nextYaml),
+                                                )
+                                            }.onSuccess {
+                                                editorMessage = "Overrides saved ✓"
+                                            }.onFailure {
+                                                editorMessage = "Could not save: ${it.message}"
                                             }
-                                            appSettingsViewModel.updateKeyModifications(
-                                                KeyModificationsUpdate(id = 1, keyModifications = nextYaml),
-                                            )
-                                        }.onSuccess {
-                                            editorMessage = "Overrides saved ✓"
-                                        }.onFailure {
-                                            editorMessage = "Could not save: ${it.message}"
-                                        }
-                                    },
-                                ) {
-                                    Text("SAVE KEY")
+                                        },
+                                    ) {
+                                        Text("SAVE KEY")
+                                    }
+                                    Button(
+                                        modifier = Modifier.weight(1f),
+                                        onClick = {
+                                            VisualRemapSlot.entries.forEach { overrides[it] = "" }
+                                            editorMessage = "Cleared in editor — tap SAVE KEY to restore originals."
+                                        },
+                                    ) {
+                                        Text("CLEAR")
+                                    }
                                 }
-                                Button(
-                                    modifier = Modifier.weight(1f),
-                                    onClick = {
-                                        VisualRemapSlot.entries.forEach { overrides[it] = "" }
-                                        editorMessage = "Cleared in editor — tap SAVE KEY to restore originals."
-                                    },
-                                ) {
-                                    Text("CLEAR")
+                                editorMessage?.let {
+                                    Text(it, color = MATRIX_GREEN, fontFamily = FontFamily.Monospace)
                                 }
-                            }
-                            editorMessage?.let {
-                                Text(it, color = MATRIX_GREEN, fontFamily = FontFamily.Monospace)
                             }
                         }
                     }
                 }
-            }
 
-            Card {
-                Column(Modifier.padding(14.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
-                    Text("Current word + personal dictionary", style = MaterialTheme.typography.titleMedium)
-                    Text(
-                        "This adds the unfinished word (like “scr”) to the left side of the suggestion strip, MessageEase-style.",
-                        style = MaterialTheme.typography.bodySmall,
-                    )
-                    SettingSwitchRow(
-                        title = "Show unfinished word in suggestions",
-                        checked = showCurrentWord,
-                        onCheckedChange = {
-                            showCurrentWord = it
-                            AdvancedKeyWordPreferences.setShowCurrentWord(context, it)
-                        },
-                    )
-                    SettingSwitchRow(
-                        title = "Long-press unfinished word → add to personal dictionary",
-                        checked = longPressAdd,
-                        enabled = showCurrentWord,
-                        onCheckedChange = {
-                            longPressAdd = it
-                            AdvancedKeyWordPreferences.setLongPressAddWord(context, it)
-                        },
-                    )
-                    Text(
-                        "Long-press uses Android's user dictionary provider from the keyboard itself.",
-                        style = MaterialTheme.typography.bodySmall,
-                    )
+                Card {
+                    Column(Modifier.padding(14.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                        Text("Current word + personal dictionary", style = MaterialTheme.typography.titleMedium)
+                        Text(
+                            "This adds the unfinished word (like “scr”) to the left side of the suggestion strip, MessageEase-style.",
+                            style = MaterialTheme.typography.bodySmall,
+                        )
+                        SettingSwitchRow(
+                            title = "Show unfinished word in suggestions",
+                            checked = showCurrentWord,
+                            onCheckedChange = {
+                                showCurrentWord = it
+                                AdvancedKeyWordPreferences.setShowCurrentWord(context, it)
+                            },
+                        )
+                        SettingSwitchRow(
+                            title = "Long-press unfinished word → add to personal dictionary",
+                            checked = longPressAdd,
+                            enabled = showCurrentWord,
+                            onCheckedChange = {
+                                longPressAdd = it
+                                AdvancedKeyWordPreferences.setLongPressAddWord(context, it)
+                            },
+                        )
+                        Text(
+                            "Long-press uses Android's user dictionary provider from the keyboard itself.",
+                            style = MaterialTheme.typography.bodySmall,
+                        )
+                    }
                 }
-            }
 
-            Button(
-                modifier = Modifier.fillMaxWidth(),
-                onClick = { navController.navigate("modifyKeys") },
-            ) {
-                Text("OPEN RAW YAML KEY EDITOR")
+                Button(
+                    modifier = Modifier.fillMaxWidth(),
+                    onClick = { navController.navigate("modifyKeys") },
+                ) {
+                    Text("OPEN RAW YAML KEY EDITOR")
+                }
             }
         }
     }
@@ -366,6 +464,7 @@ private fun MatrixKeyboardPreview(
     selectedRow: Int,
     selectedCol: Int,
     onSelect: (Int, Int) -> Unit,
+    onLongSelect: (Int, Int) -> Unit,
     selectedIds: Set<String> = setOf("$selectedRow:$selectedCol"),
 ) {
     Card(
@@ -381,6 +480,7 @@ private fun MatrixKeyboardPreview(
                             selected = "$row:$col" in selectedIds,
                             modifier = Modifier.weight(key.widthMultiplier.toFloat().coerceAtLeast(1f)),
                             onClick = { onSelect(row, col) },
+                            onLongClick = { onLongSelect(row, col) },
                         )
                     }
                 }
@@ -389,16 +489,22 @@ private fun MatrixKeyboardPreview(
     }
 }
 
+@OptIn(ExperimentalFoundationApi::class)
 @Composable
 private fun MatrixKey(
     key: KeyItemC,
     selected: Boolean,
     modifier: Modifier,
     onClick: () -> Unit,
+    onLongClick: () -> Unit,
 ) {
     val borderColor = if (selected) MATRIX_GREEN else MATRIX_DIM.copy(alpha = 0.55f)
     Card(
-        modifier = modifier.heightIn(min = 82.dp).clickable(onClick = onClick),
+        modifier =
+            modifier
+                .heightIn(min = 82.dp)
+                .semantics { stateDescription = if (selected) "Selected" else "Not selected" }
+                .combinedClickable(onClick = onClick, onLongClick = onLongClick),
         colors = CardDefaults.cardColors(containerColor = if (selected) Color(0xFF05240C) else Color(0xFF010804)),
         border = BorderStroke(if (selected) 2.dp else 1.dp, borderColor),
         shape = RoundedCornerShape(5.dp),
@@ -536,10 +642,12 @@ private fun com.dessalines.thumbkey.utils.KeyboardDefinition.keyboardForMode(mod
     }
 
 /** Uses the live HK topology so the displayed cell IDs match runtime events. */
+@OptIn(ExperimentalFoundationApi::class)
 @Composable
 private fun HkEffectsMatrix(
     selectedIds: Set<String>,
     onSelect: (Int, Int) -> Unit,
+    onLongSelect: (Int, Int) -> Unit,
 ) {
     Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
         Text("HK-Like key cells", style = MaterialTheme.typography.titleMedium)
@@ -547,7 +655,15 @@ private fun HkEffectsMatrix(
             Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(3.dp)) {
                 cells.forEachIndexed { col, cell ->
                     Card(
-                        modifier = Modifier.weight(cell.width).heightIn(min = 42.dp).clickable { onSelect(row, col) },
+                        modifier =
+                            Modifier
+                                .weight(cell.width)
+                                .heightIn(min = 42.dp)
+                                .semantics { stateDescription = if ("$row:$col" in selectedIds) "Selected" else "Not selected" }
+                                .combinedClickable(
+                                    onClick = { onSelect(row, col) },
+                                    onLongClick = { onLongSelect(row, col) },
+                                ),
                         border =
                             BorderStroke(
                                 if ("$row:$col" in selectedIds) 2.dp else 1.dp,
@@ -586,7 +702,7 @@ private fun KeyEffectsAssignments(
     val assignmentKey = "$keyId:$direction"
     Card {
         Column(Modifier.padding(14.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
-            Text("ACTION FX // $keyId", fontFamily = FontFamily.Monospace, fontWeight = FontWeight.Bold)
+            Text("GESTURE ACTIONS // $keyId", fontFamily = FontFamily.Monospace, fontWeight = FontWeight.Bold)
             Text(
                 "Choose a gesture, then assign a clip from either pack. Changes save immediately. Inherit follows your global direction / playback rules.",
                 style = MaterialTheme.typography.bodySmall,

@@ -302,7 +302,7 @@ fun SettingsDripBackdrop(
             Modifier.matchParentSize().background(
                 Brush.verticalGradient(
                     listOf(
-                        shade.copy(alpha = if (panel) .65f else .75f),
+                        shade.copy(alpha = .75f),
                         shade.copy(alpha = if (panel) .88f else .93f),
                     ),
                 ),
@@ -332,9 +332,9 @@ fun Modifier.settingsDripSurface(selected: Boolean = false): Modifier {
             }
         }.let { if (it.size < 2) listOf(colors.outline, colors.outline) else it }
     return drawWithCache {
-        val tint = Brush.verticalGradient(listOf(colors.surfaceRaised.copy(alpha = .72f), colors.surface.copy(alpha = .94f)))
+        val tint = Brush.verticalGradient(listOf(colors.surfaceRaised.copy(alpha = .84f), colors.surface.copy(alpha = .94f)))
         val rim = Brush.linearGradient(edge, Offset.Zero, Offset(size.width, size.height))
-        val gloss = Brush.verticalGradient(listOf(Color.White.copy(alpha = .15f), Color.Transparent, Color.Black.copy(alpha = .22f)))
+        val gloss = Brush.verticalGradient(listOf(Color.White.copy(alpha = .04f), Color.Transparent, Color.Black.copy(alpha = .04f)))
         onDrawBehind {
             drawRect(colors.surface)
             drawThemeArtwork(style, style.backdrop.opacity * .75f)

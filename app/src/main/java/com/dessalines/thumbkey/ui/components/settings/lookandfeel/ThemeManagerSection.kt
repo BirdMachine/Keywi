@@ -172,7 +172,7 @@ fun ThemeManagerSection(
 
         // Library tiles are rendered with each theme's actual saved backdrop.
         // The renderer resolves app-owned assets instead of depending on source URIs.
-        val libraryThemes = listOf(ThemeEngine.loadCustom(context)) + themes()
+        val libraryThemes = listOf(ThemeEngine.customPreview(context)) + themes()
         ThemeLibraryStrip(
             themes =
                 libraryThemes.map { theme ->

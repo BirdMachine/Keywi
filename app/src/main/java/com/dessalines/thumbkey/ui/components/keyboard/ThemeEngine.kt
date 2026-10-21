@@ -166,6 +166,14 @@ object ThemeEngine {
                 allowMissing = true,
             )
 
+    /** Active Custom is edited live; previews must not read its older saved manifest. */
+    fun customPreview(context: Context): ThemeDocument =
+        if (activeThemeId(context) == CUSTOM_THEME_ID) {
+            captureCurrent(context, "Custom", CUSTOM_THEME_ID)
+        } else {
+            loadCustom(context)
+        }
+
     fun saveCustom(
         context: Context,
         theme: ThemeDocument,

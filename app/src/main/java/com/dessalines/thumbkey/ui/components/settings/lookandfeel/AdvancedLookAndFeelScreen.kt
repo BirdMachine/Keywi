@@ -39,6 +39,7 @@ import androidx.compose.runtime.mutableStateMapOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -226,7 +227,7 @@ private fun SurfaceThemeSection(
                 }
             }
         }
-    Column(gemSectionModifier(), verticalArrangement = Arrangement.spacedBy(6.dp)) {
+    Column(Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(6.dp)) {
         Text(title, style = MaterialTheme.typography.titleSmall)
         Text(subtitle, style = MaterialTheme.typography.bodySmall)
         mediaError?.let { Text(it, color = MaterialTheme.colorScheme.error) }
@@ -299,117 +300,105 @@ internal fun ManagedGradientEditor(
     val context = LocalContext.current
     var gradients by remember { mutableStateOf(GradientLibrary.load(context)) }
     var menuOpen by remember { mutableStateOf(false) }
-    var selectedName by remember { mutableStateOf("Current gradient") }
-    var saveName by remember { mutableStateOf("") }
-    var expanded by remember { mutableStateOf(false) }
-    Column(verticalArrangement = Arrangement.spacedBy(5.dp)) {
-        Row(Modifier.fillMaxWidth(), Arrangement.SpaceBetween, Alignment.CenterVertically) {
-            Text(title, style = MaterialTheme.typography.titleSmall)
-            Text(
-                if (expanded) "Hide details  ▲" else "Edit gradient  ▼",
-                style = MaterialTheme.typography.labelMedium,
-                color = MaterialTheme.colorScheme.primary,
-                modifier =
-                    Modifier
-                        .clickable {
-                            expanded =
-                                !expanded
-                        }.padding(6.dp),
-            )
-        }
-        Box {
-            Row(
-                Modifier
-                    .fillMaxWidth()
-                    .clip(
-                        RoundedCornerShape(10.dp),
-                    ).border(1.dp, MaterialTheme.colorScheme.outline, RoundedCornerShape(10.dp))
-                    .clickable {
-                        menuOpen =
-                            true
-                    }.padding(horizontal = 14.dp, vertical = 10.dp),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically,
-            ) {
-                Column {
-                    Text(
-                        "GRADIENT PRESET",
-                        style = MaterialTheme.typography.labelSmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    )
-                    Text(selectedName, style = MaterialTheme.typography.bodyMedium)
-                }
-                Text("⌄", style = MaterialTheme.typography.titleLarge, color = MaterialTheme.colorScheme.primary)
-            }
-            ; DropdownMenu(menuOpen, {
-                menuOpen =
-                    false
-            }) {
-                gradients.forEach { saved ->
-                    DropdownMenuItem({ Text(saved.name) }, {
-                        selectedName = saved.name
-                        menuOpen = false
-                        onGradientChange(saved.toBackdrop())
-                    })
-                }
-                DropdownMenuItem({ Text("＋ New gradient") }, {
-                    selectedName = "New gradient"
-                    menuOpen = false
-                    expanded = true
-                    onGradientChange(
-                        KeyboardBackdrop(
-                            listOf(KeyboardGradientStop(0f, Color(0xFF151A2C)), KeyboardGradientStop(1f, Color(0xFFB5D8FF))),
-                            0f,
-                        ),
-                    )
-                })
-            }
-        }
-        gradients.firstOrNull { it.name == selectedName }?.description?.let {
-            Text(it, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
-        }
-        Box(
-            Modifier
-                .fillMaxWidth()
-                .height(24.dp)
-                .clip(RoundedCornerShape(12.dp))
-                .keyboardGradientBackground(gradient),
-        )
-        if (expanded) {
-            Column(
-                Modifier
-                    .fillMaxWidth()
-                    .background(
-                        MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.22f),
-                        RoundedCornerShape(12.dp),
-                    ).padding(10.dp),
-                verticalArrangement = Arrangement.spacedBy(6.dp),
-            ) {
-                GradientEditor(title, gradient) {
-                    selectedName = "Modified — save as new"
-                    onGradientChange(it)
-                }
-                Row(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
-                    OutlinedTextField(saveName, {
-                        saveName =
-                            it
-                    }, label = {
-                        Text(
-                            "Save as",
-                        )
-                    }, singleLine = true, textStyle = MaterialTheme.typography.bodySmall, modifier = Modifier.weight(1f))
-                    ; Button(enabled = saveName.isNotBlank(), onClick = {
-                        val saved =
-                            GradientLibrary.saveCustom(
-                                context,
-                                SavedGradient("", saveName.trim(), gradient.angleDegrees, gradient.stops),
+    var selectedName by rememberSaveable { mutableStateOf("Current gradient") }
+    var saveName by rememberSaveable { mutableStateOf("") }
+    var expanded by rememberSaveable { mutableStateOf(false) }
+    ThemeEditorExpandableSection(
+        title = title,
+        expanded = expanded,
+        onExpandedChange = { expanded = it },
+        trailingLabel = if (expanded) "Hide details  ▲" else "Edit gradient  ▼",
+        summary = {
+            Column(verticalArrangement = Arrangement.spacedBy(5.dp)) {
+                Box {
+                    Row(
+                        Modifier
+                            .fillMaxWidth()
+                            .clip(
+                                RoundedCornerShape(10.dp),
+                            ).border(1.dp, MaterialTheme.colorScheme.outline, RoundedCornerShape(10.dp))
+                            .clickable {
+                                menuOpen =
+                                    true
+                            }.padding(horizontal = 14.dp, vertical = 10.dp),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically,
+                    ) {
+                        Column {
+                            Text(
+                                "GRADIENT PRESET",
+                                style = MaterialTheme.typography.labelSmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
                             )
-                        selectedName =
-                            saved.name
-                        saveName = ""
-                        gradients = GradientLibrary.load(context)
-                    }) { Text("Save", fontSize = 12.sp) }
+                            Text(selectedName, style = MaterialTheme.typography.bodyMedium)
+                        }
+                        Text("⌄", style = MaterialTheme.typography.titleLarge, color = MaterialTheme.colorScheme.primary)
+                    }
+                    ; DropdownMenu(menuOpen, {
+                        menuOpen =
+                            false
+                    }) {
+                        gradients.forEach { saved ->
+                            DropdownMenuItem({ Text(saved.name) }, {
+                                selectedName = saved.name
+                                menuOpen = false
+                                onGradientChange(saved.toBackdrop())
+                            })
+                        }
+                        DropdownMenuItem({ Text("＋ New gradient") }, {
+                            selectedName = "New gradient"
+                            menuOpen = false
+                            expanded = true
+                            onGradientChange(
+                                KeyboardBackdrop(
+                                    listOf(KeyboardGradientStop(0f, Color(0xFF151A2C)), KeyboardGradientStop(1f, Color(0xFFB5D8FF))),
+                                    0f,
+                                ),
+                            )
+                        })
+                    }
                 }
+                gradients.firstOrNull { it.name == selectedName }?.description?.let {
+                    Text(it, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                }
+                Box(
+                    Modifier
+                        .fillMaxWidth()
+                        .height(24.dp)
+                        .clip(RoundedCornerShape(12.dp))
+                        .keyboardGradientBackground(gradient),
+                )
+            }
+        },
+    ) {
+        Column(
+            Modifier.fillMaxWidth(),
+            verticalArrangement = Arrangement.spacedBy(6.dp),
+        ) {
+            GradientEditor(title, gradient) {
+                selectedName = "Modified — save as new"
+                onGradientChange(it)
+            }
+            Row(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
+                OutlinedTextField(saveName, {
+                    saveName =
+                        it
+                }, label = {
+                    Text(
+                        "Save as",
+                    )
+                }, singleLine = true, textStyle = MaterialTheme.typography.bodySmall, modifier = Modifier.weight(1f))
+                ; Button(enabled = saveName.isNotBlank(), onClick = {
+                    val saved =
+                        GradientLibrary.saveCustom(
+                            context,
+                            SavedGradient("", saveName.trim(), gradient.angleDegrees, gradient.stops),
+                        )
+                    selectedName =
+                        saved.name
+                    saveName = ""
+                    gradients = GradientLibrary.load(context)
+                }) { Text("Save", fontSize = 12.sp) }
             }
         }
     }
@@ -424,7 +413,7 @@ private fun SuggestionLozengeAppearanceSection() {
         state = next
         SuggestionLozengeThemePreferences.save(context, next)
     }
-    Column(gemSectionModifier(), verticalArrangement = Arrangement.spacedBy(6.dp)) {
+    Column(Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(6.dp)) {
         Text("Toolbar lozenges", style = MaterialTheme.typography.titleSmall)
         Text("Suggestion pills and the ✨ toggle get their own surface and border theme.", style = MaterialTheme.typography.bodySmall)
         Text("Lozenge background", style = MaterialTheme.typography.titleSmall)
@@ -502,7 +491,7 @@ private fun KeyAppearanceSection(onOpenKeyDesign: () -> Unit) {
         state = next
         KeyThemePreferences.save(context, next)
     }
-    Column(gemSectionModifier(), verticalArrangement = Arrangement.spacedBy(6.dp)) {
+    Column(Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(6.dp)) {
         Text("Keys", style = MaterialTheme.typography.titleSmall)
         OutlinedButton(onClick = onOpenKeyDesign, modifier = Modifier.fillMaxWidth()) { Text("Design individual keys & groups") }
         Text("Key surface", style = MaterialTheme.typography.titleSmall)
@@ -584,7 +573,7 @@ private fun FontAndSuggestionSection() {
                 }
             }
         }
-    Column(gemSectionModifier(), verticalArrangement = Arrangement.spacedBy(6.dp)) {
+    Column(Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(6.dp)) {
         fontError?.let { Text(it, color = MaterialTheme.colorScheme.error) }
         Text("Typography", style = MaterialTheme.typography.titleSmall)
         Text(fontName)
@@ -633,7 +622,7 @@ private fun GradientEditor(
     gradient: KeyboardBackdrop,
     onChange: (KeyboardBackdrop) -> Unit,
 ) {
-    var stopsExpanded by remember { mutableStateOf(false) }
+    var stopsExpanded by rememberSaveable { mutableStateOf(false) }
     Text("$label angle • ${gradient.angleDegrees.roundToInt()}°", style = MaterialTheme.typography.labelMedium)
     Slider(
         gradient.angleDegrees,
@@ -641,18 +630,11 @@ private fun GradientEditor(
         valueRange =
             0f..360f,
     )
-    Text(
-        "${gradient.stops.size} color stops  ${if (stopsExpanded) "▲" else "▼"}",
-        style = MaterialTheme.typography.labelMedium,
-        color = MaterialTheme.colorScheme.primary,
-        modifier =
-            Modifier
-                .clickable {
-                    stopsExpanded =
-                        !stopsExpanded
-                }.padding(vertical = 4.dp),
-    )
-    if (stopsExpanded) {
+    ThemeEditorExpandableSection(
+        title = "${gradient.stops.size} color stops",
+        expanded = stopsExpanded,
+        onExpandedChange = { stopsExpanded = it },
+    ) {
         gradient.stops.forEachIndexed { index, stop ->
             Column(
                 Modifier
@@ -710,7 +692,7 @@ private fun GradientEditor(
     }
 }
 
-/** Compact, independently expandable editor sections; advanced controls stay intact. */
+/** Independent editor sections retain a clear connection to their controls as they expand. */
 @Composable
 private fun ThemeEditorFold(
     title: String,
@@ -718,26 +700,13 @@ private fun ThemeEditorFold(
     initiallyExpanded: Boolean = false,
     content: @Composable () -> Unit,
 ) {
-    var expanded by remember { mutableStateOf(initiallyExpanded) }
-    Column(Modifier.fillMaxWidth().padding(horizontal = 12.dp, vertical = 4.dp)) {
-        Surface(
-            onClick = { expanded = !expanded },
-            shape = RoundedCornerShape(14.dp),
-            color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.55f),
-            border = BorderStroke(1.dp, MaterialTheme.colorScheme.primary.copy(alpha = 0.22f)),
-        ) {
-            Row(
-                Modifier.fillMaxWidth().padding(14.dp),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically,
-            ) {
-                Column(Modifier.weight(1f)) {
-                    Text(title, style = MaterialTheme.typography.titleSmall)
-                    Text(subtitle, style = MaterialTheme.typography.bodySmall)
-                }
-                Text(if (expanded) "⌃" else "›", style = MaterialTheme.typography.titleLarge)
-            }
-        }
-        if (expanded) content()
-    }
+    var expanded by rememberSaveable(title) { mutableStateOf(initiallyExpanded) }
+    ThemeEditorExpandableSection(
+        title = title,
+        subtitle = subtitle,
+        expanded = expanded,
+        onExpandedChange = { expanded = it },
+        modifier = Modifier.padding(horizontal = 12.dp, vertical = 4.dp),
+        content = content,
+    )
 }

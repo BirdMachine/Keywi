@@ -43,13 +43,29 @@ class KeyGroupGradientCanvasTest {
             )
         assertNull(theme.groupCanvasForKey("0:1", KeyGradientLayer.BORDER, rectangles))
         assertNotNull(theme.groupCanvasForKey("0:1", KeyGradientLayer.SURFACE, rectangles))
-        assertNull(theme.groupCanvasForKey("1:0", KeyGradientLayer.SURFACE, rectangles))
+        assertEquals(rectangles["1:0"], theme.groupCanvasForKey("1:0", KeyGradientLayer.SURFACE, rectangles))
         assertNotNull(theme.groupCanvasForKey("1:0", KeyGradientLayer.BORDER, rectangles))
         val replacement = group.copy(id = "Newest", keyIds = setOf("0:1", "0:2"))
         assertEquals(
             KeyCanvasRect(85f, 2f, 239f, 56f),
             theme.copy(keyGroups = listOf(group, replacement)).groupCanvasForKey("0:1", KeyGradientLayer.BORDER, rectangles),
         )
+    }
+
+    @Test fun assignedFillsAlwaysFitTheirOwningSelectionWithoutTheSharingSwitch() {
+        val assigned =
+            group.copy(
+                sharedGradientCanvas = false,
+                design = KeyDesignOverride(surfaceGradient = BIRDIE_KEY_GRADIENT),
+            )
+        val theme = KeyThemeState(keyGroups = listOf(assigned))
+        assertEquals(KeyCanvasRect(2f, 2f, 239f, 111f), theme.groupCanvasForKey("0:1", KeyGradientLayer.SURFACE, rectangles))
+        assertNull(theme.groupCanvasForKey("0:1", KeyGradientLayer.BORDER, rectangles))
+        val single = theme.copy(keyOverrides = mapOf("0:1" to KeyDesignOverride(surfaceGradient = BIRDIE_KEY_GRADIENT)))
+        assertEquals(rectangles["0:1"], single.groupCanvasForKey("0:1", KeyGradientLayer.SURFACE, rectangles))
+        val all = theme.copy(keyGroups = listOf(assigned.copy(keyIds = rectangles.keys)))
+        assertEquals(KeyCanvasRect(2f, 2f, 322f, 111f), all.groupCanvasForKey("0:1", KeyGradientLayer.SURFACE, rectangles))
+        assertNull(theme.groupCanvasForKey("0:0", KeyGradientLayer.SURFACE, rectangles))
     }
 
     @Test fun legacyGroupsAndWholeKeyboardDistributionKeepTheirExistingCanvas() {

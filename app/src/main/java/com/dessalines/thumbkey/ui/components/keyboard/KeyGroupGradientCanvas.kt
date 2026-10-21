@@ -47,7 +47,10 @@ private fun KeyDesignOverride.specifies(layer: KeyGradientLayer): Boolean =
 
 /**
  * Resolve each layer separately: later applicable groups win, then a specific key's explicit
- * design wins. A group with no design and no shared canvas does not erase earlier layer settings.
+ * design wins. Assigned fill gradients always fit the selection that owns them: one key for a
+ * specific override, or the group bounding rectangle. The sharing switch governs inherited fill
+ * gradients and border distribution; it is not needed to fit an explicitly assigned fill.
+ * A group with no design and no shared canvas does not erase earlier layer settings.
  * Out-of-layout IDs are ignored; the persisted group naturally adapts to the current gem cut.
  */
 fun KeyThemeState.groupCanvasForKey(
@@ -55,12 +58,20 @@ fun KeyThemeState.groupCanvasForKey(
     layer: KeyGradientLayer,
     rectangles: Map<String, KeyCanvasRect>,
 ): KeyCanvasRect? {
-    if (keyOverrides[keyId]?.specifies(layer) == true) return null
+    val specific = keyOverrides[keyId]
+    if (specific?.specifies(layer) == true) {
+        return if (layer == KeyGradientLayer.SURFACE && specific.surfaceGradient != null) {
+            rectangles[keyId]?.takeIf { it.width > 0f && it.height > 0f }
+        } else {
+            null
+        }
+    }
     val group =
         keyGroups.lastOrNull {
             keyId in it.keyIds && (it.sharedGradientCanvas || it.design.specifies(layer))
         } ?: return null
-    if (!group.sharedGradientCanvas) return null
+    val assignedFill = layer == KeyGradientLayer.SURFACE && group.design.surfaceGradient != null
+    if (!group.sharedGradientCanvas && !assignedFill) return null
     val members = group.keyIds.mapNotNull { rectangles[it] }.filter { it.width > 0f && it.height > 0f }
     if (members.isEmpty() || keyId !in rectangles) return null
     val left = members.minOf { it.left }
