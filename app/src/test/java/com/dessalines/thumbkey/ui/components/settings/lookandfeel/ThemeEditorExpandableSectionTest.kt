@@ -2,6 +2,7 @@ package com.dessalines.thumbkey.ui.components.settings.lookandfeel
 
 import android.app.Application
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.height
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -11,6 +12,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.semantics.SemanticsActions
 import androidx.compose.ui.semantics.SemanticsProperties
 import androidx.compose.ui.test.SemanticsMatcher
 import androidx.compose.ui.test.assert
@@ -19,6 +21,7 @@ import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
+import androidx.compose.ui.test.performSemanticsAction
 import androidx.compose.ui.unit.dp
 import com.dessalines.thumbkey.ui.components.keyboard.KeywiPowerMode
 import com.dessalines.thumbkey.ui.components.keyboard.KeywiPowerPreferences
@@ -42,15 +45,18 @@ class ThemeEditorExpandableSectionTest {
         compose.setContent {
             var expanded by remember { mutableStateOf(false) }
             MaterialTheme {
-                ThemeEditorExpandableSection(
-                    title = "Keys",
-                    subtitle = "Borders and surfaces",
-                    expanded = expanded,
-                    onExpandedChange = { expanded = it },
-                    summary = { Text("Shared preview") },
-                ) {
-                    Box(Modifier.height(160.dp)) {
-                        TextButton(onClick = { applied++ }) { Text("Apply border") }
+                // Match the editor: sections wrap their contents inside a scrolling Column.
+                Column {
+                    ThemeEditorExpandableSection(
+                        title = "Keys",
+                        subtitle = "Borders and surfaces",
+                        expanded = expanded,
+                        onExpandedChange = { expanded = it },
+                        summary = { Text("Shared preview") },
+                    ) {
+                        Box(Modifier.height(160.dp)) {
+                            TextButton(onClick = { applied++ }) { Text("Apply border") }
+                        }
                     }
                 }
             }
@@ -59,27 +65,36 @@ class ThemeEditorExpandableSectionTest {
 
     private fun header() = compose.onNodeWithTag("theme-section-header:Keys")
 
-    private fun height() =
-        compose
+    private fun height(): Float {
+        // Android measure/layout is outside the Compose animation clock.
+        compose.waitForIdle()
+        return compose
             .onNodeWithTag("theme-section:Keys")
             .fetchSemanticsNode()
             .boundsInRoot.height
+    }
+
+    private fun toggleForFrameMeasurement() {
+        header().performSemanticsAction(SemanticsActions.OnClick) { it() }
+        compose.mainClock.advanceTimeByFrame()
+        compose.waitForIdle()
+    }
 
     @Test fun expandingAndCollapsingGrowTheSameContainerThroughIntermediateSizes() {
         show()
         val collapsed = height()
         compose.mainClock.autoAdvance = false
-        header().performClick()
+        toggleForFrameMeasurement()
         compose.mainClock.advanceTimeBy(80)
         val opening = height()
         compose.mainClock.advanceTimeBy(400)
         val opened = height()
-        assertTrue("Section should grow gradually instead of jumping to its full height", opening > collapsed && opening < opened)
-        header().performClick()
+        assertTrue("Expansion sizes: collapsed=$collapsed, opening=$opening, opened=$opened", opening > collapsed && opening < opened)
+        toggleForFrameMeasurement()
         compose.mainClock.advanceTimeBy(80)
         val closing = height()
         compose.mainClock.advanceTimeBy(400)
-        assertTrue("Section should shrink gradually", closing > collapsed && closing < opened)
+        assertTrue("Collapse sizes: collapsed=$collapsed, closing=$closing, opened=$opened", closing > collapsed && closing < opened)
         assertEquals(collapsed, height(), .5f)
     }
 
@@ -108,10 +123,10 @@ class ThemeEditorExpandableSectionTest {
         show(mode)
         val collapsed = height()
         compose.mainClock.autoAdvance = false
-        header().performClick()
+        toggleForFrameMeasurement()
         compose.mainClock.advanceTimeBy(32)
         val opened = height()
-        assertTrue(opened > collapsed)
+        assertTrue("Immediate $mode sizes: collapsed=$collapsed, opened=$opened", opened > collapsed)
         compose.mainClock.advanceTimeBy(300)
         assertEquals(opened, height(), .5f)
     }
