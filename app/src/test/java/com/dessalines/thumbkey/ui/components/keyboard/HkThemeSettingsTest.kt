@@ -19,7 +19,6 @@ import androidx.compose.ui.test.performClick
 import androidx.compose.ui.unit.dp
 import androidx.test.core.app.ApplicationProvider
 import com.dessalines.thumbkey.MainActivity
-import java.io.File
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 import org.junit.Rule
@@ -29,6 +28,7 @@ import org.robolectric.RobolectricTestRunner
 import org.robolectric.Shadows.shadowOf
 import org.robolectric.annotation.Config
 import org.robolectric.annotation.GraphicsMode
+import java.io.File
 
 @RunWith(RobolectricTestRunner::class)
 @Config(sdk = [34], application = Application::class, qualifiers = "w411dp-h891dp")
@@ -39,18 +39,28 @@ class HkThemeSettingsTest {
     private val context: Application get() = ApplicationProvider.getApplicationContext()
     private val border = Color(0xFFFF00FF)
 
-    private fun showKeyboard(width: Float = 3f, style: KeyBorderStyle = KeyBorderStyle.SOLID) {
+    private fun showKeyboard(
+        width: Float = 3f,
+        style: KeyBorderStyle = KeyBorderStyle.SOLID,
+    ) {
         KeywiAppearancePreferences.save(context, true)
-        KeyThemePreferences.save(context, KeyThemeState(
-            surfaceStyle = KeySurfaceStyle.SOLID,
-            surfaceColor = Color(0xFF142235),
-            borderStyle = style,
-            borderColor = border,
-            borderGradient = KeyboardBackdrop(listOf(
-                KeyboardGradientStop(0f, border),
-                KeyboardGradientStop(1f, border),
-            ), 0f),
-        ))
+        KeyThemePreferences.save(
+            context,
+            KeyThemeState(
+                surfaceStyle = KeySurfaceStyle.SOLID,
+                surfaceColor = Color(0xFF142235),
+                borderStyle = style,
+                borderColor = border,
+                borderGradient =
+                    KeyboardBackdrop(
+                        listOf(
+                            KeyboardGradientStop(0f, border),
+                            KeyboardGradientStop(1f, border),
+                        ),
+                        0f,
+                    ),
+            ),
+        )
         compose.setContent {
             MaterialTheme {
                 Box(Modifier.width(390.dp)) {
@@ -64,9 +74,11 @@ class HkThemeSettingsTest {
     private fun borderPixels(): Int {
         val pixels = compose.onNodeWithContentDescription("Keywi settings").captureToImage().toPixelMap()
         var count = 0
-        for (y in 0 until pixels.height) for (x in 0 until pixels.width) {
-            val color = pixels[x, y]
-            if (color.red > .9f && color.green < .1f && color.blue > .9f) count++
+        for (y in 0 until pixels.height) {
+            for (x in 0 until pixels.width) {
+                val color = pixels[x, y]
+                if (color.red > .9f && color.green < .1f && color.blue > .9f) count++
+            }
         }
         return count
     }
@@ -75,7 +87,11 @@ class HkThemeSettingsTest {
         val file = File("build/outputs/hk-review/$name.png")
         file.parentFile.mkdirs()
         file.outputStream().use {
-            compose.onRoot().captureToImage().asAndroidBitmap().compress(android.graphics.Bitmap.CompressFormat.PNG, 100, it)
+            compose
+                .onRoot()
+                .captureToImage()
+                .asAndroidBitmap()
+                .compress(android.graphics.Bitmap.CompressFormat.PNG, 100, it)
         }
     }
 

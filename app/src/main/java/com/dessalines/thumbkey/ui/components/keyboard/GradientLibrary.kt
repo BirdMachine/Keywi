@@ -13,6 +13,7 @@ data class SavedGradient(
     val angleDegrees: Float,
     val stops: List<KeyboardGradientStop>,
     val builtIn: Boolean = false,
+    val description: String? = null,
 ) {
     fun toBackdrop(): KeyboardBackdrop = KeyboardBackdrop(angleDegrees = angleDegrees, stops = stops)
 }
@@ -36,6 +37,22 @@ object GradientLibrary {
                 angleDegrees = BackdropThemePreferences.stateForPreset(BackdropPreset.SINEBOW).angleDegrees,
                 stops = BackdropThemePreferences.stateForPreset(BackdropPreset.SINEBOW).stops,
                 builtIn = true,
+            ),
+            SavedGradient(
+                id = "builtin_oklab_broad",
+                name = "Oklab Broad",
+                angleDegrees = 0f,
+                stops = OklabReferenceGradients.broad,
+                builtIn = true,
+                description = "Sampled approximation of XorDev’s upper source ramp. Source: x.com/XorDev/status/2111856284375105661",
+            ),
+            SavedGradient(
+                id = "builtin_oklab_tight",
+                name = "Oklab Tight",
+                angleDegrees = 0f,
+                stops = OklabReferenceGradients.tight,
+                builtIn = true,
+                description = "Sampled approximation of XorDev’s lower source ramp. Source: x.com/XorDev/status/2111856284375105661",
             ),
             SavedGradient(
                 id = "builtin_birdie_gold_border",

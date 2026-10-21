@@ -51,7 +51,12 @@ object SuggestionLozengeThemePreferences {
             borderColor = readColor(prefs, "border_color", defaults.borderColor),
             borderWidth = prefs.getFloat("border_width", 1f).coerceIn(0f, 6f),
             currentWordBackgroundColor = readColor(prefs, "current_word_background", defaults.currentWordBackgroundColor),
-            currentWordHighlightColor = readColor(prefs, "current_word_highlight", AdvancedKeyWordPreferences.newWordHighlightColor(context)),
+            currentWordHighlightColor =
+                readColor(
+                    prefs,
+                    "current_word_highlight",
+                    AdvancedKeyWordPreferences.newWordHighlightColor(context),
+                ),
         )
     }
 

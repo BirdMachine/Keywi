@@ -67,6 +67,15 @@ jobs:
           if-no-files-found: ignore
           retention-days: 14
 
+      - name: Upload color picker review
+        if: always()
+        uses: actions/upload-artifact@v6
+        with:
+          name: color-picker-review
+          path: app/build/outputs/color-review/
+          if-no-files-found: ignore
+          retention-days: 14
+
       - name: Run Android lint
         run: ./gradlew lint
 

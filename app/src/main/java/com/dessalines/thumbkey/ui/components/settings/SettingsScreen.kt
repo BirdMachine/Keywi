@@ -1,16 +1,10 @@
 package com.dessalines.thumbkey.ui.components.settings
 
-import com.dessalines.thumbkey.ui.components.settings.gemPreferenceModifier
 import android.util.Log
-import com.dessalines.thumbkey.ui.components.common.SettingsNoticeBanners
-import com.dessalines.thumbkey.utils.getVersionCode
 import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.ui.Alignment
-import androidx.compose.ui.unit.dp
-import androidx.compose.material.icons.outlined.Diamond
 import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
@@ -24,6 +18,7 @@ import androidx.compose.material.icons.outlined.BugReport
 import androidx.compose.material.icons.outlined.Build
 import androidx.compose.material.icons.outlined.ContentPaste
 import androidx.compose.material.icons.outlined.DashboardCustomize
+import androidx.compose.material.icons.outlined.Diamond
 import androidx.compose.material.icons.outlined.Info
 import androidx.compose.material.icons.outlined.InstallMobile
 import androidx.compose.material.icons.outlined.KeyboardAlt
@@ -43,25 +38,30 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.runtime.remember
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.AnnotatedString
+import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import com.dessalines.thumbkey.R
 import com.dessalines.thumbkey.db.AppSettingsViewModel
 import com.dessalines.thumbkey.db.DEFAULT_KEYBOARD_LAYOUT
+import com.dessalines.thumbkey.ui.components.common.SettingsNoticeBanners
 import com.dessalines.thumbkey.ui.components.common.TestOutTextField
 import com.dessalines.thumbkey.ui.components.settings.about.SettingsDivider
 import com.dessalines.thumbkey.ui.components.settings.about.USER_GUIDE_URL
+import com.dessalines.thumbkey.ui.components.settings.gemPreferenceModifier
 import com.dessalines.thumbkey.utils.KeyboardLayout
 import com.dessalines.thumbkey.utils.TAG
+import com.dessalines.thumbkey.utils.getVersionCode
 import com.dessalines.thumbkey.utils.keyboardLayoutsSetFromDbIndexString
 import com.dessalines.thumbkey.utils.openLink
 import com.dessalines.thumbkey.utils.updateLayouts
 import me.zhanghai.compose.preference.MultiSelectListPreference
-import com.dessalines.thumbkey.ui.components.settings.GemNavigationPreference as Preference
 import me.zhanghai.compose.preference.ProvidePreferenceTheme
+import com.dessalines.thumbkey.ui.components.settings.GemNavigationPreference as Preference
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -80,16 +80,17 @@ fun SettingsScreen(
     val layoutsState = keyboardLayoutsSetFromDbIndexString(settings?.keyboardLayouts)
 
     Scaffold(
+        containerColor =
+            if (com.dessalines.thumbkey.ui.components.settings.LocalSettingsDrip.current !=
+                null
+            ) {
+                androidx.compose.ui.graphics.Color.Transparent
+            } else {
+                MaterialTheme.colorScheme.background
+            },
         snackbarHost = { SnackbarHost(snackbarHostState) },
         topBar = {
-            CenterAlignedTopAppBar(
-                title = {
-                    Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-                        Icon(Icons.Outlined.Diamond, contentDescription = null, tint = MaterialTheme.colorScheme.primary)
-                        Text("KEYWI ✦", style = MaterialTheme.typography.headlineSmall)
-                    }
-                },
-            )
+            GemSettingsTopAppBar(text = "KEYWI ✦", navController = navController, showBack = false)
         },
         content = { padding ->
             Column(
@@ -97,9 +98,18 @@ fun SettingsScreen(
                     Modifier
                         .padding(padding)
                         .verticalScroll(scrollState)
-                        .background(color = MaterialTheme.colorScheme.surface)
-                        .imePadding(),
+                        .background(
+                            color =
+                                if (com.dessalines.thumbkey.ui.components.settings.LocalSettingsDrip.current !=
+                                    null
+                                ) {
+                                    androidx.compose.ui.graphics.Color.Transparent
+                                } else {
+                                    MaterialTheme.colorScheme.surface
+                                },
+                        ).imePadding(),
             ) {
+                SettingsThemeBanner()
                 SettingsNoticeBanners(
                     versionCode = ctx.getVersionCode(),
                     lastViewedVersion = settings?.lastVersionCodeViewed,
@@ -133,6 +143,7 @@ fun SettingsScreen(
                         icon = { Icon(Icons.Outlined.DashboardCustomize, contentDescription = null) },
                         onClick = { navController.navigate("advancedBoards") },
                     )
+                    SettingsAppearancePreference()
                     Preference(
                         title = { Text("Key & Word Selection") },
                         summary = { Text("Matrix remapper, unfinished-word chip, and personal dictionary") },
@@ -144,6 +155,12 @@ fun SettingsScreen(
                         summary = { Text("Gestures, typing behavior, context, characters and hardware keyboard options") },
                         icon = { Icon(Icons.Outlined.Tune, contentDescription = null) },
                         onClick = { navController.navigate("advancedInput") },
+                    )
+                    Preference(
+                        title = { Text("Keypress effects") },
+                        summary = { Text("Sound packs, action assignments and touch-through GIF / PNG overlays") },
+                        icon = { Icon(Icons.Outlined.TouchApp, contentDescription = null) },
+                        onClick = { navController.navigate("keypressEffects") },
                     )
                     Preference(
                         title = { Text("Power options") },
@@ -161,7 +178,6 @@ fun SettingsScreen(
 
                     GemSettingsGroupLabel("✦ SETTINGS", "Character layouts, clipboard and saved data")
                     MultiSelectListPreference(
-
                         modifier = gemPreferenceModifier(),
                         value = layoutsState,
                         values = KeyboardLayout.entries.sortedBy { it.keyboardDefinition.title },
@@ -174,7 +190,6 @@ fun SettingsScreen(
                         title = { Text("Character layouts") },
                         summary = { Text(layoutsState.joinToString(", ") { it.keyboardDefinition.title }) },
                     )
-
 
                     Preference(
                         title = { Text(stringResource(R.string.clipboard_history)) },

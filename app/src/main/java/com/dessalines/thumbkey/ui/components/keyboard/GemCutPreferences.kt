@@ -13,14 +13,18 @@ object GemCutPreferences {
     private const val KEY_FACET = "active_facet"
 
     fun load(context: Context): FacetId {
-        val saved = context
-            .getSharedPreferences(PREFS, Context.MODE_PRIVATE)
-            .getString(KEY_FACET, FacetId.ME_LIKE.name)
+        val saved =
+            context
+                .getSharedPreferences(PREFS, Context.MODE_PRIVATE)
+                .getString(KEY_FACET, FacetId.ME_LIKE.name)
         return runCatching { FacetId.valueOf(saved ?: FacetId.ME_LIKE.name) }
             .getOrDefault(FacetId.ME_LIKE)
     }
 
-    fun save(context: Context, facet: FacetId) {
+    fun save(
+        context: Context,
+        facet: FacetId,
+    ) {
         context
             .getSharedPreferences(PREFS, Context.MODE_PRIVATE)
             .edit()

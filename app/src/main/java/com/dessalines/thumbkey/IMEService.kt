@@ -74,9 +74,7 @@ class IMEService :
      * historical non-null override there. Async/lifecycle-sensitive code must use
      * [activeInputConnectionOrNull] instead.
      */
-    override fun getCurrentInputConnection(): InputConnection {
-        return checkNotNull(activeInputConnectionOrNull()) { "No active input connection" }
-    }
+    override fun getCurrentInputConnection(): InputConnection = checkNotNull(activeInputConnectionOrNull()) { "No active input connection" }
 
     fun activeInputConnectionOrNull(): InputConnection? {
         val target = super.getCurrentInputConnection() ?: return null
@@ -86,13 +84,18 @@ class IMEService :
     private class PaletteSearchInputConnection(
         target: InputConnection,
     ) : InputConnectionWrapper(target, false) {
-        override fun commitText(text: CharSequence?, newCursorPosition: Int): Boolean =
-            if (PaletteSearchCapture.consumeCommitText(text)) true else super.commitText(text, newCursorPosition)
+        override fun commitText(
+            text: CharSequence?,
+            newCursorPosition: Int,
+        ): Boolean = if (PaletteSearchCapture.consumeCommitText(text)) true else super.commitText(text, newCursorPosition)
 
         override fun sendKeyEvent(event: KeyEvent): Boolean =
             if (PaletteSearchCapture.consumeKeyEvent(event)) true else super.sendKeyEvent(event)
 
-        override fun deleteSurroundingText(beforeLength: Int, afterLength: Int): Boolean =
+        override fun deleteSurroundingText(
+            beforeLength: Int,
+            afterLength: Int,
+        ): Boolean =
             if (PaletteSearchCapture.consumeDeleteBeforeCursor(beforeLength)) {
                 true
             } else {

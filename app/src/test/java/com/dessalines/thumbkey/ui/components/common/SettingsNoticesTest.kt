@@ -30,16 +30,24 @@ class SettingsNoticesTest {
         val viewed = mutableStateOf<Int?>(10)
         var acknowledgments = 0
         compose.setContent {
-            MaterialTheme { GemSettingsTheme(true) {
-                SettingsNoticeBanners(11, viewed.value) { acknowledgments++; viewed.value = 11 }
-            } }
+            MaterialTheme {
+                GemSettingsTheme(true) {
+                    SettingsNoticeBanners(11, viewed.value) {
+                        acknowledgments++
+                        viewed.value = 11
+                    }
+                }
+            }
         }
         // Both notices remain available as banners, but neither auto-launches.
         assertEquals(0, compose.onAllNodesWithText("Done").fetchSemanticsNodes().size)
         compose.onNodeWithText("Welcome to Keywi").performClick()
         compose.onNodeWithText("BUILD 11 · WHAT'S NEW").assertIsDisplayed()
         compose.onNodeWithText("Done").performClick()
-        compose.runOnIdle { assertEquals(1, acknowledgments); assertEquals(11, viewed.value) }
+        compose.runOnIdle {
+            assertEquals(1, acknowledgments)
+            assertEquals(11, viewed.value)
+        }
         // Closing the welcome does not automatically open the policy.
         assertEquals(0, compose.onAllNodesWithText("Done").fetchSemanticsNodes().size)
         compose.onNodeWithText("Android installation policy").performClick()
@@ -52,7 +60,11 @@ class SettingsNoticesTest {
     @Test
     fun noticesWaitForSettingsAndReadingThemPersistsForTheCurrentBuild() {
         val context = ApplicationProvider.getApplicationContext<Application>()
-        context.getSharedPreferences("keywi_notices", 0).edit().putInt("policy_seen_version", 12).apply()
+        context
+            .getSharedPreferences("keywi_notices", 0)
+            .edit()
+            .putInt("policy_seen_version", 12)
+            .apply()
         val viewed = mutableStateOf<Int?>(null)
         compose.setContent { MaterialTheme { SettingsNoticeBanners(12, viewed.value) {} } }
         compose.runOnIdle { viewed.value = 12 }
@@ -65,7 +77,11 @@ class SettingsNoticesTest {
     @Test
     fun upstreamLinksAreExplicitAndOwnNotesArePackaged() {
         val context = ApplicationProvider.getApplicationContext<Application>()
-        val notes = context.assets.open("KEYWI_RELEASES.md").bufferedReader().use { it.readText() }
+        val notes =
+            context.assets
+                .open("KEYWI_RELEASES.md")
+                .bufferedReader()
+                .use { it.readText() }
         assertTrue(notes.contains("What's changed"))
         assertTrue(notes.contains("Keywi"))
         assertTrue(UPSTREAM_MARKDOWN.contains("NOT Keywi"))

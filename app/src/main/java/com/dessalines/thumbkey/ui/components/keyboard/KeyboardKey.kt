@@ -40,18 +40,24 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.lerp
 import com.dessalines.thumbkey.IMEService
+import com.dessalines.thumbkey.effects.ActionSoundEngine
+import com.dessalines.thumbkey.effects.ActionSoundPreferences
+import com.dessalines.thumbkey.effects.SoundSelection
+import com.dessalines.thumbkey.effects.SoundTrigger
+import com.dessalines.thumbkey.effects.TaskerKeyBindings
 import com.dessalines.thumbkey.utils.CircularDirection
 import com.dessalines.thumbkey.utils.CircularDragAction
 import com.dessalines.thumbkey.utils.FontSizeVariant
@@ -103,6 +109,7 @@ private const val SLIDE_HOLD_FAST_TICK_DELAY_MS = 100L // ms between ticks durin
 @Composable
 fun KeyboardKey(
     key: KeyItemC,
+    effectKeyId: String = "key",
     // Hidden background key to detect swipes for. When a swipe isn't captured by the key, the ghost
     // key will attempt to capture it instead. This is derived automatically from the keyboard
     // layout, and should not be set directly in the keyboard definition.
@@ -159,6 +166,9 @@ fun KeyboardKey(
     keyGradientCanvasHeight: Float = 0f,
     keyGradientOffsetX: Float = 0f,
     keyGradientOffsetY: Float = 0f,
+    keyDesignId: String = "",
+    keySequenceIndex: Int = 0,
+    keyRectangles: Map<String, KeyCanvasRect> = emptyMap(),
 ) {
     // Necessary for swipe settings to get updated correctly
     val id =
@@ -173,8 +183,36 @@ fun KeyboardKey(
     val ime = ctx as IMEService
     val scope = rememberCoroutineScope()
 
-    // Don't show animations for password fields
-    val isPasswordField by remember { mutableStateOf(isPasswordField(ime)) }
+    // Do not expose typed-key effects in password editors.
+    val isPasswordField = isPasswordField(ime)
+    var soundPressDispatched by remember { mutableStateOf(false) }
+    var gifPressDispatched by remember { mutableStateOf(false) }
+    var heldEffectPendingRelease by remember { mutableStateOf(false) }
+    var taskerReservesSwipe by remember { mutableStateOf(false) }
+
+    // Directional assignments wait for a resolved gesture; general packs can play on touch-down.
+    fun actionEffects(
+        direction: String,
+        phase: SoundTrigger,
+    ) {
+        if (phase != SoundTrigger.PRESS || !soundPressDispatched) {
+            ActionSoundEngine.fire(ctx, direction = direction, keyId = effectKeyId, phase = phase)
+            if (phase == SoundTrigger.PRESS) soundPressDispatched = true
+        }
+        if (!isPasswordField && (phase != SoundTrigger.PRESS || !gifPressDispatched)) {
+            val x =
+                if (keyGradientCanvasWidth >
+                    0f
+                ) {
+                    (keyGradientOffsetX + key.widthMultiplier * keyWidth / 2f) / keyGradientCanvasWidth
+                } else {
+                    0.5f
+                }
+            val y = if (keyGradientCanvasHeight > 0f) (keyGradientOffsetY + keyHeight / 2f) / keyGradientCanvasHeight else 0.5f
+            ActionGifRuntime.trigger(ctx, effectKeyId, direction, phase.name.lowercase(), x.coerceIn(0f, 1f), y.coerceIn(0f, 1f))
+            if (phase == SoundTrigger.PRESS) gifPressDispatched = true
+        }
+    }
 
     val interactionSource = remember { MutableInteractionSource() }
     val isPressed by interactionSource.collectIsPressedAsState()
@@ -206,11 +244,60 @@ fun KeyboardKey(
     var slideHoldRepeatJob by remember { mutableStateOf<kotlinx.coroutines.Job?>(null) }
 
     val appearanceEnabled = KeywiAppearancePreferences.currentEnabled
-    val keyTheme = KeyThemePreferences.current
-    val idleGradient = if (appearanceEnabled && keyTheme.surfaceStyle == KeySurfaceStyle.GRADIENT) keyTheme.surfaceGradient else keyGradient
-    val activeBorderGradient = if (appearanceEnabled) {
-        if (keyTheme.borderStyle == KeyBorderStyle.GRADIENT) keyTheme.borderGradient else null
-    } else keyBorderGradient
+    val baseKeyTheme = KeyThemePreferences.current
+    val keyTheme = baseKeyTheme.forKey(keyDesignId)
+    val density = LocalDensity.current
+    val gradientWidthPx = with(density) { keyGradientCanvasWidth.dp.toPx() }
+    val gradientHeightPx = with(density) { keyGradientCanvasHeight.dp.toPx() }
+    val gradientOffsetXPx = with(density) { (keyGradientOffsetX + keyPadding).dp.toPx() }
+    val gradientOffsetYPx = with(density) { (keyGradientOffsetY + keyPadding).dp.toPx() }
+    val groupSurface =
+        if (appearanceEnabled) {
+            baseKeyTheme
+                .groupCanvasForKey(
+                    keyDesignId,
+                    KeyGradientLayer.SURFACE,
+                    keyRectangles,
+                )?.scaled(density.density)
+        } else {
+            null
+        }
+    val groupBorder =
+        if (appearanceEnabled) {
+            baseKeyTheme
+                .groupCanvasForKey(
+                    keyDesignId,
+                    KeyGradientLayer.BORDER,
+                    keyRectangles,
+                )?.scaled(density.density)
+        } else {
+            null
+        }
+    val sharedBorder = appearanceEnabled && keyTheme.borderDistribution == GradientDistribution.SHARED
+    val borderPhase =
+        if (appearanceEnabled && groupBorder == null) {
+            gradientPhaseDegrees(
+                keyTheme.borderDistribution,
+                keyDesignId,
+                keySequenceIndex,
+                keyTheme.borderPhaseStepDegrees,
+                keyTheme.borderRandomSeed,
+            )
+        } else {
+            0f
+        }
+    val idleGradient =
+        if (appearanceEnabled) {
+            if (keyTheme.surfaceStyle == KeySurfaceStyle.GRADIENT) keyTheme.surfaceGradient else null
+        } else {
+            keyGradient
+        }
+    val activeBorderGradient =
+        if (appearanceEnabled) {
+            if (keyTheme.borderStyle == KeyBorderStyle.GRADIENT) keyTheme.borderGradient else null
+        } else {
+            keyBorderGradient
+        }
     val drawBorder = !appearanceEnabled || keyTheme.borderStyle == KeyBorderStyle.GRADIENT || keyTheme.borderStyle == KeyBorderStyle.SOLID
     val backgroundColor =
         if (!(isDragged.value || isPressed)) {
@@ -219,7 +306,9 @@ fun KeyboardKey(
                     KeySurfaceStyle.SOLID -> keyTheme.surfaceColor
                     KeySurfaceStyle.GRADIENT, KeySurfaceStyle.NONE -> Color.Transparent
                 }
-            } else colorVariantToColor(colorVariant = key.backgroundColor)
+            } else {
+                colorVariantToColor(colorVariant = key.backgroundColor)
+            }
         } else {
             MaterialTheme.colorScheme.inversePrimary
         }
@@ -243,14 +332,39 @@ fun KeyboardKey(
 
     LaunchedEffect(key1 = isPressed) {
         if (isPressed) {
+            soundPressDispatched = false
+            gifPressDispatched = false
+            heldEffectPendingRelease = false
+            val sounds = ActionSoundPreferences.get(ctx)
+            if (sounds.selection != SoundSelection.DIRECTION && sounds.keys.isEmpty() && sounds.directions.isEmpty()) {
+                ActionSoundEngine.fire(ctx, keyId = effectKeyId, phase = SoundTrigger.PRESS)
+                soundPressDispatched = true
+            }
+            val gifs = ActionGifPreferences.current
+            if (!isPasswordField && gifs.mode != "direction" && gifs.keyAssignments.isEmpty() && gifs.directionAssignments.isEmpty()) {
+                val x =
+                    if (keyGradientCanvasWidth >
+                        0f
+                    ) {
+                        (keyGradientOffsetX + key.widthMultiplier * keyWidth / 2f) / keyGradientCanvasWidth
+                    } else {
+                        0.5f
+                    }
+                val y = if (keyGradientCanvasHeight > 0f) (keyGradientOffsetY + keyHeight / 2f) / keyGradientCanvasHeight else 0.5f
+                ActionGifRuntime.trigger(ctx, effectKeyId, "CENTER", "press", x.coerceIn(0f, 1f), y.coerceIn(0f, 1f))
+                gifPressDispatched = true
+            }
             if (vibrateOnTap) {
                 // This is a workaround for only having LongPress
                 // https://stackoverflow.com/questions/68333741/how-to-perform-a-haptic-feedback-in-jetpack-compose
                 view.performHapticFeedback(HapticFeedbackConstants.KEYBOARD_TAP)
             }
-            if (soundOnTap) {
+            if (soundOnTap && !ActionSoundEngine.isEnabled(ctx)) {
                 audioManager.playSoundEffect(AudioManager.FX_KEY_CLICK, .1f)
             }
+        } else if (heldEffectPendingRelease) {
+            heldEffectPendingRelease = false
+            actionEffects("HOLD", SoundTrigger.RELEASE)
         }
     }
 
@@ -403,20 +517,25 @@ fun KeyboardKey(
             .padding(keyPadding.dp)
             .then(
                 if (appearanceEnabled && keyTheme.borderStyle == KeyBorderStyle.SHADOW) {
-                    Modifier.shadow(keyTheme.shadowElevation.dp, RoundedCornerShape(keyRadius.dp), clip = false,
+                    Modifier.shadow(
+                        keyTheme.shadowElevation.dp,
+                        RoundedCornerShape(keyRadius.dp),
+                        clip = false,
                         ambientColor = keyTheme.shadowColor.copy(alpha = keyTheme.shadowAlpha),
-                        spotColor = keyTheme.shadowColor.copy(alpha = keyTheme.shadowAlpha))
-                } else Modifier,
-            )
-            .clip(RoundedCornerShape(keyRadius.dp))
+                        spotColor = keyTheme.shadowColor.copy(alpha = keyTheme.shadowAlpha),
+                    )
+                } else {
+                    Modifier
+                },
+            ).clip(RoundedCornerShape(keyRadius.dp))
             .then(
                 if (!(isDragged.value || isPressed) && idleGradient != null) {
                     Modifier.keyboardGradientSlice(
                         backdrop = idleGradient,
-                        canvasWidth = keyGradientCanvasWidth,
-                        canvasHeight = keyGradientCanvasHeight,
-                        offsetX = keyGradientOffsetX,
-                        offsetY = keyGradientOffsetY,
+                        canvasWidth = groupSurface?.width ?: gradientWidthPx,
+                        canvasHeight = groupSurface?.height ?: gradientHeightPx,
+                        offsetX = gradientOffsetXPx - (groupSurface?.left ?: 0f),
+                        offsetY = gradientOffsetYPx - (groupSurface?.top ?: 0f),
                     )
                 } else {
                     Modifier.background(color = backgroundColor)
@@ -428,6 +547,29 @@ fun KeyboardKey(
                             backdrop = activeBorderGradient,
                             width = keyBorderWidth.dp,
                             radius = keyRadius.dp,
+                            canvasWidth = groupBorder?.width ?: if (sharedBorder) gradientWidthPx else 0f,
+                            canvasHeight = groupBorder?.height ?: if (sharedBorder) gradientHeightPx else 0f,
+                            offsetX =
+                                if (groupBorder !=
+                                    null
+                                ) {
+                                    gradientOffsetXPx - groupBorder.left
+                                } else if (sharedBorder) {
+                                    gradientOffsetXPx
+                                } else {
+                                    0f
+                                },
+                            offsetY =
+                                if (groupBorder !=
+                                    null
+                                ) {
+                                    gradientOffsetYPx - groupBorder.top
+                                } else if (sharedBorder) {
+                                    gradientOffsetYPx
+                                } else {
+                                    0f
+                                },
+                            phaseDegrees = borderPhase,
                         )
                     } else {
                         Modifier.border(
@@ -446,6 +588,7 @@ fun KeyboardKey(
                 indication = null,
                 hapticFeedbackEnabled = false, // We manually trigger haptics instead
                 onClick = {
+                    actionEffects("CENTER", SoundTrigger.PRESS)
                     // Set the last key info, and the tap count
                     val cAction = key.center.action
                     lastAction.value?.let { (lastAction, time) ->
@@ -458,7 +601,15 @@ fun KeyboardKey(
                     lastAction.value = Pair(cAction, TimeSource.Monotonic.markNow())
 
                     // Set the correct action
-                    val action = tapActions[tapCount % tapActions.size]
+                    val action =
+                        if (TaskerKeyBindings.dispatch(ctx, effectKeyId, "CENTER")) {
+                            KeyAction.Noop
+                        } else {
+                            tapActions[
+                                tapCount %
+                                    tapActions.size,
+                            ]
+                        }
                     performKeyAction(
                         action = action,
                         ime = ime,
@@ -478,9 +629,11 @@ fun KeyboardKey(
                         onKeyEvent = onKeyEvent,
                     )
                     doneKeyAction(scope, action, isDragged, releasedKey, animationHelperSpeed)
+                    actionEffects("CENTER", SoundTrigger.RELEASE)
                 },
                 onLongClick = {
-                    key.longPress?.let { action ->
+                    (if (TaskerKeyBindings.dispatch(ctx, effectKeyId, "HOLD")) KeyAction.Noop else key.longPress)?.let { action ->
+                        actionEffects("HOLD", SoundTrigger.PRESS)
                         performKeyAction(
                             action = action,
                             ime = ime,
@@ -500,10 +653,11 @@ fun KeyboardKey(
                             onKeyEvent = onKeyEvent,
                         )
                         doneKeyAction(scope, action, isDragged, releasedKey, animationHelperSpeed)
+                        heldEffectPendingRelease = true
                         if (vibrateOnTap) {
                             view.performHapticFeedback(HapticFeedbackConstants.KEYBOARD_TAP)
                         }
-                        if (soundOnTap) {
+                        if (soundOnTap && !ActionSoundEngine.isEnabled(ctx)) {
                             audioManager.playSoundEffect(AudioManager.FX_KEY_CLICK, .1f)
                         }
                     }
@@ -513,9 +667,10 @@ fun KeyboardKey(
             .pointerInput(key1 = id) {
                 detectDragGestures(
                     onDragStart = {
+                        taskerReservesSwipe = TaskerKeyBindings.reservesSwipe(ctx, effectKeyId)
                         isDragged.value = true
                     },
-                    onDrag = { change, dragAmount ->
+                    onDrag = onDrag@{ change, dragAmount ->
                         change.consume()
                         val (x, y) = dragAmount
                         offsetX += x
@@ -523,6 +678,9 @@ fun KeyboardKey(
                         val offset = Offset(offsetX, offsetY)
                         positions += offset
                         if (offset.getDistanceSquared() > maxOffset.getDistanceSquared()) maxOffset = offset
+
+                        // A replacement task owns its gesture before any legacy slide side effects.
+                        if (taskerReservesSwipe) return@onDrag
 
                         // First detection is large enough to preserve swipe actions.
                         val slideOffsetTrigger = (keySize.dp.toPx() * 0.75) + minSwipeLength
@@ -684,18 +842,32 @@ fun KeyboardKey(
                         }
                     },
                     onDragEnd = {
+                        val effectDirection =
+                            swipeDirection(maxOffset.x, maxOffset.y, minSwipeLength, SwipeNWay.EIGHT_WAY)?.name ?: "CENTER"
+                        actionEffects(effectDirection, SoundTrigger.PRESS)
                         lateinit var action: KeyAction
 
                         val slideHoldTicks = resetSlideHoldVariables()
 
-                        if ((key.slideType == SlideType.MOVE_CURSOR || key.slideType == SlideType.DELETE) &&
+                        // Match ordinary swipe topology; return gestures retain the outward direction.
+                        val taskerDirection =
+                            swipeDirection(
+                                offsetX,
+                                offsetY,
+                                minSwipeLength,
+                                if (ghostKey == null) key.swipeType else SwipeNWay.EIGHT_WAY,
+                            )?.name ?: effectDirection
+                        if (TaskerKeyBindings.dispatch(ctx, effectKeyId, taskerDirection)) {
+                            action = KeyAction.Noop
+                            doneKeyAction(scope, action, isDragged, releasedKey, animationHelperSpeed)
+                        } else if ((key.slideType == SlideType.MOVE_CURSOR || key.slideType == SlideType.DELETE) &&
                             slideHoldEnabled && slideHoldTicks > 0
                         ) {
                             // The repeat coroutine already handled all movement/deletion; nothing more to do.
                             action = KeyAction.Noop
                             doneKeyAction(scope, action, isDragged, releasedKey, animationHelperSpeed)
                         } else if (key.slideType == SlideType.NONE ||
-                            !slideEnabled ||
+                            !slideEnabled || taskerReservesSwipe ||
                             ((key.slideType == SlideType.DELETE) && !selection.active) ||
                             ((key.slideType == SlideType.MOVE_CURSOR) && !hasSlideMoveCursorTriggered)
                         ) {
@@ -864,6 +1036,8 @@ fun KeyboardKey(
                                 animationHelperSpeed,
                             )
                         }
+
+                        actionEffects(effectDirection, SoundTrigger.RELEASE)
 
                         // Set tapCount and lastAction to avoid issues with multitap after slide
                         tapCount = 0

@@ -14,9 +14,9 @@ import androidx.compose.material.icons.outlined.ResetTv
 import androidx.compose.material.icons.outlined.Restore
 import androidx.compose.material.icons.outlined.Save
 import androidx.compose.material3.AlertDialog
-import com.dessalines.thumbkey.ui.components.settings.GemButton as Button
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
@@ -83,16 +83,17 @@ import com.dessalines.thumbkey.db.DEFAULT_THEME_COLOR
 import com.dessalines.thumbkey.db.DEFAULT_USE_PRIVATE_CLIPBOARD
 import com.dessalines.thumbkey.db.DEFAULT_VIBRATE_ON_SLIDE
 import com.dessalines.thumbkey.db.DEFAULT_VIBRATE_ON_TAP
-import com.dessalines.thumbkey.ui.components.settings.GemSettingsTopAppBar as SimpleTopAppBar
 import com.dessalines.thumbkey.utils.keyboardLayoutsSetFromDbIndexString
 import com.dessalines.thumbkey.utils.updateLayouts
 import com.roomdbexportimport.RoomDBExportImport
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
-import com.dessalines.thumbkey.ui.components.settings.GemNavigationPreference as Preference
 import me.zhanghai.compose.preference.ProvidePreferenceTheme
 import java.time.LocalDate
+import com.dessalines.thumbkey.ui.components.settings.GemButton as Button
+import com.dessalines.thumbkey.ui.components.settings.GemNavigationPreference as Preference
+import com.dessalines.thumbkey.ui.components.settings.GemSettingsTopAppBar as SimpleTopAppBar
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -193,6 +194,14 @@ fun BackupAndRestoreScreen(
     }
 
     Scaffold(
+        containerColor =
+            if (com.dessalines.thumbkey.ui.components.settings.LocalSettingsDrip.current !=
+                null
+            ) {
+                androidx.compose.ui.graphics.Color.Transparent
+            } else {
+                MaterialTheme.colorScheme.background
+            },
         snackbarHost = { SnackbarHost(snackbarHostState) },
         topBar = {
             SimpleTopAppBar(text = stringResource(R.string.backup_and_restore), navController = navController)

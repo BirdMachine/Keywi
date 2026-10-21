@@ -3,8 +3,8 @@ package com.dessalines.thumbkey.ui.components.keyboard
 import android.content.Intent
 import android.net.Uri
 import androidx.compose.foundation.BorderStroke
-import androidx.compose.foundation.background
 import androidx.compose.foundation.ExperimentalFoundationApi
+import androidx.compose.foundation.background
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
@@ -24,6 +24,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -47,7 +48,7 @@ fun KaomojiRoom(
     modifier: Modifier = Modifier,
 ) {
     val context = LocalContext.current
-    var selectedCategoryId by remember { mutableStateOf(KaomojiLibrary.categories.first().id) }
+    var selectedCategoryId by rememberSaveable { mutableStateOf(KaomojiLibrary.categories.first().id) }
     val searchQuery = PaletteSearchCapture.query
     val searchActive = PaletteSearchCapture.active
     var favorites by remember { mutableStateOf(KaomojiPreferences.loadFavorites(context)) }
@@ -99,18 +100,24 @@ fun KaomojiRoom(
     }
 
     Column(
-        modifier = modifier.clip(RoundedCornerShape(topStart = 18.dp, topEnd = 18.dp))
-            .background(MaterialTheme.colorScheme.surface.copy(alpha = 0.82f))
-            .padding(horizontal = 9.dp, vertical = 8.dp),
+        modifier =
+            modifier
+                .clip(RoundedCornerShape(topStart = 18.dp, topEnd = 18.dp))
+                .background(MaterialTheme.colorScheme.surface.copy(alpha = 0.82f))
+                .padding(horizontal = 9.dp, vertical = 8.dp),
         verticalArrangement = Arrangement.spacedBy(5.dp),
     ) {
-        Text("✧  KAOMOJI", style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.primary)
+        Text(
+            "✧  KAOMOJI",
+            style = MaterialTheme.typography.titleSmall,
+            fontWeight = FontWeight.Bold,
+            color = MaterialTheme.colorScheme.primary,
+        )
         Row(
             modifier = Modifier.fillMaxWidth(),
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(6.dp),
         ) {
-
             Surface(
                 onClick = { PaletteSearchCapture.activate() },
                 modifier = Modifier.weight(1f),
@@ -159,14 +166,14 @@ fun KaomojiRoom(
                 )
             }
             if (showDismissButton) {
-            PaletteLozengeButton(
-                text = "✕",
-                onClick = {
-                    PaletteSearchCapture.release(clear = true)
-                    onBackToLetters()
-                },
-                theme = lozengeTheme,
-            )
+                PaletteLozengeButton(
+                    text = "✕",
+                    onClick = {
+                        PaletteSearchCapture.release(clear = true)
+                        onBackToLetters()
+                    },
+                    theme = lozengeTheme,
+                )
             }
         }
 
@@ -255,20 +262,28 @@ private fun PaletteKaomojiCell(
             .then(
                 when (theme.surfaceStyle) {
                     SuggestionLozengeSurfaceStyle.GRADIENT -> Modifier.keyboardGradientBackground(theme.surfaceGradient)
+
                     SuggestionLozengeSurfaceStyle.SOLID,
                     SuggestionLozengeSurfaceStyle.NONE,
                     -> Modifier
                 },
             ).then(
                 when {
-                    favorite -> Modifier.keyboardGradientBorder(BIRDIE_GOLD_BORDER, 2.dp, 10.dp)
-                    theme.borderStyle == SuggestionLozengeBorderStyle.GRADIENT ->
+                    favorite -> {
+                        Modifier.keyboardGradientBorder(BIRDIE_GOLD_BORDER, 2.dp, 10.dp)
+                    }
+
+                    theme.borderStyle == SuggestionLozengeBorderStyle.GRADIENT -> {
                         Modifier.keyboardGradientBorder(
                             backdrop = theme.borderGradient,
                             width = theme.borderWidth.coerceAtMost(2.5f).dp,
                             radius = 10.dp,
                         )
-                    else -> Modifier
+                    }
+
+                    else -> {
+                        Modifier
+                    }
                 },
             ).combinedClickable(
                 onClick = onClick,
@@ -285,12 +300,21 @@ private fun PaletteKaomojiCell(
             },
         border =
             when {
-                favorite -> null
-                theme.borderStyle == SuggestionLozengeBorderStyle.SOLID ->
+                favorite -> {
+                    null
+                }
+
+                theme.borderStyle == SuggestionLozengeBorderStyle.SOLID -> {
                     BorderStroke(theme.borderWidth.coerceAtMost(2.5f).dp, theme.borderColor)
-                theme.borderStyle == SuggestionLozengeBorderStyle.NONE ->
+                }
+
+                theme.borderStyle == SuggestionLozengeBorderStyle.NONE -> {
                     BorderStroke(1.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.55f))
-                else -> null
+                }
+
+                else -> {
+                    null
+                }
             },
         modifier = modifier,
     ) {
@@ -333,6 +357,7 @@ private fun PaletteCategoryChip(
             .then(
                 when (theme.surfaceStyle) {
                     SuggestionLozengeSurfaceStyle.GRADIENT -> Modifier.keyboardGradientBackground(theme.surfaceGradient)
+
                     SuggestionLozengeSurfaceStyle.SOLID,
                     SuggestionLozengeSurfaceStyle.NONE,
                     -> Modifier
@@ -379,21 +404,26 @@ private fun PaletteLozengeButton(
             .then(
                 when (theme.surfaceStyle) {
                     SuggestionLozengeSurfaceStyle.GRADIENT -> Modifier.keyboardGradientBackground(theme.surfaceGradient)
+
                     SuggestionLozengeSurfaceStyle.SOLID,
                     SuggestionLozengeSurfaceStyle.NONE,
                     -> Modifier
                 },
             ).then(
                 when (theme.borderStyle) {
-                    SuggestionLozengeBorderStyle.GRADIENT ->
+                    SuggestionLozengeBorderStyle.GRADIENT -> {
                         Modifier.keyboardGradientBorder(
                             backdrop = theme.borderGradient,
                             width = theme.borderWidth.dp,
                             radius = 18.dp,
                         )
+                    }
+
                     SuggestionLozengeBorderStyle.SOLID,
                     SuggestionLozengeBorderStyle.NONE,
-                    -> Modifier
+                    -> {
+                        Modifier
+                    }
                 },
             )
 
@@ -403,6 +433,7 @@ private fun PaletteLozengeButton(
         color =
             when (theme.surfaceStyle) {
                 SuggestionLozengeSurfaceStyle.SOLID -> theme.surfaceColor
+
                 SuggestionLozengeSurfaceStyle.GRADIENT,
                 SuggestionLozengeSurfaceStyle.NONE,
                 -> Color.Transparent
@@ -410,6 +441,7 @@ private fun PaletteLozengeButton(
         border =
             when (theme.borderStyle) {
                 SuggestionLozengeBorderStyle.SOLID -> BorderStroke(theme.borderWidth.dp, theme.borderColor)
+
                 SuggestionLozengeBorderStyle.GRADIENT,
                 SuggestionLozengeBorderStyle.NONE,
                 -> null

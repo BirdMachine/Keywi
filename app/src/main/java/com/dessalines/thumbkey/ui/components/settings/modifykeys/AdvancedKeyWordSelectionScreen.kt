@@ -3,10 +3,12 @@ package com.dessalines.thumbkey.ui.components.settings.modifykeys
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.heightIn
+import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -14,6 +16,8 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.MaterialTheme
@@ -21,6 +25,7 @@ import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -43,7 +48,11 @@ import com.dessalines.thumbkey.db.AppSettingsViewModel
 import com.dessalines.thumbkey.db.DEFAULT_KEYBOARD_LAYOUT
 import com.dessalines.thumbkey.db.DEFAULT_KEY_MODIFICATIONS
 import com.dessalines.thumbkey.db.KeyModificationsUpdate
+import com.dessalines.thumbkey.effects.ActionSoundPreferences
+import com.dessalines.thumbkey.effects.soundDirections
+import com.dessalines.thumbkey.ui.components.keyboard.ActionGifPreferences
 import com.dessalines.thumbkey.ui.components.keyboard.AdvancedKeyWordPreferences
+import com.dessalines.thumbkey.ui.components.keyboard.MachineCutLayouts
 import com.dessalines.thumbkey.ui.components.keyboard.VisualRemapSlot
 import com.dessalines.thumbkey.utils.KeyAction
 import com.dessalines.thumbkey.utils.KeyC
@@ -78,8 +87,11 @@ fun AdvancedKeyWordSelectionScreen(
     var selectedMode by remember { mutableStateOf(KeyboardMode.MAIN) }
     var selectedRow by remember { mutableIntStateOf(0) }
     var selectedCol by remember { mutableIntStateOf(0) }
+    var designGroupMode by remember { mutableStateOf(false) }
+    var designKeys by remember { mutableStateOf(setOf("0:0")) }
     var showCurrentWord by remember { mutableStateOf(AdvancedKeyWordPreferences.showCurrentWord(context)) }
     var longPressAdd by remember { mutableStateOf(AdvancedKeyWordPreferences.longPressAddWord(context)) }
+    var effectsHk by remember { mutableStateOf(false) }
     var editorMessage by remember { mutableStateOf<String?>(null) }
 
     val effectiveDefinition =
@@ -110,6 +122,7 @@ fun AdvancedKeyWordSelectionScreen(
                 Modifier
                     .padding(padding)
                     .verticalScroll(scrollState)
+                    .imePadding()
                     .padding(12.dp),
             verticalArrangement = Arrangement.spacedBy(12.dp),
         ) {
@@ -144,6 +157,7 @@ fun AdvancedKeyWordSelectionScreen(
                                     selectedMode = mode
                                     selectedRow = 0
                                     selectedCol = 0
+                                    designKeys = setOf("0:0")
                                 },
                                 label = { Text(mode.name.lowercase(), fontFamily = FontFamily.Monospace) },
                             )
@@ -152,77 +166,137 @@ fun AdvancedKeyWordSelectionScreen(
                 }
             }
 
-            keyboard?.let {
-                MatrixKeyboardPreview(
-                    keyboard = it,
-                    selectedRow = selectedRow,
-                    selectedCol = selectedCol,
-                    onSelect = { row, col ->
-                        selectedRow = row
-                        selectedCol = col
-                        editorMessage = null
-                    },
-                )
+            SettingSwitchRow("Select a key group for appearance", designGroupMode, onCheckedChange = {
+                designGroupMode = it
+                designKeys = setOf("$selectedRow:$selectedCol")
+            })
+            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                FilterChip(selected = !effectsHk, onClick = {
+                    effectsHk = false
+                    selectedRow = 0
+                    selectedCol = 0
+                    designKeys = setOf("0:0")
+                }, label = { Text("ME-Like matrix") })
+                FilterChip(selected = effectsHk, onClick = {
+                    effectsHk = true
+                    selectedRow = 0
+                    selectedCol = 0
+                    designKeys = setOf("0:0")
+                }, label = { Text("HK-Like matrix") })
+            }
+            if (effectsHk) {
+                HkEffectsMatrix(
+                    selectedIds = if (designGroupMode) designKeys else setOf("$selectedRow:$selectedCol"),
+                ) { row, col ->
+                    selectedRow = row
+                    selectedCol = col
+                    val id = "$row:$col"
+                    designKeys =
+                        if (designGroupMode) {
+                            if (id in designKeys) designKeys - id else designKeys + id
+                        } else {
+                            setOf(id)
+                        }
+                    editorMessage = null
+                }
+            } else {
+                keyboard?.let {
+                    MatrixKeyboardPreview(
+                        keyboard = it,
+                        selectedRow = selectedRow,
+                        selectedCol = selectedCol,
+                        selectedIds = if (designGroupMode) designKeys else setOf("$selectedRow:$selectedCol"),
+                        onSelect = { row, col ->
+                            selectedRow = row
+                            selectedCol = col
+                            val id = "$row:$col"
+                            designKeys =
+                                if (designGroupMode) {
+                                    if (id in designKeys) designKeys - id else designKeys + id
+                                } else {
+                                    setOf(id)
+                                }
+                            editorMessage = null
+                        },
+                    )
+                }
             }
 
-            selectedKey?.let { key ->
-                Card(
-                    colors = CardDefaults.cardColors(containerColor = MATRIX_BLACK),
-                    border = BorderStroke(1.dp, MATRIX_GREEN),
-                ) {
-                    Column(Modifier.padding(12.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                        Text(
-                            "EDIT key${selectedRow}_$selectedCol",
-                            color = MATRIX_GREEN,
-                            fontFamily = FontFamily.Monospace,
-                            fontWeight = FontWeight.Bold,
-                        )
-                        RemapEditorGrid(key, overrides)
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.spacedBy(8.dp),
-                        ) {
-                            Button(
-                                modifier = Modifier.weight(1f),
-                                onClick = {
-                                    runCatching {
-                                        var nextYaml = yaml
-                                        VisualRemapSlot.entries.forEach { slot ->
-                                            nextYaml =
-                                                updateVisualTextOverride(
-                                                    yaml = nextYaml,
-                                                    layoutName = layout.name,
-                                                    mode = selectedMode,
-                                                    row = selectedRow,
-                                                    col = selectedCol,
-                                                    slot = slot,
-                                                    text = overrides[slot].orEmpty(),
-                                                )
+            com.dessalines.thumbkey.ui.components.settings.lookandfeel.KeyDesignOverrideEditor(
+                selectedIds = if (designGroupMode) designKeys else setOf("$selectedRow:$selectedCol"),
+                groupMode = designGroupMode,
+                onSelectGroup = { ids ->
+                    designGroupMode = true
+                    designKeys = ids
+                },
+            )
+
+            KeyEffectsAssignments(
+                keyId = if (effectsHk) "hk${selectedRow}_$selectedCol" else "key${selectedRow}_$selectedCol",
+                navController = navController,
+                hk = effectsHk,
+            )
+
+            if (!effectsHk) {
+                selectedKey?.let { key ->
+                    Card(
+                        colors = CardDefaults.cardColors(containerColor = MATRIX_BLACK),
+                        border = BorderStroke(1.dp, MATRIX_GREEN),
+                    ) {
+                        Column(Modifier.padding(12.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                            Text(
+                                "EDIT key${selectedRow}_$selectedCol",
+                                color = MATRIX_GREEN,
+                                fontFamily = FontFamily.Monospace,
+                                fontWeight = FontWeight.Bold,
+                            )
+                            RemapEditorGrid(key, overrides)
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                            ) {
+                                Button(
+                                    modifier = Modifier.weight(1f),
+                                    onClick = {
+                                        runCatching {
+                                            var nextYaml = yaml
+                                            VisualRemapSlot.entries.forEach { slot ->
+                                                nextYaml =
+                                                    updateVisualTextOverride(
+                                                        yaml = nextYaml,
+                                                        layoutName = layout.name,
+                                                        mode = selectedMode,
+                                                        row = selectedRow,
+                                                        col = selectedCol,
+                                                        slot = slot,
+                                                        text = overrides[slot].orEmpty(),
+                                                    )
+                                            }
+                                            appSettingsViewModel.updateKeyModifications(
+                                                KeyModificationsUpdate(id = 1, keyModifications = nextYaml),
+                                            )
+                                        }.onSuccess {
+                                            editorMessage = "Overrides saved ✓"
+                                        }.onFailure {
+                                            editorMessage = "Could not save: ${it.message}"
                                         }
-                                        appSettingsViewModel.updateKeyModifications(
-                                            KeyModificationsUpdate(id = 1, keyModifications = nextYaml),
-                                        )
-                                    }.onSuccess {
-                                        editorMessage = "Overrides saved ✓"
-                                    }.onFailure {
-                                        editorMessage = "Could not save: ${it.message}"
-                                    }
-                                },
-                            ) {
-                                Text("SAVE KEY")
+                                    },
+                                ) {
+                                    Text("SAVE KEY")
+                                }
+                                Button(
+                                    modifier = Modifier.weight(1f),
+                                    onClick = {
+                                        VisualRemapSlot.entries.forEach { overrides[it] = "" }
+                                        editorMessage = "Cleared in editor — tap SAVE KEY to restore originals."
+                                    },
+                                ) {
+                                    Text("CLEAR")
+                                }
                             }
-                            Button(
-                                modifier = Modifier.weight(1f),
-                                onClick = {
-                                    VisualRemapSlot.entries.forEach { overrides[it] = "" }
-                                    editorMessage = "Cleared in editor — tap SAVE KEY to restore originals."
-                                },
-                            ) {
-                                Text("CLEAR")
+                            editorMessage?.let {
+                                Text(it, color = MATRIX_GREEN, fontFamily = FontFamily.Monospace)
                             }
-                        }
-                        editorMessage?.let {
-                            Text(it, color = MATRIX_GREEN, fontFamily = FontFamily.Monospace)
                         }
                     }
                 }
@@ -292,6 +366,7 @@ private fun MatrixKeyboardPreview(
     selectedRow: Int,
     selectedCol: Int,
     onSelect: (Int, Int) -> Unit,
+    selectedIds: Set<String> = setOf("$selectedRow:$selectedCol"),
 ) {
     Card(
         colors = CardDefaults.cardColors(containerColor = Color.Black),
@@ -303,7 +378,7 @@ private fun MatrixKeyboardPreview(
                     keys.forEachIndexed { col, key ->
                         MatrixKey(
                             key = key,
-                            selected = row == selectedRow && col == selectedCol,
+                            selected = "$row:$col" in selectedIds,
                             modifier = Modifier.weight(key.widthMultiplier.toFloat().coerceAtLeast(1f)),
                             onClick = { onSelect(row, col) },
                         )
@@ -458,4 +533,152 @@ private fun com.dessalines.thumbkey.utils.KeyboardDefinition.keyboardForMode(mod
         -> {
             null
         }
+    }
+
+/** Uses the live HK topology so the displayed cell IDs match runtime events. */
+@Composable
+private fun HkEffectsMatrix(
+    selectedIds: Set<String>,
+    onSelect: (Int, Int) -> Unit,
+) {
+    Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+        Text("HK-Like key cells", style = MaterialTheme.typography.titleMedium)
+        MachineCutLayouts.touchMain.rows.forEachIndexed { row, cells ->
+            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(3.dp)) {
+                cells.forEachIndexed { col, cell ->
+                    Card(
+                        modifier = Modifier.weight(cell.width).heightIn(min = 42.dp).clickable { onSelect(row, col) },
+                        border =
+                            BorderStroke(
+                                if ("$row:$col" in selectedIds) 2.dp else 1.dp,
+                                if ("$row:$col" in selectedIds) MATRIX_GREEN else MATRIX_DIM,
+                            ),
+                    ) {
+                        Text(
+                            cell.label,
+                            modifier = Modifier.fillMaxWidth().padding(vertical = 12.dp),
+                            textAlign = TextAlign.Center,
+                            fontSize = 10.sp,
+                            maxLines = 1,
+                        )
+                    }
+                }
+            }
+        }
+        Text(
+            "Effects use HK-Like cell positions across symbol / control layers. Appearance uses the same row:column positions as other cuts.",
+            style = MaterialTheme.typography.bodySmall,
+        )
+    }
+}
+
+@Composable
+private fun KeyEffectsAssignments(
+    keyId: String,
+    navController: NavController,
+    hk: Boolean,
+) {
+    val context = androidx.compose.ui.platform.LocalContext.current
+    var sounds by remember { mutableStateOf(ActionSoundPreferences.get(context)) }
+    remember(context) { ActionGifPreferences.load(context) }
+    val gifs = ActionGifPreferences.current
+    var direction by remember(hk) { mutableStateOf("CENTER") }
+    val assignmentKey = "$keyId:$direction"
+    Card {
+        Column(Modifier.padding(14.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
+            Text("ACTION FX // $keyId", fontFamily = FontFamily.Monospace, fontWeight = FontWeight.Bold)
+            Text(
+                "Choose a gesture, then assign a clip from either pack. Changes save immediately. Inherit follows your global direction / playback rules.",
+                style = MaterialTheme.typography.bodySmall,
+            )
+            val rows = if (hk) listOf(listOf("CENTER", "HOLD")) else soundDirections.take(9).chunked(3) + listOf(listOf("HOLD"))
+            rows.forEach { gestures ->
+                Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+                    gestures.forEach { gesture ->
+                        FilterChip(
+                            selected = direction == gesture,
+                            onClick = { direction = gesture },
+                            modifier = Modifier.weight(1f),
+                            label = { Text(gestureLabel(gesture), fontSize = 11.sp) },
+                        )
+                    }
+                }
+            }
+            TaskerKeyAssignments(keyId = keyId, direction = direction)
+            EffectAssignmentMenu(
+                title = "Sound",
+                selectedId = sounds.keys[assignmentKey],
+                options = sounds.clips.mapIndexed { i, clip -> clip.id to "${i + 1}. ${clip.name}" },
+                onSelect = { id ->
+                    ActionSoundPreferences.assignKey(context, keyId, direction, id)
+                    sounds = ActionSoundPreferences.get(context)
+                },
+            )
+            EffectAssignmentMenu(
+                title = "GIF / PNG",
+                selectedId = gifs.keyAssignments[assignmentKey],
+                options = gifs.assets.mapIndexed { i, asset -> asset.id to "${i + 1}. ${asset.name}" },
+                onSelect = { id ->
+                    val current = ActionGifPreferences.current
+                    val assignments =
+                        current.keyAssignments.toMutableMap().apply {
+                            if (id == null) remove(assignmentKey) else put(assignmentKey, id)
+                        }
+                    ActionGifPreferences.save(context, current.copy(keyAssignments = assignments))
+                },
+            )
+            Text(
+                "Sound: ${if (sounds.enabled) "enabled" else "off"} · GIF overlays: ${if (gifs.enabled) "enabled" else "off"}",
+                style = MaterialTheme.typography.bodySmall,
+            )
+            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                TextButton(onClick = { navController.navigate("keypressSounds") }) { Text("Sound pack") }
+                TextButton(onClick = { navController.navigate("typingOverlay") }) { Text("GIF pack") }
+            }
+        }
+    }
+}
+
+@Composable
+private fun EffectAssignmentMenu(
+    title: String,
+    selectedId: String?,
+    options: List<Pair<String, String>>,
+    onSelect: (String?) -> Unit,
+) {
+    var expanded by remember { mutableStateOf(false) }
+    val selected = options.firstOrNull { it.first == selectedId }
+    Box {
+        Button(onClick = { expanded = true }, modifier = Modifier.fillMaxWidth()) {
+            Text("$title: ${if (selectedId == null) "Inherit" else selected?.second ?: "Missing clip"}")
+        }
+        DropdownMenu(expanded = expanded, onDismissRequest = { expanded = false }) {
+            DropdownMenuItem(text = { Text("Inherit / clear assignment") }, onClick = {
+                onSelect(null)
+                expanded = false
+            })
+            options.forEach { (id, label) ->
+                DropdownMenuItem(text = { Text(label) }, onClick = {
+                    onSelect(id)
+                    expanded = false
+                })
+            }
+        }
+    }
+    selectedId?.let { Text("Clip ID: $it", fontFamily = FontFamily.Monospace, style = MaterialTheme.typography.labelSmall) }
+    if (options.isEmpty()) Text("Import clips in the $title pack to assign them here.", style = MaterialTheme.typography.bodySmall)
+}
+
+private fun gestureLabel(direction: String): String =
+    when (direction) {
+        "TOP_LEFT" -> "↖ up left"
+        "TOP" -> "↑ up"
+        "TOP_RIGHT" -> "↗ up right"
+        "LEFT" -> "← left"
+        "CENTER" -> "● tap"
+        "RIGHT" -> "→ right"
+        "BOTTOM_LEFT" -> "↙ down left"
+        "BOTTOM" -> "↓ down"
+        "BOTTOM_RIGHT" -> "↘ down right"
+        else -> "◷ hold"
     }

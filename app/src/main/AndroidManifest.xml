@@ -1,6 +1,12 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools">
+    <uses-permission android:name="net.dinglisch.android.tasker.PERMISSION_RUN_TASKS" />
+    <queries>
+        <package android:name="net.dinglisch.android.taskerm" />
+        <package android:name="net.dinglisch.android.tasker" />
+        <provider android:authorities="net.dinglisch.android.tasker" />
+    </queries>
     <application
         android:name=".ThumbkeyApplication"
         android:allowBackup="true"
