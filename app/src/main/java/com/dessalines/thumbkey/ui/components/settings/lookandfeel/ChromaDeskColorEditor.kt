@@ -52,6 +52,9 @@ import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
 import com.dessalines.thumbkey.ui.components.settings.GemButton
 import com.dessalines.thumbkey.ui.components.settings.GemOutlinedButton
+import com.dessalines.thumbkey.ui.components.settings.LocalSettingsDrip
+import com.dessalines.thumbkey.ui.components.settings.SettingsDripBackdrop
+import com.dessalines.thumbkey.ui.components.settings.rememberSettingsDrip
 import kotlin.math.roundToInt
 
 /** Every theme color uses the same transactional editor; opening it never writes preferences. */
@@ -123,6 +126,7 @@ internal fun ChromaDeskDialog(
                 .mapNotNull { it.toLongOrNull()?.toInt()?.let(::Color) }
                 .take(7)
         }
+    val artwork = rememberSettingsDrip()
     val openingHsv = remember { FloatArray(3).also { android.graphics.Color.colorToHSV(initial.toArgb(), it) } }
     var hue by remember { mutableFloatStateOf(openingHsv[0]) }
     var saturation by remember { mutableFloatStateOf(openingHsv[1]) }
@@ -203,7 +207,14 @@ internal fun ChromaDeskDialog(
                             Text("After", style = MaterialTheme.typography.labelSmall)
                         }
                     }
-                    ColorFieldPicker(hue, saturation, brightness) { h, s, v -> updateHsv(h, s, v) }
+                    CompositionLocalProvider(LocalSettingsDrip provides artwork) {
+                        Box(Modifier.fillMaxWidth().clip(CutCornerShape(12.dp))) {
+                            SettingsDripBackdrop(Modifier.matchParentSize(), panel = true)
+                            Box(Modifier.padding(8.dp)) {
+                                ColorFieldPicker(hue, saturation, brightness) { h, s, v -> updateHsv(h, s, v) }
+                            }
+                        }
+                    }
                     Text(
                         "Hue ${hue.roundToInt()}° · Saturation ${(saturation * 100).roundToInt()}%",
                         style = MaterialTheme.typography.labelSmall,

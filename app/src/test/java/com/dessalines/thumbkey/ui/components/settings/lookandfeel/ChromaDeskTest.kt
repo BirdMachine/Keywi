@@ -1,6 +1,8 @@
 package com.dessalines.thumbkey.ui.components.settings.lookandfeel
 
 import android.app.Application
+import android.graphics.Bitmap
+import android.net.Uri
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.darkColorScheme
 import androidx.compose.ui.geometry.Offset
@@ -20,6 +22,9 @@ import androidx.compose.ui.test.performScrollTo
 import androidx.compose.ui.test.performSemanticsAction
 import androidx.compose.ui.test.performTextReplacement
 import androidx.compose.ui.test.performTouchInput
+import com.dessalines.thumbkey.ui.components.keyboard.BackdropMode
+import com.dessalines.thumbkey.ui.components.keyboard.BackdropPreset
+import com.dessalines.thumbkey.ui.components.keyboard.BackdropThemePreferences
 import com.dessalines.thumbkey.ui.components.settings.GemSettingsTheme
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull
@@ -28,6 +33,7 @@ import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
+import org.robolectric.RuntimeEnvironment
 import org.robolectric.annotation.Config
 import org.robolectric.annotation.GraphicsMode
 import java.io.File
@@ -114,8 +120,51 @@ class ChromaDeskTest {
         compose.runOnIdle { assertEquals(0x805064FF.toInt(), applied!!.toArgb()) }
     }
 
-    @Test fun rendersActualChromaDesk() {
+    /** A real app-owned image must survive the panel tint outside the opaque color disc. */
+    private fun showWithStripedArtwork() {
+        val context = RuntimeEnvironment.getApplication()
+        val fixture = File(context.filesDir, "chroma-desk-artwork.png")
+        val bitmap = Bitmap.createBitmap(128, 128, Bitmap.Config.ARGB_8888)
+        for (y in 0 until bitmap.height) {
+            for (x in 0 until bitmap.width) {
+                bitmap.setPixel(x, y, if ((x / 16) % 2 == 0) android.graphics.Color.RED else android.graphics.Color.BLUE)
+            }
+        }
+        fixture.outputStream().use { bitmap.compress(Bitmap.CompressFormat.PNG, 100, it) }
+        bitmap.recycle()
+        BackdropThemePreferences.save(
+            context,
+            BackdropThemePreferences.stateForPreset(BackdropPreset.BIRDIE_RAINBOW).copy(
+                mode = BackdropMode.IMAGE,
+                opacity = 1f,
+                mediaUri = Uri.fromFile(fixture).toString(),
+            ),
+        )
         show()
+        compose.waitUntil(timeoutMillis = 5_000) {
+            val disc = compose.onNodeWithContentDescription("Hue and saturation disc").captureToImage().asAndroidBitmap()
+            var redBands = 0
+            var blueBands = 0
+            // The color wheel itself is opaque. Its corners are transparent and expose artwork.
+            for (y in 4 until disc.height - 4 step 4) {
+                for (x in 4 until disc.width - 4 step 4) {
+                    val dx = (x - disc.width / 2f) / disc.width
+                    val dy = (y - disc.height / 2f) / disc.height
+                    if (dx * dx + dy * dy > .25f) {
+                        val pixel = disc.getPixel(x, y)
+                        val red = android.graphics.Color.red(pixel)
+                        val blue = android.graphics.Color.blue(pixel)
+                        if (red - blue > 20) redBands++
+                        if (blue - red > 20) blueBands++
+                    }
+                }
+            }
+            redBands > 20 && blueBands > 20
+        }
+    }
+
+    @Test fun rendersActualChromaDesk() {
+        showWithStripedArtwork()
         val file = File("build/outputs/color-review/chroma-desk.png")
         file.parentFile.mkdirs()
         compose.onNode(isDialog()).captureToImage().asAndroidBitmap().let { bitmap ->

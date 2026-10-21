@@ -5,7 +5,7 @@
 The theme editor supports same, stable random, incremental and shared-canvas border gradients.
 The matrix remapper selects individual physical keys or multiple keys as a named group.
 Each target can override its border/highlight and fill using a solid color or saved/custom gradient.
-Enable a group's shared gradient canvas to normalize its gradient across the bounding rectangle of only its selected keys. Unselected keys retain their own design; gaps remain gaps.
+Assigned fill gradients automatically fit the bounding rectangle of their selected key or group. One key gets the full gradient; multiple selected keys share it. Unselected keys retain their own design; gaps remain gaps. A group's sharing switch controls inherited fills and borders.
 Blank/inherit fields fall back to the underlying group or theme. Positions are zero-based row:column,
 shared across board/mode changes. Individual designs win over groups; later groups win over earlier groups.
 
@@ -30,3 +30,11 @@ The right-side cycler scrolls through Characters, Formatting, Kaomoji, and Quick
 ## Settings artwork
 
 Shared settings artwork is clipped to its own surface, including short app bars. Portrait images and animated drawable frames cannot paint a rectangular overlay over neighboring settings rows.
+
+## Selection and editor polish
+
+The matrix separates Style keys & groups from Actions & values. Long press a key or enable Select multiple keys, then tap keys to style as a group. Selection count, Clear, and Select all make membership explicit; selecting the matrix hides the IME.
+
+Active Custom tiles preview live unsaved backdrop preferences without saving them. Chroma Desk displays active theme artwork around the color disc. Theme section headings and their expanding controls share one outline and accessible expansion state; transitions animate only in Unbridled mode.
+
+Settings choose a stable foreground palette from still artwork or gradient brightness, with a legibility scrim. Quick Settings owns a coherent local palette so keyboard-specific text colors cannot make labels disappear.

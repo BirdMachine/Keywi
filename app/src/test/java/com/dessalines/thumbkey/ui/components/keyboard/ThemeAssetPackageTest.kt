@@ -275,4 +275,17 @@ class ThemeAssetPackageTest {
         assertEquals(Color(0xFF031005), restored.currentWordBackgroundColor)
         assertEquals(highlight, restored.currentWordHighlightColor)
     }
+
+    @Test
+    fun customPreviewReflectsLiveEditsWithoutSavingOrReplacingInactiveCustom() {
+        ThemeEngine.ensureMigrated(context)
+        val savedCustom = ThemeEngine.loadCustom(context)
+        val before = ThemeEngine.export(savedCustom)
+        val live = savedCustom.backdrop.copy(mode = BackdropMode.IMAGE, mediaUri = "file:///live-background.png", opacity = .63f)
+        BackdropThemePreferences.save(context, live)
+        assertEquals(live, ThemeEngine.customPreview(context).backdrop)
+        assertEquals(before, ThemeEngine.export(ThemeEngine.loadCustom(context)))
+        ThemeEngine.apply(context, ThemeEngine.builtInThemes().first())
+        assertEquals(savedCustom, ThemeEngine.customPreview(context))
+    }
 }

@@ -87,7 +87,7 @@ internal fun KeyDesignOverrideEditor(
     var design by remember(groupMode, draftTarget, newGroupRevision, savedDesign) { mutableStateOf(savedDesign ?: KeyDesignOverride()) }
     var groupName by remember(groupMode, draftTarget, newGroupRevision) { mutableStateOf(existingGroup?.id.orEmpty()) }
     var sharedCanvas by remember(groupMode, draftTarget, newGroupRevision, existingGroup?.sharedGradientCanvas) {
-        mutableStateOf(existingGroup?.sharedGradientCanvas ?: false)
+        mutableStateOf(existingGroup?.sharedGradientCanvas ?: true)
     }
     var message by remember(selectedIds, groupMode) { mutableStateOf<String?>(null) }
     val nameCollision =
@@ -100,9 +100,12 @@ internal fun KeyDesignOverrideEditor(
     }
     Card(Modifier.fillMaxWidth()) {
         Column(Modifier.padding(12.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-            Text("Key appearance • ${if (groupMode) "group" else "individual key"}", style = MaterialTheme.typography.titleMedium)
             Text(
-                "Selected: ${selectedIds.sorted().joinToString().ifBlank { "none — tap keys above" }}",
+                if (groupMode) "Group style · ${selectedIds.size} selected keys" else "Individual key style",
+                style = MaterialTheme.typography.titleMedium,
+            )
+            Text(
+                "Key positions: ${selectedIds.sorted().joinToString().ifBlank { "none — tap keys above" }}",
                 style = MaterialTheme.typography.bodySmall,
             )
             Text(
@@ -153,15 +156,21 @@ internal fun KeyDesignOverrideEditor(
                     horizontalArrangement = Arrangement.spacedBy(12.dp),
                     verticalAlignment = Alignment.CenterVertically,
                 ) {
-                    Text("Share gradient across this group", modifier = Modifier.weight(1f), style = MaterialTheme.typography.titleSmall)
+                    Text("Share inherited gradients & borders", modifier = Modifier.weight(1f), style = MaterialTheme.typography.titleSmall)
                     Switch(checked = sharedCanvas, onCheckedChange = { sharedCanvas = it })
                 }
                 Text(
                     if (sharedCanvas) {
-                        "One gradient spans the selected keys' bounding rectangle, for both gradient fill and border. Gaps keep their place in that canvas; unselected keys keep their own design. Inherit can use the theme's gradient. Individual key overrides take priority for that fill or border."
+                        "Assigned fill gradients fit the selected keys. Inherited gradients and borders also span the group's bounding rectangle. Gaps keep their place; unselected keys keep their own style. Individual overrides take priority."
                     } else {
-                        "Each key keeps its own fill gradient and the theme's border distribution. Enable sharing to restrict a continuous gradient canvas to this group."
+                        "Assigned fill gradients still fit the selected keys. Inherited fills and borders use the theme's distribution."
                     },
+                    style = MaterialTheme.typography.bodySmall,
+                )
+            }
+            if (!groupMode) {
+                Text(
+                    "Assigned fill gradients fit this key. Inherit follows its group or theme.",
                     style = MaterialTheme.typography.bodySmall,
                 )
             }
@@ -205,7 +214,7 @@ internal fun KeyDesignOverrideEditor(
                         persist(latest.copy(keyOverrides = latest.keyOverrides + (selectedIds.first() to design)))
                     }
                     message = "Appearance saved ✓"
-                }) { Text("Apply appearance") }
+                }) { Text(if (groupMode) "Apply group style" else "Apply key style") }
                 OutlinedButton(enabled = savedDesign != null, onClick = {
                     val latest = KeyThemePreferences.current
                     persist(

@@ -30,12 +30,14 @@ import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.TopAppBarScrollBehavior
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.compositeOver
 import androidx.compose.ui.graphics.luminance
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
@@ -58,8 +60,8 @@ fun gemSettingsColors(dark: Boolean): AdvancedSettingsColors =
             surfaceRaised = Color(0xFF251333),
             outline = Color(0xFF344766),
             text = Color(0xFFF4EDFF),
-            textMuted = Color(0xFFC5B6D9),
-            accent = Color(0xFFD969FF),
+            textMuted = Color(0xFFE0D4EF),
+            accent = Color(0xFFEAA6FF),
             onAccent = Color(0xFF180B2A),
         )
     } else {
@@ -69,8 +71,8 @@ fun gemSettingsColors(dark: Boolean): AdvancedSettingsColors =
             surfaceRaised = Color(0xFFE4D4FF),
             outline = Color(0xFFC0AED5),
             text = Color(0xFF211332),
-            textMuted = Color(0xFF665274),
-            accent = Color(0xFF7434BD),
+            textMuted = Color(0xFF493553),
+            accent = Color(0xFF59218E),
             onAccent = Color.White,
         )
     }
@@ -86,10 +88,13 @@ fun GemSettingsTheme(
         return
     }
     val keyboardScheme = MaterialTheme.colorScheme
-    val dark = keyboardScheme.background.luminance() < .5f
     val followsKeyboard = rememberSettingsFollowKeyboard()
     // Removing the media composition also disposes animation callbacks and optics.
     val drip = if (dripEnabled && followsKeyboard) rememberSettingsDrip() else null
+    val dark =
+        remember(drip?.image, drip?.backdrop, keyboardScheme.background) {
+            settingsArtworkIsDark(drip, keyboardScheme.background)
+        }
     val baseColors = gemSettingsColors(dark)
     val themeEdge =
         drip?.keys?.let { keys ->
@@ -101,34 +106,18 @@ fun GemSettingsTheme(
                 keys.borderColor
             }
         }
-    val readableAccent = themeEdge?.takeIf { if (dark) it.luminance() > .3f else it.luminance() < .35f }
+    val readableAccent =
+        themeEdge?.takeIf { edge ->
+            listOf(
+                baseColors.background,
+                baseColors.surface,
+                baseColors.surfaceRaised,
+                Color.White.copy(alpha = .04f).compositeOver(baseColors.surfaceRaised.copy(alpha = .84f).compositeOver(Color.White)),
+                Color.Black.copy(alpha = .04f).compositeOver(baseColors.surfaceRaised.copy(alpha = .84f).compositeOver(Color.Black)),
+            ).all { settingsContrastRatio(edge, it) >= 4.5f }
+        }
     val colors = baseColors.copy(accent = readableAccent ?: baseColors.accent)
-    val scheme =
-        keyboardScheme.copy(
-            primary = colors.accent,
-            onPrimary = colors.onAccent,
-            primaryContainer = colors.surfaceRaised,
-            onPrimaryContainer = colors.text,
-            secondary = if (dark) Color(0xFFA9A6FF) else Color(0xFF5952A4),
-            secondaryContainer = colors.surfaceRaised,
-            onSecondaryContainer = colors.text,
-            tertiary = if (dark) Color(0xFF71DDE8) else Color(0xFF006875),
-            background = colors.background,
-            onBackground = colors.text,
-            surface = colors.background,
-            onSurface = colors.text,
-            surfaceVariant = colors.surface,
-            onSurfaceVariant = colors.textMuted,
-            surfaceContainer = colors.surface,
-            surfaceContainerLow = colors.surface,
-            surfaceContainerLowest = colors.background,
-            surfaceContainerHigh = colors.surfaceRaised,
-            surfaceContainerHighest = colors.surfaceRaised,
-            outline = colors.outline,
-            outlineVariant = colors.outline.copy(alpha = .65f),
-            inversePrimary = if (dark) Color(0xFF7434BD) else Color(0xFFD969FF),
-            surfaceTint = colors.accent,
-        )
+    val scheme = gemSettingsScheme(dark, colors)
     CompositionLocalProvider(
         LocalAdvancedSettingsColors provides colors,
         androidx.compose.material3.LocalContentColor provides colors.text,
