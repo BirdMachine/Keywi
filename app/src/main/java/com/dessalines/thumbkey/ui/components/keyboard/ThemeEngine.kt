@@ -504,7 +504,7 @@ object ThemeEngine {
                 },
             ).toString(2)
 
-    private fun decode(raw: String?): Result<ThemeDocument> =
+    internal fun decode(raw: String?): Result<ThemeDocument> =
         runCatching {
             require(!raw.isNullOrBlank()) { "Empty theme document" }
             val json = JSONObject(raw)
