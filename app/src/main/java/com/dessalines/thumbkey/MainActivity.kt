@@ -28,6 +28,7 @@ import com.dessalines.thumbkey.db.ClipboardRepository
 import com.dessalines.thumbkey.diagnostics.KeywiDiagnostics
 import com.dessalines.thumbkey.ui.components.settings.GemSettingsTheme
 import com.dessalines.thumbkey.ui.components.settings.SettingsScreen
+import com.dessalines.thumbkey.ui.components.settings.TaskerThemeSettingsScreen
 import com.dessalines.thumbkey.ui.components.settings.about.AboutScreen
 import com.dessalines.thumbkey.ui.components.settings.advancedinput.AdvancedCharactersScreen
 import com.dessalines.thumbkey.ui.components.settings.advancedinput.AdvancedInputScreen
@@ -133,6 +134,7 @@ class MainActivity : AppCompatActivity() {
                             .KeypressSoundSettingsScreen(navController)
                     }
                     gemSettingsDestination("advancedLookAndFeel") { ThemeManagerScreen(navController) }
+                    gemSettingsDestination("taskerThemeUpdates") { TaskerThemeSettingsScreen(navController) }
                     gemSettingsDestination("advancedLookAndFeelEditor") { AdvancedLookAndFeelScreen(navController) }
                     composable("advancedKeyWordSelection") { AdvancedKeyWordSelectionScreen(navController, appSettingsViewModel) }
                     gemSettingsDestination("behavior") { BehaviorScreen(navController, appSettingsViewModel) }

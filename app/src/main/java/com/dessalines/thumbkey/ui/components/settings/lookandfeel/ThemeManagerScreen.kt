@@ -23,6 +23,7 @@ import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.navigation.NavController
+import com.dessalines.thumbkey.automation.TaskerThemeAutomation
 import com.dessalines.thumbkey.ui.components.keyboard.CUSTOM_THEME_ID
 import com.dessalines.thumbkey.ui.components.keyboard.ThemeEngine
 import com.dessalines.thumbkey.ui.components.settings.GemNavigationPreference
@@ -51,12 +52,18 @@ fun ThemeManagerScreen(navController: NavController) {
         ) {
             AdvancedThemeEditorEntry(navController)
 
-            key(managerRefresh) {
+            key(managerRefresh, TaskerThemeAutomation.revision) {
                 ThemeManagerSection(
                     onThemeApplied = { managerRefresh++ },
                     onEditTheme = { navController.navigate("advancedLookAndFeelEditor") },
                 )
             }
+
+            GemNavigationPreference(
+                title = { Text("Tasker theme updates") },
+                summary = { Text("Let your tasks change backgrounds, gradients and border colors.") },
+                onClick = { navController.navigate("taskerThemeUpdates") },
+            )
 
             KeywiThemeTestBench()
 

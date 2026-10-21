@@ -46,6 +46,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
@@ -55,7 +56,12 @@ import androidx.compose.ui.draw.drawWithContent
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.semantics.LiveRegionMode
+import androidx.compose.ui.semantics.heading
+import androidx.compose.ui.semantics.liveRegion
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.dessalines.thumbkey.IMEService
@@ -65,6 +71,7 @@ import com.dessalines.thumbkey.effects.SoundEvent
 import com.dessalines.thumbkey.effects.SoundTrigger
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.collect
+import kotlinx.coroutines.isActive
 import java.util.Locale
 
 private const val BAR_HEIGHT_DP = 42
@@ -385,7 +392,8 @@ fun SuggestionBarV2(
     onPage: (ToolbarPage) -> Unit = {},
 ) {
     val suggestionScroll = rememberScrollState()
-    LaunchedEffect(suggestionScroll) {
+    LaunchedEffect(suggestionScroll, page) {
+        if (page != ToolbarPage.CHARACTERS) return@LaunchedEffect
         var previous = suggestionScroll.value
         var lastSoundAt = 0L
         snapshotFlow { suggestionScroll.value }.collect { position ->
@@ -433,55 +441,57 @@ fun SuggestionBarV2(
         }
     }
 
-    LaunchedEffect(enabled, privateField) {
-        while (enabled && !privateField) {
-            showCurrentWord = AdvancedKeyWordPreferences.showCurrentWord(ime)
-            longPressAddWord = AdvancedKeyWordPreferences.longPressAddWord(ime)
-            newWordHighlightColor = AdvancedKeyWordPreferences.newWordHighlightColor(ime)
-            val connection = ime.activeInputConnectionOrNull()
-            if (connection == null) {
-                if (!connectionWasMissing) {
-                    KeywiDiagnostics.event("IME", "suggestion polling paused: no active input connection")
-                    connectionWasMissing = true
-                }
-                delay(80)
-                continue
-            } else if (connectionWasMissing) {
-                KeywiDiagnostics.event("IME", "suggestion polling resumed: input connection available")
-                connectionWasMissing = false
-            }
-
-            val cursorReadStarted = SystemClock.uptimeMillis()
-            val beforeCursor =
-                connection
-                    .getTextBeforeCursor(64, 0)
-                    ?.toString()
-                    .orEmpty()
-            KeywiDiagnostics.performance(
-                "PERF_INPUT",
-                "read text-before-cursor",
-                SystemClock.uptimeMillis() - cursorReadStarted,
-            )
-
-            val nextToken = TOKEN_PATTERN_V2.find(beforeCursor)?.value.orEmpty()
-            val nextPrefix = SUGGESTION_PREFIX_PATTERN_V2.find(nextToken)?.value.orEmpty()
-            if (nextToken != currentToken || nextPrefix != prefix) {
-                currentToken = nextToken
-                prefix = nextPrefix
-                val suggestStarted = SystemClock.uptimeMillis()
-                suggestions = KeywiSuggestionEngine.suggest(ime, nextToken, nextPrefix, MAX_VISIBLE_SUGGESTIONS)
-                KeywiDiagnostics.performance(
-                    "PERF_INPUT",
-                    "suggestion lookup",
-                    SystemClock.uptimeMillis() - suggestStarted,
-                )
-            }
-            delay(80)
-        }
-        if (!enabled || privateField) {
+    SuggestionPollingEffect(
+        page = page,
+        enabled = enabled,
+        privateField = privateField,
+        onInactive = {
             currentToken = ""
             prefix = ""
             suggestions = emptyList()
+            justAddedWord = null
+            connectionWasMissing = false
+        },
+    ) {
+        showCurrentWord = AdvancedKeyWordPreferences.showCurrentWord(ime)
+        longPressAddWord = AdvancedKeyWordPreferences.longPressAddWord(ime)
+        newWordHighlightColor = AdvancedKeyWordPreferences.newWordHighlightColor(ime)
+        val connection = ime.activeInputConnectionOrNull()
+        if (connection == null) {
+            if (!connectionWasMissing) {
+                KeywiDiagnostics.event("IME", "suggestion polling paused: no active input connection")
+                connectionWasMissing = true
+            }
+            return@SuggestionPollingEffect
+        } else if (connectionWasMissing) {
+            KeywiDiagnostics.event("IME", "suggestion polling resumed: input connection available")
+            connectionWasMissing = false
+        }
+
+        val cursorReadStarted = SystemClock.uptimeMillis()
+        val beforeCursor =
+            connection
+                .getTextBeforeCursor(64, 0)
+                ?.toString()
+                .orEmpty()
+        KeywiDiagnostics.performance(
+            "PERF_INPUT",
+            "read text-before-cursor",
+            SystemClock.uptimeMillis() - cursorReadStarted,
+        )
+
+        val nextToken = TOKEN_PATTERN_V2.find(beforeCursor)?.value.orEmpty()
+        val nextPrefix = SUGGESTION_PREFIX_PATTERN_V2.find(nextToken)?.value.orEmpty()
+        if (nextToken != currentToken || nextPrefix != prefix) {
+            currentToken = nextToken
+            prefix = nextPrefix
+            val suggestStarted = SystemClock.uptimeMillis()
+            suggestions = KeywiSuggestionEngine.suggest(ime, nextToken, nextPrefix, MAX_VISIBLE_SUGGESTIONS)
+            KeywiDiagnostics.performance(
+                "PERF_INPUT",
+                "suggestion lookup",
+                SystemClock.uptimeMillis() - suggestStarted,
+            )
         }
     }
 
@@ -499,7 +509,7 @@ fun SuggestionBarV2(
                 listOf(suggestions[1], suggestions[0]) + suggestions.drop(2)
             }
         }
-    val currentWordVisible = showCurrentWord && currentToken.isNotEmpty()
+    val currentWordVisible = page == ToolbarPage.CHARACTERS && enabled && !privateField && showCurrentWord && currentToken.isNotEmpty()
     val displayed =
         ((if (currentWordVisible) listOf(currentToken) else emptyList()) + orderedSuggestions)
             .take(MAX_VISIBLE_SUGGESTIONS)
@@ -513,9 +523,9 @@ fun SuggestionBarV2(
                 modifier = Modifier.fillMaxSize().padding(start = 6.dp, end = 0.dp, top = 4.dp, bottom = 4.dp),
                 verticalAlignment = Alignment.CenterVertically,
             ) {
-                Box(
+                SuggestionToolbarContent(
+                    page = page,
                     modifier = Modifier.weight(1f).fillMaxSize(),
-                    contentAlignment = Alignment.Center,
                 ) {
                     Row(
                         modifier =
@@ -644,3 +654,60 @@ private fun Modifier.suggestionToggleKeyBorder(theme: KeyThemeState): Modifier =
             this
         }
     }
+
+/** The character workspace is absent from the composition while a tool occupies the toolbar. */
+@Composable
+internal fun SuggestionToolbarContent(
+    page: ToolbarPage,
+    modifier: Modifier = Modifier,
+    characterContent: @Composable () -> Unit,
+) {
+    Box(modifier = modifier, contentAlignment = Alignment.Center) {
+        if (page == ToolbarPage.CHARACTERS) {
+            characterContent()
+        } else {
+            Text(
+                text = page.title,
+                style = MaterialTheme.typography.titleSmall,
+                fontWeight = FontWeight.SemiBold,
+                color = MaterialTheme.colorScheme.onSurface,
+                textAlign = TextAlign.Center,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+                modifier =
+                    Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 6.dp)
+                        .background(MaterialTheme.colorScheme.surface.copy(alpha = .78f), RoundedCornerShape(10.dp))
+                        .padding(horizontal = 8.dp, vertical = 5.dp)
+                        .semantics {
+                            heading()
+                            liveRegion = LiveRegionMode.Polite
+                        },
+            )
+        }
+    }
+}
+
+/** Page changes cancel the editor-reading job before a tool view starts its own interaction. */
+@Composable
+internal fun SuggestionPollingEffect(
+    page: ToolbarPage,
+    enabled: Boolean,
+    privateField: Boolean,
+    onInactive: () -> Unit,
+    onPoll: () -> Unit,
+) {
+    val poll by rememberUpdatedState(onPoll)
+    val clear by rememberUpdatedState(onInactive)
+    LaunchedEffect(page, enabled, privateField) {
+        if (page != ToolbarPage.CHARACTERS || !enabled || privateField) {
+            clear()
+            return@LaunchedEffect
+        }
+        while (isActive) {
+            poll()
+            delay(80)
+        }
+    }
+}

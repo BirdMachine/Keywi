@@ -477,6 +477,12 @@ private fun RowScope.HkKey(
                 ),
         contentAlignment = Alignment.Center,
     ) {
-        Text(label, color = if (pressed || active) MaterialTheme.colorScheme.onPrimaryContainer else MaterialTheme.colorScheme.onSurface)
+        val legendColor = if (pressed || active) MaterialTheme.colorScheme.onPrimaryContainer else MaterialTheme.colorScheme.onSurface
+        TaskerCommandLegend(effectKeyId, "CENTER", 24.dp, legendColor) {
+            Text(label, color = legendColor)
+        }
+        Box(Modifier.matchParentSize().padding(3.dp), contentAlignment = Alignment.BottomEnd) {
+            TaskerCommandLegend(effectKeyId, "HOLD", 12.dp, legendColor) {}
+        }
     }
 }

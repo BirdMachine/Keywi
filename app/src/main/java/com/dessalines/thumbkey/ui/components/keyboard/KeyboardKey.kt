@@ -1090,8 +1090,12 @@ fun KeyboardKey(
                         vertical = diagonalYPadding,
                     ),
         ) {
-            key.getSwipe(SwipeDirection.TOP_LEFT)?.takeUnless { hideSwipeHints }?.let {
-                KeyText(it, (keySize - keyBorderWidth).dp, hideLetters, hideSymbols, capsLock)
+            if (!hideSwipeHints) {
+                TaskerCommandLegend(effectKeyId, "TOP_LEFT", ((keySize - keyBorderWidth) * .28).dp) {
+                    key.getSwipe(SwipeDirection.TOP_LEFT)?.let {
+                        KeyText(it, (keySize - keyBorderWidth).dp, hideLetters, hideSymbols, capsLock)
+                    }
+                }
             }
         }
         Box(
@@ -1101,8 +1105,12 @@ fun KeyboardKey(
                     .fillMaxSize()
                     .padding(vertical = yPadding),
         ) {
-            key.getSwipe(SwipeDirection.TOP)?.takeUnless { hideSwipeHints }?.let {
-                KeyText(it, (keySize - keyBorderWidth).dp, hideLetters, hideSymbols, capsLock)
+            if (!hideSwipeHints) {
+                TaskerCommandLegend(effectKeyId, "TOP", ((keySize - keyBorderWidth) * .28).dp) {
+                    key.getSwipe(SwipeDirection.TOP)?.let {
+                        KeyText(it, (keySize - keyBorderWidth).dp, hideLetters, hideSymbols, capsLock)
+                    }
+                }
             }
         }
         Box(
@@ -1115,8 +1123,12 @@ fun KeyboardKey(
                         vertical = diagonalYPadding,
                     ),
         ) {
-            key.getSwipe(SwipeDirection.TOP_RIGHT)?.takeUnless { hideSwipeHints }?.let {
-                KeyText(it, (keySize - keyBorderWidth).dp, hideLetters, hideSymbols, capsLock)
+            if (!hideSwipeHints) {
+                TaskerCommandLegend(effectKeyId, "TOP_RIGHT", ((keySize - keyBorderWidth) * .28).dp) {
+                    key.getSwipe(SwipeDirection.TOP_RIGHT)?.let {
+                        KeyText(it, (keySize - keyBorderWidth).dp, hideLetters, hideSymbols, capsLock)
+                    }
+                }
             }
         }
         Box(
@@ -1126,8 +1138,12 @@ fun KeyboardKey(
                     .fillMaxSize()
                     .padding(horizontal = xPadding),
         ) {
-            key.getSwipe(SwipeDirection.LEFT)?.takeUnless { hideSwipeHints }?.let {
-                KeyText(it, (keySize - keyBorderWidth).dp, hideLetters, hideSymbols, capsLock)
+            if (!hideSwipeHints) {
+                TaskerCommandLegend(effectKeyId, "LEFT", ((keySize - keyBorderWidth) * .28).dp) {
+                    key.getSwipe(SwipeDirection.LEFT)?.let {
+                        KeyText(it, (keySize - keyBorderWidth).dp, hideLetters, hideSymbols, capsLock)
+                    }
+                }
             }
         }
         Box(
@@ -1136,7 +1152,9 @@ fun KeyboardKey(
                 Modifier
                     .fillMaxSize(),
         ) {
-            KeyText(key.center, (keySize - keyBorderWidth).dp, hideLetters, hideSymbols, capsLock)
+            TaskerCommandLegend(effectKeyId, "CENTER", ((keySize - keyBorderWidth) * .4).dp) {
+                KeyText(key.center, (keySize - keyBorderWidth).dp, hideLetters, hideSymbols, capsLock)
+            }
         }
 
         Box(
@@ -1146,8 +1164,12 @@ fun KeyboardKey(
                     .fillMaxSize()
                     .padding(horizontal = xPadding),
         ) {
-            key.getSwipe(SwipeDirection.RIGHT)?.takeUnless { hideSwipeHints }?.let {
-                KeyText(it, (keySize - keyBorderWidth).dp, hideLetters, hideSymbols, capsLock)
+            if (!hideSwipeHints) {
+                TaskerCommandLegend(effectKeyId, "RIGHT", ((keySize - keyBorderWidth) * .28).dp) {
+                    key.getSwipe(SwipeDirection.RIGHT)?.let {
+                        KeyText(it, (keySize - keyBorderWidth).dp, hideLetters, hideSymbols, capsLock)
+                    }
+                }
             }
         }
         Box(
@@ -1160,8 +1182,12 @@ fun KeyboardKey(
                         vertical = diagonalYPadding,
                     ),
         ) {
-            key.getSwipe(SwipeDirection.BOTTOM_LEFT)?.takeUnless { hideSwipeHints }?.let {
-                KeyText(it, (keySize - keyBorderWidth).dp, hideLetters, hideSymbols, capsLock)
+            if (!hideSwipeHints) {
+                TaskerCommandLegend(effectKeyId, "BOTTOM_LEFT", ((keySize - keyBorderWidth) * .28).dp) {
+                    key.getSwipe(SwipeDirection.BOTTOM_LEFT)?.let {
+                        KeyText(it, (keySize - keyBorderWidth).dp, hideLetters, hideSymbols, capsLock)
+                    }
+                }
             }
         }
         Box(
@@ -1171,8 +1197,12 @@ fun KeyboardKey(
                     .fillMaxSize()
                     .padding(vertical = yPadding),
         ) {
-            key.getSwipe(SwipeDirection.BOTTOM)?.takeUnless { hideSwipeHints }?.let {
-                KeyText(it, (keySize - keyBorderWidth).dp, hideLetters, hideSymbols, capsLock)
+            if (!hideSwipeHints) {
+                TaskerCommandLegend(effectKeyId, "BOTTOM", ((keySize - keyBorderWidth) * .28).dp) {
+                    key.getSwipe(SwipeDirection.BOTTOM)?.let {
+                        KeyText(it, (keySize - keyBorderWidth).dp, hideLetters, hideSymbols, capsLock)
+                    }
+                }
             }
         }
         Box(
@@ -1185,8 +1215,18 @@ fun KeyboardKey(
                         vertical = diagonalYPadding,
                     ),
         ) {
-            key.getSwipe(SwipeDirection.BOTTOM_RIGHT)?.takeUnless { hideSwipeHints }?.let {
-                KeyText(it, (keySize - keyBorderWidth).dp, hideLetters, hideSymbols, capsLock)
+            if (!hideSwipeHints) {
+                TaskerCommandLegend(effectKeyId, "BOTTOM_RIGHT", ((keySize - keyBorderWidth) * .28).dp) {
+                    key.getSwipe(SwipeDirection.BOTTOM_RIGHT)?.let {
+                        KeyText(it, (keySize - keyBorderWidth).dp, hideLetters, hideSymbols, capsLock)
+                    }
+                }
+            }
+        }
+
+        if (!hideSwipeHints) {
+            Box(Modifier.fillMaxSize().padding(bottom = (keySize * .2).dp), contentAlignment = Alignment.BottomCenter) {
+                TaskerCommandLegend(effectKeyId, "HOLD", 12.dp) {}
             }
         }
 

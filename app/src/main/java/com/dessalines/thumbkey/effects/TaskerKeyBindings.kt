@@ -2,6 +2,9 @@ package com.dessalines.thumbkey.effects
 
 import android.content.Context
 import android.widget.Toast
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.setValue
 import org.json.JSONObject
 
 enum class TaskerBindingMode { REPLACE, SECONDARY }
@@ -9,10 +12,13 @@ enum class TaskerBindingMode { REPLACE, SECONDARY }
 data class TaskerKeyBinding(
     val task: TaskerTask,
     val mode: TaskerBindingMode = TaskerBindingMode.REPLACE,
+    val display: TaskerCommandDisplay? = null,
 )
 
 /** Position and gesture bindings share the sound/GIF matrix IDs across board layers. */
 object TaskerKeyBindings {
+    var revision by mutableIntStateOf(0)
+        private set
     private val keyPattern = Regex("(key|hk)[0-9]+_[0-9]+")
     private val directions =
         setOf("CENTER", "TOP_LEFT", "TOP", "TOP_RIGHT", "LEFT", "RIGHT", "BOTTOM_LEFT", "BOTTOM", "BOTTOM_RIGHT", "HOLD")
@@ -38,6 +44,7 @@ object TaskerKeyBindings {
             TaskerKeyBinding(
                 TaskerTask(value.getString("name"), value.getString("package")),
                 TaskerBindingMode.valueOf(value.getString("mode")),
+                TaskerCommandDisplay.fromJson(value.optJSONObject("display")),
             ).takeIf { TaskerIntegration.valid(it.task) }
         }.getOrNull()
 
@@ -57,22 +64,34 @@ object TaskerKeyBindings {
         direction: String,
         binding: TaskerKeyBinding?,
     ) {
+        val previous = get(context, keyId, direction)
         val editor = prefs(context).edit()
         val key = slot(keyId, direction)
         if (binding == null) {
             editor.remove(key)
         } else {
             require(TaskerIntegration.valid(binding.task))
+            require(binding.display?.valid() != false)
             editor.putString(
                 key,
                 JSONObject()
                     .put("name", binding.task.name)
                     .put("package", binding.task.packageName)
                     .put("mode", binding.mode.name)
+                    .put("display", binding.display?.toJson())
                     .toString(),
             )
         }
         editor.apply()
+        revision++
+        val old = previous?.display
+        if (old?.kind == TaskerCommandDisplayKind.IMAGE && old != binding?.display) {
+            val stillUsed =
+                prefs(context).all.values.filterIsInstance<String>().any { raw ->
+                    runCatching { TaskerCommandDisplay.fromJson(JSONObject(raw).optJSONObject("display")) == old }.getOrDefault(false)
+                }
+            if (!stillUsed) TaskerCommandImages.delete(context, old.value)
+        }
     }
 
     /**

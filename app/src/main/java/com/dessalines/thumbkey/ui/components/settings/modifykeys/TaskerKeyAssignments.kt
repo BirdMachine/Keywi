@@ -70,7 +70,11 @@ fun TaskerKeyAssignments(
                             context,
                             pendingKey,
                             pendingDirection,
-                            TaskerKeyBinding(task, TaskerBindingMode.valueOf(pendingMode)),
+                            TaskerKeyBinding(
+                                task,
+                                TaskerBindingMode.valueOf(pendingMode),
+                                TaskerKeyBindings.get(context, pendingKey, pendingDirection)?.display,
+                            ),
                         )
                         refresh()
                         feedback = "Task assigned. It will run only when you use that key gesture."
@@ -131,6 +135,7 @@ fun TaskerKeyAssignments(
                 manual = true
             }) { Text("Enter name") }
         }
+        binding?.let { current -> TaskerCommandAppearanceEditor(keyId, direction, current) { binding = it } }
         if (binding != null) {
             TextButton(onClick = {
                 TaskerKeyBindings.save(context, keyId, direction, null)
@@ -174,7 +179,7 @@ fun TaskerKeyAssignments(
                     val pkg = TaskerIntegration.installedPackage(context)
                     val task = pkg?.let { TaskerTask(taskName, it) }
                     if (task != null && TaskerIntegration.valid(task)) {
-                        val updated = TaskerKeyBinding(task, mode)
+                        val updated = TaskerKeyBinding(task, mode, binding?.display)
                         TaskerKeyBindings.save(context, keyId, direction, updated)
                         binding = updated
                         manual = false

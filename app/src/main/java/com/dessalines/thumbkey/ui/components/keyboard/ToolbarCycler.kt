@@ -26,6 +26,7 @@ import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
@@ -33,6 +34,7 @@ import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalViewConfiguration
@@ -44,6 +46,7 @@ import androidx.compose.ui.semantics.onLongClick
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
 import com.dessalines.thumbkey.MainActivity
+import com.dessalines.thumbkey.automation.TaskerThemeAutomation
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
@@ -99,6 +102,18 @@ enum class ToolbarGesture(
 
 object ToolbarViewPreferences {
     private fun preferences(context: Context) = context.getSharedPreferences("toolbar_views", Context.MODE_PRIVATE)
+
+    fun iconStyle(context: Context): ToolbarIconStyle =
+        runCatching {
+            ToolbarIconStyle.valueOf(preferences(context).getString("icon_style", ToolbarIconStyle.AUTOMATIC.name)!!)
+        }.getOrDefault(ToolbarIconStyle.AUTOMATIC)
+
+    fun setIconStyle(
+        context: Context,
+        style: ToolbarIconStyle,
+    ) {
+        preferences(context).edit().putString("icon_style", style.name).apply()
+    }
 
     fun home(context: Context): ToolbarPage =
         runCatching {
@@ -194,6 +209,26 @@ fun ToolbarCycler(
     onOpenSettings: (() -> Unit)? = null,
 ) {
     val context = LocalContext.current
+    var iconRevision by remember { mutableIntStateOf(0) }
+    DisposableEffect(context) {
+        val prefs = context.getSharedPreferences("toolbar_views", Context.MODE_PRIVATE)
+        val listener = android.content.SharedPreferences.OnSharedPreferenceChangeListener { _, _ -> iconRevision++ }
+        prefs.registerOnSharedPreferenceChangeListener(listener)
+        onDispose { prefs.unregisterOnSharedPreferenceChangeListener(listener) }
+    }
+    val iconStyle = remember(iconRevision) { ToolbarViewPreferences.iconStyle(context) }
+    val toolbar = remember(TaskerThemeAutomation.revision) { ToolbarThemePreferences.load(context) }
+    val iconBackground =
+        if (toolbar.mode == BackdropMode.COLORFUL && toolbar.stops.isNotEmpty()) {
+            val colors = toolbar.stops.map { it.color }
+            Color(
+                colors.map { it.red }.average().toFloat(),
+                colors.map { it.green }.average().toFloat(),
+                colors.map { it.blue }.average().toFloat(),
+            )
+        } else {
+            MaterialTheme.colorScheme.surface
+        }
     var showSettings by remember { mutableStateOf(false) }
     val currentPage by rememberUpdatedState(page)
     val toggle by rememberUpdatedState(onToggle)
@@ -229,13 +264,7 @@ fun ToolbarCycler(
         shape =
             androidx.compose.foundation.shape
                 .RoundedCornerShape(18.dp),
-        color =
-            if (enabled) {
-                SuggestionLozengeThemePreferences.load(context).currentWordBackgroundColor
-            } else {
-                MaterialTheme.colorScheme.surface.copy(alpha = .4f)
-            },
-        border = androidx.compose.foundation.BorderStroke(1.dp, MaterialTheme.colorScheme.primary),
+        color = Color.Transparent,
         modifier =
             Modifier
                 .width(54.dp)
@@ -313,7 +342,11 @@ fun ToolbarCycler(
                 },
     ) {
         Column(horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.Center) {
-            Text(page.icon, style = MaterialTheme.typography.labelLarge)
+            ToolbarKiwiIcon(
+                light = toolbarIconIsLight(iconStyle, iconBackground),
+                modifier = Modifier.size(28.dp),
+                alpha = if (enabled || page != ToolbarPage.CHARACTERS) 1f else .65f,
+            )
             Row(horizontalArrangement = Arrangement.spacedBy(3.dp), verticalAlignment = Alignment.CenterVertically) {
                 ToolbarPage.entries.forEach { entry ->
                     Box(
@@ -333,6 +366,7 @@ fun ToolbarCycler(
 fun ToolbarControlsDialog(onDismiss: () -> Unit) {
     val context = LocalContext.current
     var home by remember { mutableStateOf(ToolbarViewPreferences.home(context)) }
+    var iconStyle by remember { mutableStateOf(ToolbarViewPreferences.iconStyle(context)) }
     var actions by remember { mutableStateOf(ToolbarGesture.entries.associateWith { ToolbarViewPreferences.action(context, it) }) }
     AlertDialog(
         onDismissRequest = onDismiss,
@@ -347,6 +381,15 @@ fun ToolbarControlsDialog(onDismiss: () -> Unit) {
                     onSelect = { index ->
                         home = ToolbarPage.entries[index]
                         ToolbarViewPreferences.setHome(context, home)
+                    },
+                )
+                ToolbarChoice(
+                    title = "Cycler icon",
+                    selected = iconStyle.title,
+                    choices = ToolbarIconStyle.entries.map { it.title },
+                    onSelect = { index ->
+                        iconStyle = ToolbarIconStyle.entries[index]
+                        ToolbarViewPreferences.setIconStyle(context, iconStyle)
                     },
                 )
                 ToolbarGesture.entries.forEach { gesture ->

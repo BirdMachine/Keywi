@@ -36,6 +36,7 @@ import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.zIndex
 import androidx.lifecycle.lifecycleScope
+import com.dessalines.thumbkey.automation.TaskerThemeAutomation
 import com.dessalines.thumbkey.db.AppSettingsRepository
 import com.dessalines.thumbkey.db.ClipboardRepository
 import com.dessalines.thumbkey.db.DEFAULT_KEY_BORDER_WIDTH
@@ -84,8 +85,9 @@ class ComposeKeyboardView(
         val ctx = context as IMEService
 
         ThumbkeyTheme(settings = settings) {
+            val themeAutomationRevision = TaskerThemeAutomation.revision
             var quickSettingsRevision by remember { mutableIntStateOf(0) }
-            val keywiEnabled = remember(quickSettingsRevision) { KeywiAppearancePreferences.load(ctx) }
+            val keywiEnabled = remember(quickSettingsRevision, themeAutomationRevision) { KeywiAppearancePreferences.load(ctx) }
             val mainBackdrop = BackdropThemePreferences.load(ctx)
             val toolbarBackdrop = ToolbarThemePreferences.load(ctx)
             val keyboardColorScheme =

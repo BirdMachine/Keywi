@@ -138,6 +138,7 @@ fun QuickSettingsWorkspace(
                     HorizontalDivider()
                     TextButton(onClick = { showControls = true }) { Text("Toolbar controls") }
                     TextButton(onClick = { open("advancedLookAndFeel") }) { Text("Themes & appearance") }
+                    TextButton(onClick = { open("taskerThemeUpdates") }) { Text("Tasker theme updates") }
                     TextButton(onClick = { open("keypressSounds") }) { Text("Manage key sounds") }
                     TextButton(onClick = { open("keypressEffects") }) { Text("Manage keypress images & GIFs") }
                     TextButton(onClick = { open("settings") }) { Text("All Keywi settings") }
