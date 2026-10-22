@@ -5,6 +5,7 @@ import android.net.Uri
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
@@ -21,6 +22,8 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -34,6 +37,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import kotlinx.coroutines.CancellationException
 
 private const val FAVORITES_CATEGORY = "__favorites__"
 private const val RECENTS_CATEGORY = "__recents__"
@@ -55,17 +59,44 @@ fun KaomojiRoom(
     var recents by remember { mutableStateOf(KaomojiPreferences.loadRecents(context)) }
     val lozengeTheme = SuggestionLozengeThemePreferences.load(context)
 
-    val items =
+    var webItems by remember { mutableStateOf<List<StringPaletteItem>>(emptyList()) }
+    var requestedQuery by remember { mutableStateOf<String?>(null) }
+    var requestNumber by remember { mutableIntStateOf(0) }
+    var webStatus by remember { mutableStateOf<String?>(null) }
+    var webLoading by remember { mutableStateOf(false) }
+    LaunchedEffect(searchQuery, requestedQuery, requestNumber) {
+        webItems = emptyList()
+        webStatus = null
+        webLoading = false
+        if (requestedQuery != searchQuery || searchQuery.isBlank()) {
+            requestedQuery = null
+            return@LaunchedEffect
+        }
+        val source = KaomojiSearchPreferences.active(context)
+        webLoading = true
+        try {
+            webItems = KaomojiWebSearch.search(source, searchQuery)
+            webStatus = "${source.name}: ${webItems.size} web results"
+        } catch (cancelled: CancellationException) {
+            throw cancelled
+        } catch (error: Exception) {
+            webStatus = error.message ?: "Web search unavailable. Try opening the website."
+        } finally {
+            webLoading = false
+        }
+    }
+
+    val localItems =
         if (searchQuery.isNotBlank()) {
             KaomojiLibrary.search(searchQuery).distinctBy { it.text }
         } else {
             when (selectedCategoryId) {
                 FAVORITES_CATEGORY -> {
-                    KaomojiLibrary.allItems.filter { it.text in favorites }
+                    favorites.map { text -> KaomojiLibrary.allItems.firstOrNull { it.text == text } ?: StringPaletteItem(text) }
                 }
 
                 RECENTS_CATEGORY -> {
-                    recents.mapNotNull { recent -> KaomojiLibrary.allItems.firstOrNull { it.text == recent } }
+                    recents.map { recent -> KaomojiLibrary.allItems.firstOrNull { it.text == recent } ?: StringPaletteItem(recent) }
                 }
 
                 else -> {
@@ -77,6 +108,8 @@ fun KaomojiRoom(
             }
         }
 
+    val items = (localItems + webItems).distinctBy { it.text }
+
     fun commit(text: String) {
         recents = KaomojiPreferences.recordRecent(context, text)
         onCommit(text)
@@ -87,16 +120,13 @@ fun KaomojiRoom(
         selectedCategoryId = id
     }
 
-    fun openEmojiCombos() {
-        val slug =
-            searchQuery
-                .trim()
-                .lowercase()
-                .replace(Regex("[^a-z0-9]+"), "-")
-                .trim('-')
-        if (slug.isEmpty()) return
-        val uri = Uri.parse("https://emojicombos.com/$slug-kaomoji")
-        context.startActivity(Intent(Intent.ACTION_VIEW, uri).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK))
+    fun openSearchWebsite() {
+        val source = KaomojiSearchPreferences.active(context)
+        runCatching {
+            val uri = Uri.parse(source.searchUrl(searchQuery))
+            validateSearchUri(uri.toString())
+            context.startActivity(Intent(Intent.ACTION_VIEW, uri).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK))
+        }.onFailure { webStatus = "Could not open the search website." }
     }
 
     Column(
@@ -151,8 +181,8 @@ fun KaomojiRoom(
 
             if (searchQuery.isNotBlank()) {
                 PaletteLozengeButton(
-                    text = "EC↗",
-                    onClick = ::openEmojiCombos,
+                    text = "Web↗",
+                    onClick = ::openSearchWebsite,
                     theme = lozengeTheme,
                     compact = true,
                 )
@@ -175,6 +205,44 @@ fun KaomojiRoom(
                     theme = lozengeTheme,
                 )
             }
+        }
+
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(5.dp),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            if (searchQuery.isNotBlank()) {
+                PaletteLozengeButton(
+                    text = if (webLoading) "Searching…" else "Search web",
+                    onClick = {
+                        if (!webLoading) {
+                            if (KaomojiSearchPreferences.active(context).selector.isBlank()) {
+                                openSearchWebsite()
+                            } else {
+                                requestedQuery = searchQuery
+                                requestNumber++
+                            }
+                        }
+                    },
+                    theme = lozengeTheme,
+                    compact = true,
+                )
+            }
+            PaletteLozengeButton(
+                text = "Search sources ⚙",
+                onClick = {
+                    PaletteSearchCapture.release()
+                    context.startActivity(
+                        Intent(context, KaomojiSearchSettingsActivity::class.java).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK),
+                    )
+                },
+                theme = lozengeTheme,
+                compact = true,
+            )
+        }
+        webStatus?.let { status ->
+            Text(status, style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurface)
         }
 
         Row(
@@ -212,7 +280,7 @@ fun KaomojiRoom(
                 Text(
                     text =
                         when {
-                            searchQuery.isNotBlank() -> "No local kaomoji match “$searchQuery”. Try EC↗ for EmojiCombos."
+                            searchQuery.isNotBlank() -> "No local kaomoji match “$searchQuery”. Tap Search web for more."
                             selectedCategoryId == FAVORITES_CATEGORY -> "No favorites yet — double-tap a kaomoji to pin it here."
                             else -> "Nothing here yet. Your recently used kaomoji will appear here."
                         },
@@ -365,7 +433,6 @@ private fun PaletteCategoryChip(
             )
 
     Surface(
-        onClick = onClick,
         shape = shape,
         color =
             when (theme.surfaceStyle) {
@@ -378,7 +445,7 @@ private fun PaletteCategoryChip(
                 if (selected) 2.dp else 1.dp,
                 if (selected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.outline.copy(alpha = 0.6f),
             ),
-        modifier = modifier,
+        modifier = modifier.clickable(onClick = onClick),
     ) {
         Text(
             text = text,
@@ -428,7 +495,6 @@ private fun PaletteLozengeButton(
             )
 
     Surface(
-        onClick = onClick,
         shape = shape,
         color =
             when (theme.surfaceStyle) {
@@ -448,7 +514,7 @@ private fun PaletteLozengeButton(
             },
         tonalElevation = 2.dp,
         shadowElevation = 1.dp,
-        modifier = modifier,
+        modifier = modifier.clickable(onClick = onClick),
     ) {
         Text(
             text = text,

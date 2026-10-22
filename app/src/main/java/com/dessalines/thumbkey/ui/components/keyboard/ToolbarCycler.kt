@@ -9,8 +9,8 @@ import androidx.compose.foundation.gestures.detectVerticalDragGestures
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxHeight
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
@@ -341,17 +341,21 @@ fun ToolbarCycler(
                     )
                 },
     ) {
-        Column(horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.Center) {
+        Box(contentAlignment = Alignment.Center) {
             ToolbarKiwiIcon(
                 light = toolbarIconIsLight(iconStyle, iconBackground),
                 modifier = Modifier.size(28.dp),
                 alpha = if (enabled || page != ToolbarPage.CHARACTERS) 1f else .65f,
             )
-            Row(horizontalArrangement = Arrangement.spacedBy(3.dp), verticalAlignment = Alignment.CenterVertically) {
+            Column(
+                modifier = Modifier.align(Alignment.CenterEnd).padding(end = 3.dp),
+                verticalArrangement = Arrangement.spacedBy(3.dp),
+                horizontalAlignment = Alignment.CenterHorizontally,
+            ) {
                 ToolbarPage.entries.forEach { entry ->
                     Box(
-                        Modifier.size(if (entry == page) 5.dp else 3.dp).background(
-                            MaterialTheme.colorScheme.onSurface.copy(alpha = if (entry == page) 1f else .35f),
+                        Modifier.size(width = if (entry == page) 4.dp else 3.dp, height = 5.dp).background(
+                            if (entry == page) Color(0xFFB6DC58) else MaterialTheme.colorScheme.onSurface.copy(alpha = .4f),
                             CircleShape,
                         ),
                     )
