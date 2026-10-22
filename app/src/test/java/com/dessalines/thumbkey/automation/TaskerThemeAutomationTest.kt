@@ -26,6 +26,7 @@ import org.robolectric.RobolectricTestRunner
 import org.robolectric.RuntimeEnvironment
 import org.robolectric.Shadows.shadowOf
 import org.robolectric.annotation.Config
+import org.robolectric.annotation.GraphicsMode
 import java.io.ByteArrayInputStream
 import java.io.ByteArrayOutputStream
 import java.io.File
@@ -224,6 +225,7 @@ class TaskerThemeAutomationTest {
         assertEquals(background, BackdropThemePreferences.load(context))
     }
 
+    @GraphicsMode(GraphicsMode.Mode.NATIVE)
     @Test fun contentImageIsCopiedBeforeProviderDisappearsAndInvalidImageDoesNotApply() {
         val uri = Uri.parse("content://tasker.test/image.png")
         val image = Bitmap.createBitmap(8, 8, Bitmap.Config.ARGB_8888).apply { eraseColor(android.graphics.Color.MAGENTA) }
