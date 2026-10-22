@@ -49,7 +49,9 @@ class ThemeManagerCompositionTest {
 
     @Test
     fun managerOpensSelectsAndEditsWithoutClobberingSavedTheme() {
-        val context = androidx.test.core.app.ApplicationProvider.getApplicationContext<Application>()
+        val context =
+            androidx.test.core.app.ApplicationProvider
+                .getApplicationContext<Application>()
         KeywiAppearancePreferences.save(context, true)
         ThemeEngine.ensureMigrated(context)
         val saved = ThemeEngine.saveCustomAs(context, "Pondly regression")
@@ -94,7 +96,9 @@ class ThemeManagerCompositionTest {
 
     @Test
     fun savedThemeEditButtonOpensGradientEditor() {
-        val context = androidx.test.core.app.ApplicationProvider.getApplicationContext<Application>()
+        val context =
+            androidx.test.core.app.ApplicationProvider
+                .getApplicationContext<Application>()
         KeywiAppearancePreferences.save(context, true)
         ThemeEngine.ensureMigrated(context)
         val saved = ThemeEngine.saveCustomAs(context, "Saved editor regression")
@@ -114,12 +118,15 @@ class ThemeManagerCompositionTest {
         compose.onNodeWithText("Enable custom keyboard backgrounds").assertIsDisplayed()
         compose.onAllNodesWithText("Edit gradient  ▼")[0].performScrollTo().performClick()
         compose.onNodeWithText("color stops", substring = true).performScrollTo().performClick()
-        compose.onNodeWithText("＋ Add stop").performScrollTo().assertIsDisplayed().performClick()
+        compose
+            .onNodeWithText("＋ Add stop")
+            .performScrollTo()
+            .assertIsDisplayed()
+            .performClick()
         compose.runOnIdle {
             assertEquals(CUSTOM_THEME_ID, ThemeEngine.activeThemeId(context))
             assertEquals(saved.backdrop.stops.size + 1, BackdropThemePreferences.load(context).stops.size)
             assertEquals(savedJson, ThemeEngine.export(requireNotNull(ThemeEngine.loadTheme(context, saved.id))))
         }
     }
-
 }

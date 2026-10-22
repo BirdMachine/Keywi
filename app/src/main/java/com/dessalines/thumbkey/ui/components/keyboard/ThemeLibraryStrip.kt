@@ -43,8 +43,11 @@ fun ThemeLibraryStrip(
     modifier: Modifier = Modifier,
 ) {
     Row(
-        modifier = modifier.fillMaxWidth().horizontalScroll(rememberScrollState())
-            .padding(horizontal = 10.dp, vertical = 8.dp),
+        modifier =
+            modifier
+                .fillMaxWidth()
+                .horizontalScroll(rememberScrollState())
+                .padding(horizontal = 10.dp, vertical = 8.dp),
         horizontalArrangement = Arrangement.spacedBy(10.dp),
     ) {
         themes.forEach { theme ->
@@ -54,11 +57,15 @@ fun ThemeLibraryStrip(
                 modifier = Modifier.width(178.dp).height(100.dp),
                 shape = RoundedCornerShape(14.dp),
                 color = MaterialTheme.colorScheme.surface,
-                border = BorderStroke(
-                    if (selected) 2.dp else 1.dp,
-                    if (selected) MaterialTheme.colorScheme.primary
-                    else MaterialTheme.colorScheme.outline.copy(alpha = 0.45f),
-                ),
+                border =
+                    BorderStroke(
+                        if (selected) 2.dp else 1.dp,
+                        if (selected) {
+                            MaterialTheme.colorScheme.primary
+                        } else {
+                            MaterialTheme.colorScheme.outline.copy(alpha = 0.45f)
+                        },
+                    ),
             ) {
                 Box {
                     theme.background()
@@ -74,12 +81,20 @@ fun ThemeLibraryStrip(
                             horizontalArrangement = Arrangement.spacedBy(6.dp),
                         ) {
                             Column(modifier = Modifier.weight(1f)) {
-                                Text(theme.name, fontWeight = FontWeight.Bold,
+                                Text(
+                                    theme.name,
+                                    fontWeight = FontWeight.Bold,
                                     style = MaterialTheme.typography.labelLarge,
-                                    maxLines = 1, overflow = TextOverflow.Ellipsis)
+                                    maxLines = 1,
+                                    overflow = TextOverflow.Ellipsis,
+                                )
                                 theme.author?.takeIf { it.isNotBlank() }?.let {
-                                    Text(it, style = MaterialTheme.typography.labelSmall,
-                                        maxLines = 1, overflow = TextOverflow.Ellipsis)
+                                    Text(
+                                        it,
+                                        style = MaterialTheme.typography.labelSmall,
+                                        maxLines = 1,
+                                        overflow = TextOverflow.Ellipsis,
+                                    )
                                 }
                             }
                             if (selected) Text("✓", fontWeight = FontWeight.Bold)

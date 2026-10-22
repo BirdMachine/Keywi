@@ -18,13 +18,10 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.selection.SelectionContainer
 import androidx.compose.foundation.verticalScroll
-import com.dessalines.thumbkey.ui.components.settings.GemButton as Button
-import com.dessalines.thumbkey.ui.components.settings.GemSettingsCard as Card
 import androidx.compose.material3.CenterAlignedTopAppBar
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
-import com.dessalines.thumbkey.ui.components.settings.GemOutlinedButton as OutlinedButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -44,14 +41,17 @@ import androidx.navigation.NavController
 import com.dessalines.thumbkey.BuildConfig
 import com.dessalines.thumbkey.diagnostics.KeywiDiagnostics
 import com.dessalines.thumbkey.diagnostics.writeDiagnosticExport
-import java.io.File
-import java.text.SimpleDateFormat
-import java.util.Date
-import java.util.Locale
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import java.io.File
+import java.text.SimpleDateFormat
+import java.util.Date
+import java.util.Locale
+import com.dessalines.thumbkey.ui.components.settings.GemButton as Button
+import com.dessalines.thumbkey.ui.components.settings.GemOutlinedButton as OutlinedButton
+import com.dessalines.thumbkey.ui.components.settings.GemSettingsCard as Card
 
 private data class DiagnosticSnapshot(
     val crashes: List<File>,
@@ -68,13 +68,14 @@ fun AdvancedDebugScreen(navController: NavController) {
     var exporting by remember { mutableStateOf(false) }
     var clearing by remember { mutableStateOf(false) }
     val snapshot by produceState<DiagnosticSnapshot?>(null, refresh) {
-        value = withContext(Dispatchers.IO) {
-            DiagnosticSnapshot(
-                KeywiDiagnostics.crashReports(context),
-                KeywiDiagnostics.systemExitHistory(context),
-                KeywiDiagnostics.readLog(context),
-            )
-        }
+        value =
+            withContext(Dispatchers.IO) {
+                DiagnosticSnapshot(
+                    KeywiDiagnostics.crashReports(context),
+                    KeywiDiagnostics.systemExitHistory(context),
+                    KeywiDiagnostics.readLog(context),
+                )
+            }
     }
 
     fun export(crash: File? = null) {
@@ -82,13 +83,14 @@ fun AdvancedDebugScreen(navController: NavController) {
         exporting = true
         scope.launch {
             try {
-                val file = withContext(Dispatchers.IO) {
-                    writeDiagnosticExport(
-                        File(context.cacheDir, "diagnostic-exports"),
-                        crash?.nameWithoutExtension ?: "keywi-diagnostics",
-                        crash?.readText() ?: KeywiDiagnostics.buildReport(context),
-                    )
-                }
+                val file =
+                    withContext(Dispatchers.IO) {
+                        writeDiagnosticExport(
+                            File(context.cacheDir, "diagnostic-exports"),
+                            crash?.nameWithoutExtension ?: "keywi-diagnostics",
+                            crash?.readText() ?: KeywiDiagnostics.buildReport(context),
+                        )
+                    }
                 shareDiagnosticFile(context, file, crash != null)
             } catch (error: CancellationException) {
                 throw error
@@ -110,7 +112,9 @@ fun AdvancedDebugScreen(navController: NavController) {
             item {
                 Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
                     Text("Keywi black box ✈", style = MaterialTheme.typography.headlineSmall)
-                    Text("Local diagnostics for crashes, ANRs, process deaths, and keyboard performance. Typed text is not intentionally recorded.")
+                    Text(
+                        "Local diagnostics for crashes, ANRs, process deaths, and keyboard performance. Typed text is not intentionally recorded.",
+                    )
                     Text("Version ${BuildConfig.VERSION_NAME} (${BuildConfig.VERSION_CODE})")
                     Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                         Button(onClick = { refresh++ }, enabled = !clearing) { Text("Refresh") }
@@ -141,8 +145,11 @@ fun AdvancedDebugScreen(navController: NavController) {
                     HorizontalDivider()
                     Text("Crash reports (${snapshot?.crashes?.size ?: 0})", style = MaterialTheme.typography.titleLarge)
                     Text("Expand a report to read or select its full text. Swipe inside the report to scroll in either direction.")
-                    if (snapshot == null) Text("Loading diagnostics…")
-                    else if (snapshot?.crashes?.isEmpty() == true) Text("No locally captured crashes yet. Tiny victory. 🌱")
+                    if (snapshot == null) {
+                        Text("Loading diagnostics…")
+                    } else if (snapshot?.crashes?.isEmpty() == true) {
+                        Text("No locally captured crashes yet. Tiny victory. 🌱")
+                    }
                 }
             }
             items(snapshot?.crashes.orEmpty(), key = { it.name }) { file ->
@@ -153,13 +160,19 @@ fun AdvancedDebugScreen(navController: NavController) {
                     HorizontalDivider()
                     Text("Android process exits", style = MaterialTheme.typography.titleLarge)
                     val exits = snapshot?.exits.orEmpty()
-                    if (exits.isEmpty()) Text("No process-exit history available.")
-                    else exits.forEach { Text(it, fontFamily = FontFamily.Monospace) }
+                    if (exits.isEmpty()) {
+                        Text("No process-exit history available.")
+                    } else {
+                        exits.forEach { Text(it, fontFamily = FontFamily.Monospace) }
+                    }
                     HorizontalDivider()
                     Text("Recent Keywi log", style = MaterialTheme.typography.titleLarge)
                     val log = snapshot?.log.orEmpty()
-                    if (log.isBlank()) Text("No events recorded yet.")
-                    else ReportTextViewport(log.takeLast(40_000))
+                    if (log.isBlank()) {
+                        Text("No events recorded yet.")
+                    } else {
+                        ReportTextViewport(log.takeLast(40_000))
+                    }
                     OutlinedButton(
                         onClick = { navController.popBackStack() },
                         modifier = Modifier.fillMaxWidth().padding(vertical = 16.dp),
@@ -171,14 +184,22 @@ fun AdvancedDebugScreen(navController: NavController) {
 }
 
 @Composable
-private fun CrashReportCard(file: File, refresh: Int, exportEnabled: Boolean, onExport: () -> Unit) {
+private fun CrashReportCard(
+    file: File,
+    refresh: Int,
+    exportEnabled: Boolean,
+    onExport: () -> Unit,
+) {
     var expanded by rememberSaveable(file.name) { mutableStateOf(false) }
     val report by produceState<String?>(null, file.path, refresh, expanded) {
-        value = if (expanded) {
-            withContext(Dispatchers.IO) {
-                runCatching { file.readText() }.getOrDefault("Couldn't read this report. Refresh and try again.")
+        value =
+            if (expanded) {
+                withContext(Dispatchers.IO) {
+                    runCatching { file.readText() }.getOrDefault("Couldn't read this report. Refresh and try again.")
+                }
+            } else {
+                null
             }
-        } else null
     }
     Card(modifier = Modifier.fillMaxWidth()) {
         Column(
@@ -213,17 +234,21 @@ private fun ReportTextViewport(text: String) {
     }
 }
 
-private fun shareDiagnosticFile(context: Context, file: File, individualCrash: Boolean) {
+private fun shareDiagnosticFile(
+    context: Context,
+    file: File,
+    individualCrash: Boolean,
+) {
     val uri = FileProvider.getUriForFile(context, "${context.packageName}.diagnostics", file)
-    val intent = Intent(Intent.ACTION_SEND).apply {
-        type = "text/plain"
-        putExtra(Intent.EXTRA_SUBJECT, if (individualCrash) "Keywi crash report" else "Keywi diagnostic report")
-        putExtra(Intent.EXTRA_STREAM, uri)
-        clipData = ClipData.newRawUri("Keywi diagnostic report", uri)
-        addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
-    }
+    val intent =
+        Intent(Intent.ACTION_SEND).apply {
+            type = "text/plain"
+            putExtra(Intent.EXTRA_SUBJECT, if (individualCrash) "Keywi crash report" else "Keywi diagnostic report")
+            putExtra(Intent.EXTRA_STREAM, uri)
+            clipData = ClipData.newRawUri("Keywi diagnostic report", uri)
+            addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+        }
     context.startActivity(Intent.createChooser(intent, "Share Keywi diagnostics"))
 }
 
-private fun formatDate(value: Long): String =
-    SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.US).format(Date(value))
+private fun formatDate(value: Long): String = SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.US).format(Date(value))

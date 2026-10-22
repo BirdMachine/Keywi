@@ -11,7 +11,6 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.AutoAwesome
 import androidx.compose.material.icons.outlined.TextFields
-import com.dessalines.thumbkey.ui.components.settings.GemSettingsCard as Card
 import androidx.compose.material3.CenterAlignedTopAppBar
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
@@ -34,8 +33,9 @@ import com.dessalines.thumbkey.R
 import com.dessalines.thumbkey.inputcontext.ContextEnginePreferences
 import com.dessalines.thumbkey.ui.components.keyboard.KaomojiLibrary
 import com.dessalines.thumbkey.ui.components.keyboard.KaomojiPreferences
-import com.dessalines.thumbkey.ui.components.settings.GemNavigationPreference as Preference
 import me.zhanghai.compose.preference.ProvidePreferenceTheme
+import com.dessalines.thumbkey.ui.components.settings.GemNavigationPreference as Preference
+import com.dessalines.thumbkey.ui.components.settings.GemSettingsCard as Card
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -43,6 +43,14 @@ fun AdvancedInputScreen(navController: NavController) {
     val scrollState = rememberScrollState()
 
     Scaffold(
+        containerColor =
+            if (com.dessalines.thumbkey.ui.components.settings.LocalSettingsDrip.current !=
+                null
+            ) {
+                androidx.compose.ui.graphics.Color.Transparent
+            } else {
+                MaterialTheme.colorScheme.background
+            },
         topBar = {
             CenterAlignedTopAppBar(
                 title = { Text(stringResource(R.string.advanced_input)) },
@@ -54,7 +62,15 @@ fun AdvancedInputScreen(navController: NavController) {
                 Modifier
                     .padding(padding)
                     .verticalScroll(scrollState)
-                    .background(MaterialTheme.colorScheme.surface),
+                    .background(
+                        if (com.dessalines.thumbkey.ui.components.settings.LocalSettingsDrip.current !=
+                            null
+                        ) {
+                            androidx.compose.ui.graphics.Color.Transparent
+                        } else {
+                            MaterialTheme.colorScheme.surface
+                        },
+                    ),
         ) {
             ProvidePreferenceTheme {
                 Preference(
@@ -105,6 +121,14 @@ fun ContextEngineScreen() {
     var preserveStructuredTokens by remember { mutableStateOf(initial.preserveEmailAndUrlTokens) }
 
     Scaffold(
+        containerColor =
+            if (com.dessalines.thumbkey.ui.components.settings.LocalSettingsDrip.current !=
+                null
+            ) {
+                androidx.compose.ui.graphics.Color.Transparent
+            } else {
+                MaterialTheme.colorScheme.background
+            },
         topBar = {
             CenterAlignedTopAppBar(
                 title = { Text(stringResource(R.string.context_engine)) },
@@ -246,6 +270,14 @@ fun AdvancedCharactersScreen() {
     val itemCount = KaomojiLibrary.allItems.size
 
     Scaffold(
+        containerColor =
+            if (com.dessalines.thumbkey.ui.components.settings.LocalSettingsDrip.current !=
+                null
+            ) {
+                androidx.compose.ui.graphics.Color.Transparent
+            } else {
+                MaterialTheme.colorScheme.background
+            },
         topBar = {
             CenterAlignedTopAppBar(
                 title = { Text(stringResource(R.string.advanced_characters)) },

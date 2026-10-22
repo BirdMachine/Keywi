@@ -31,12 +31,24 @@ const val USER_GUIDE_URL = "https://github.com/dessalines/thumb-key#user-guide"
 @Composable
 fun AboutScreen(navController: NavController) {
     val context = LocalContext.current
-    Scaffold(topBar = { GemSettingsTopAppBar(text = "About Keywi", navController = navController) }) { padding ->
+    Scaffold(
+        containerColor =
+            if (com.dessalines.thumbkey.ui.components.settings.LocalSettingsDrip.current !=
+                null
+            ) {
+                androidx.compose.ui.graphics.Color.Transparent
+            } else {
+                MaterialTheme.colorScheme.background
+            },
+        topBar = { GemSettingsTopAppBar(text = "About Keywi", navController = navController) },
+    ) { padding ->
         Column(Modifier.padding(padding).verticalScroll(rememberScrollState()), verticalArrangement = Arrangement.spacedBy(6.dp)) {
             Column(gemSectionModifier(), verticalArrangement = Arrangement.spacedBy(8.dp)) {
                 Text("◇ KEYWI", style = MaterialTheme.typography.headlineSmall, color = MaterialTheme.colorScheme.primary)
                 Text("Build ${context.getVersionCode()}", style = MaterialTheme.typography.labelMedium)
-                Text("A colorful keyboard fork grown from Thumb-Key. Keywi's changes, releases and issue tracker live in its own repository.")
+                Text(
+                    "A colorful keyboard fork grown from Thumb-Key. Keywi's changes, releases and issue tracker live in its own repository.",
+                )
             }
             AboutLink("Keywi release history", "Keywi builds and patch notes", "$KEYWI_GITHUB_URL/releases")
             AboutLink("Keywi issue tracker", "Report Keywi bugs and requests here", "$KEYWI_GITHUB_URL/issues")
@@ -45,7 +57,11 @@ fun AboutScreen(navController: NavController) {
             Column(gemSectionModifier(), verticalArrangement = Arrangement.spacedBy(8.dp)) {
                 Text("Thumb-Key · upstream project", style = MaterialTheme.typography.titleLarge)
                 Text("Thank you to Thumb-Key's developers and contributors for the foundation.")
-                Text("These links are for THUMB-KEY, NOT KEYWI. Patreon and Liberapay donations support Thumb-Key's developer, not Keywi.", style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.primary)
+                Text(
+                    "These links are for THUMB-KEY, NOT KEYWI. Patreon and Liberapay donations support Thumb-Key's developer, not Keywi.",
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.primary,
+                )
             }
             AboutLink("Thumb-Key GitHub (upstream)", "Thumb-Key source code; separate from Keywi", THUMBKEY_GITHUB_URL)
             AboutLink("Thumb-Key Patreon", "Supports THUMB-KEY, NOT KEYWI", THUMBKEY_PATREON_URL)
@@ -55,7 +71,11 @@ fun AboutScreen(navController: NavController) {
 }
 
 @Composable
-private fun AboutLink(title: String, summary: String, url: String) {
+private fun AboutLink(
+    title: String,
+    summary: String,
+    url: String,
+) {
     val context = LocalContext.current
     GemNavigationPreference(title = { Text(title) }, summary = { Text(summary) }, onClick = { openLink(url, context) })
 }

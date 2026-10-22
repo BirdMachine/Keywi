@@ -24,56 +24,74 @@ import java.util.UUID
 
 /** A slot holds a whole string: never split emoji, combining marks, or kaomoji into characters. */
 @Serializable
-data class BoardBinding(val kind: String = "text", val text: String = "") {
+data class BoardBinding(
+    val kind: String = "text",
+    val text: String = "",
+) {
     fun key(large: Boolean = false): KeyC {
-        val action = when (kind) {
-            "backspace" -> KeyAction.DeleteKeyAction
-            "enter" -> KeyAction.IMECompleteAction
-            "space" -> KeyAction.CommitText(" ")
-            "shift" -> KeyAction.ShiftAndCapsLock(true)
-            "copy" -> KeyAction.Copy
-            "paste" -> KeyAction.Paste
-            "cut" -> KeyAction.Cut
-            "undo" -> KeyAction.Undo
-            "redo" -> KeyAction.Redo
-            "selectAll" -> KeyAction.SelectAll
-            "home" -> KeyAction.BoardHome
-            "next" -> KeyAction.CycleBoard
-            "none" -> KeyAction.Noop
-            else -> if (text.isEmpty()) KeyAction.Noop else KeyAction.CommitText(text)
-        }
-        val label = when (kind) {
-            "text" -> text
-            "backspace" -> "⌫"
-            "enter" -> "↵"
-            "space" -> "␣"
-            "shift" -> "⇧"
-            "copy" -> "Copy"
-            "paste" -> "Paste"
-            "cut" -> "Cut"
-            "undo" -> "Undo"
-            "redo" -> "Redo"
-            "selectAll" -> "All"
-            "home" -> "ABC"
-            "next" -> "→"
-            else -> ""
-        }
-        return KeyC(action = action, display = KeyDisplay.TextDisplay(label), size = if (large) FontSizeVariant.LARGE else FontSizeVariant.SMALL)
+        val action =
+            when (kind) {
+                "backspace" -> KeyAction.DeleteKeyAction
+                "enter" -> KeyAction.IMECompleteAction
+                "space" -> KeyAction.CommitText(" ")
+                "shift" -> KeyAction.ShiftAndCapsLock(true)
+                "copy" -> KeyAction.Copy
+                "paste" -> KeyAction.Paste
+                "cut" -> KeyAction.Cut
+                "undo" -> KeyAction.Undo
+                "redo" -> KeyAction.Redo
+                "selectAll" -> KeyAction.SelectAll
+                "home" -> KeyAction.BoardHome
+                "next" -> KeyAction.CycleBoard
+                "none" -> KeyAction.Noop
+                else -> if (text.isEmpty()) KeyAction.Noop else KeyAction.CommitText(text)
+            }
+        val label =
+            when (kind) {
+                "text" -> text
+                "backspace" -> "⌫"
+                "enter" -> "↵"
+                "space" -> "␣"
+                "shift" -> "⇧"
+                "copy" -> "Copy"
+                "paste" -> "Paste"
+                "cut" -> "Cut"
+                "undo" -> "Undo"
+                "redo" -> "Redo"
+                "selectAll" -> "All"
+                "home" -> "ABC"
+                "next" -> "→"
+                else -> ""
+            }
+        return KeyC(
+            action = action,
+            display = KeyDisplay.TextDisplay(label),
+            size = if (large) FontSizeVariant.LARGE else FontSizeVariant.SMALL,
+        )
     }
 }
 
 val BOARD_SLOTS = listOf("center", "topLeft", "top", "topRight", "left", "right", "bottomLeft", "bottom", "bottomRight", "hold")
-val BOARD_ACTIONS = listOf("text", "none", "space", "backspace", "enter", "shift", "copy", "paste", "cut", "undo", "redo", "selectAll", "home", "next")
+val BOARD_ACTIONS =
+    listOf("text", "none", "space", "backspace", "enter", "shift", "copy", "paste", "cut", "undo", "redo", "selectAll", "home", "next")
 
 @Serializable
-data class BoardCell(val bindings: Map<String, BoardBinding> = emptyMap()) {
-    fun key(): KeyItemC = KeyItemC(
-        center = (bindings["center"] ?: BoardBinding()).key(true),
-        topLeft = bindings["topLeft"]?.key(), top = bindings["top"]?.key(), topRight = bindings["topRight"]?.key(),
-        left = bindings["left"]?.key(), right = bindings["right"]?.key(),
-        bottomLeft = bindings["bottomLeft"]?.key(), bottom = bindings["bottom"]?.key(), bottomRight = bindings["bottomRight"]?.key(),
-        longPress = bindings["hold"]?.key()?.action,
-    )
+data class BoardCell(
+    val bindings: Map<String, BoardBinding> = emptyMap(),
+) {
+    fun key(): KeyItemC =
+        KeyItemC(
+            center = (bindings["center"] ?: BoardBinding()).key(true),
+            topLeft = bindings["topLeft"]?.key(),
+            top = bindings["top"]?.key(),
+            topRight = bindings["topRight"]?.key(),
+            left = bindings["left"]?.key(),
+            right = bindings["right"]?.key(),
+            bottomLeft = bindings["bottomLeft"]?.key(),
+            bottom = bindings["bottom"]?.key(),
+            bottomRight = bindings["bottomRight"]?.key(),
+            longPress = bindings["hold"]?.key()?.action,
+        )
 }
 
 @Serializable
@@ -87,48 +105,112 @@ data class CustomBoard(
     val haptics: Boolean = true,
     val showHints: Boolean = true,
 ) {
-    private fun side(cells: List<BoardCell>, second: Boolean): KeyboardC {
+    private fun side(
+        cells: List<BoardCell>,
+        second: Boolean,
+    ): KeyboardC {
         val grid = List(9) { cells.getOrNull(it)?.key() ?: BoardCell().key() }.chunked(3)
-        fun control(action: KeyAction, text: String) = KeyItemC(KeyC(action, display = KeyDisplay.TextDisplay(text), size = FontSizeVariant.LARGE))
-        val navigation = control(KeyAction.ToggleNumericMode(!second), if (second) "B/A" else "A/B").copy(
-            right = BoardBinding("next").key(), left = BoardBinding("home").key(), longPress = KeyAction.BoardHome,
+
+        fun control(
+            action: KeyAction,
+            text: String,
+        ) = KeyItemC(KeyC(action, display = KeyDisplay.TextDisplay(text), size = FontSizeVariant.LARGE))
+        val navigation =
+            control(KeyAction.ToggleNumericMode(!second), if (second) "B/A" else "A/B").copy(
+                right = BoardBinding("next").key(),
+                left = BoardBinding("home").key(),
+                longPress = KeyAction.BoardHome,
+            )
+        return KeyboardC(
+            grid +
+                listOf(
+                    listOf(
+                        navigation,
+                        control(KeyAction.CommitText(" "), "␣"),
+                        control(KeyAction.DeleteKeyAction, "⌫").copy(top = BoardBinding("enter").key()),
+                    ),
+                ),
         )
-        return KeyboardC(grid + listOf(listOf(navigation, control(KeyAction.CommitText(" "), "␣"), control(KeyAction.DeleteKeyAction, "⌫").copy(top = BoardBinding("enter").key()))))
     }
 
     /**
      * Custom rooms occupy only the nine central letter positions of the host layout.
      * Preserve the host's right-side tools and bottom space/enter row unchanged.
      */
-    fun overlayOn(base: KeyboardC, second: Boolean): KeyboardC {
+    fun overlayOn(
+        base: KeyboardC,
+        second: Boolean,
+    ): KeyboardC {
         val cells = if (second) sideB else sideA
         val grid = List(9) { cells.getOrNull(it)?.key() ?: BoardCell().key() }.chunked(3)
-        return base.copy(arr = base.arr.mapIndexed { rowIndex, row ->
-            if (rowIndex < 3) row.mapIndexed { columnIndex, key ->
-                if (columnIndex < 3) grid[rowIndex][columnIndex] else key
-            } else row
-        })
+        return base.copy(
+            arr =
+                base.arr.mapIndexed { rowIndex, row ->
+                    if (rowIndex < 3) {
+                        row.mapIndexed { columnIndex, key ->
+                            if (columnIndex < 3) grid[rowIndex][columnIndex] else key
+                        }
+                    } else {
+                        row
+                    }
+                },
+        )
     }
 
     fun definition(): KeyboardDefinition {
         val a = side(sideA, false)
         val b = side(sideB, true)
-        return KeyboardDefinition(name, KeyboardDefinitionModes(a, b, b, ctrled = a, alted = a), KeyboardDefinitionSettings(autoShift = false))
+        return KeyboardDefinition(
+            name,
+            KeyboardDefinitionModes(a, b, b, ctrled = a, alted = a),
+            KeyboardDefinitionSettings(autoShift = false),
+        )
     }
 }
 
 object CustomBoardPreferences {
     private val json = Json { ignoreUnknownKeys = true }
+
     fun prefs(context: Context): SharedPreferences = context.getSharedPreferences("keywi_custom_boards", Context.MODE_PRIVATE)
-    fun load(context: Context): List<CustomBoard> = runCatching {
-        json.decodeFromString<List<CustomBoard>>(prefs(context).getString("boards", "[]") ?: "[]")
-    }.getOrDefault(emptyList())
-    fun save(context: Context, boards: List<CustomBoard>) {
+
+    fun load(context: Context): List<CustomBoard> =
+        runCatching {
+            json.decodeFromString<List<CustomBoard>>(prefs(context).getString("boards", "[]") ?: "[]")
+        }.getOrDefault(emptyList())
+
+    fun save(
+        context: Context,
+        boards: List<CustomBoard>,
+    ) {
         prefs(context).edit().putString("boards", json.encodeToString(boards)).apply()
     }
+
     fun preset(emoji: Boolean): CustomBoard {
-        val labels = if (emoji) listOf("🩷", "😊", "✨", "🐦", "😂", "🥹", "😍", "👍", "🫶") else listOf("°", "→", "∞", "×", "÷", "≠", "≤", "≥", "♡")
-        return CustomBoard(name = if (emoji) "Emoji" else "Unicode", sideA = labels.map { BoardCell(mapOf("center" to BoardBinding(text = it))) })
+        val labels =
+            if (emoji) {
+                listOf(
+                    "🩷",
+                    "😊",
+                    "✨",
+                    "🐦",
+                    "😂",
+                    "🥹",
+                    "😍",
+                    "👍",
+                    "🫶",
+                )
+            } else {
+                listOf("°", "→", "∞", "×", "÷", "≠", "≤", "≥", "♡")
+            }
+        return CustomBoard(
+            name = if (emoji) "Emoji" else "Unicode",
+            sideA =
+                labels.map {
+                    BoardCell(
+                        mapOf("center" to BoardBinding(text = it)),
+                    )
+                },
+        )
     }
 }
 
@@ -138,9 +220,10 @@ fun rememberCustomBoards(): List<CustomBoard> {
     var boards by remember(context) { mutableStateOf(CustomBoardPreferences.load(context)) }
     DisposableEffect(context) {
         val prefs = CustomBoardPreferences.prefs(context)
-        val listener = SharedPreferences.OnSharedPreferenceChangeListener { _, key ->
-            if (key == "boards") boards = CustomBoardPreferences.load(context)
-        }
+        val listener =
+            SharedPreferences.OnSharedPreferenceChangeListener { _, key ->
+                if (key == "boards") boards = CustomBoardPreferences.load(context)
+            }
         prefs.registerOnSharedPreferenceChangeListener(listener)
         onDispose { prefs.unregisterOnSharedPreferenceChangeListener(listener) }
     }
@@ -148,6 +231,12 @@ fun rememberCustomBoards(): List<CustomBoard> {
 }
 
 /** Only reserve right-swipe when at least one custom room is enabled; tap remains #/ABC. */
-fun KeyboardC.withBoardPaging(): KeyboardC = copy(arr = arr.map { row -> row.map { item ->
-    if (item.center.action is KeyAction.ToggleNumericMode) item.copy(right = BoardBinding("next").key()) else item
-} })
+fun KeyboardC.withBoardPaging(): KeyboardC =
+    copy(
+        arr =
+            arr.map { row ->
+                row.map { item ->
+                    if (item.center.action is KeyAction.ToggleNumericMode) item.copy(right = BoardBinding("next").key()) else item
+                }
+            },
+    )

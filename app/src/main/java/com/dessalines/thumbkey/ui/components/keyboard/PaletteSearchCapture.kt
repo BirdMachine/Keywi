@@ -52,7 +52,9 @@ object PaletteSearchCapture {
                 true
             }
 
-            else -> false
+            else -> {
+                false
+            }
         }
     }
 

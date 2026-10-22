@@ -14,7 +14,11 @@ class MachineCutLayoutTest {
 
     @Test
     fun qwertySkeletonContainsPowerUserRegions() {
-        val labels = MachineCutLayouts.qwertySkeleton.rows.flatten().map { it.label }.toSet()
+        val labels =
+            MachineCutLayouts.qwertySkeleton.rows
+                .flatten()
+                .map { it.label }
+                .toSet()
         assertTrue(labels.containsAll(setOf("Esc", "Ctrl", "Alt", "Fn", "Space", "⌫", "↵")))
     }
 }

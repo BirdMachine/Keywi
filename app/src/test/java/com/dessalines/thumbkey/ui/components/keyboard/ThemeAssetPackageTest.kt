@@ -33,11 +33,29 @@ class ThemeAssetPackageTest {
     private val gif = android.util.Base64.decode("R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7", android.util.Base64.DEFAULT)
 
     private fun selectedGif(): File = File(context.cacheDir, "original.gif").also { it.writeBytes(gif) }
-    private fun ownedFile(theme: ThemeDocument, reference: String): File = ThemeAssetStore.assetFile(ThemeAssetStore.directory(context, theme.id), reference)
-    private fun packageBytes(theme: ThemeDocument): ByteArray = ByteArrayOutputStream().also { ThemeEngine.exportPackage(context, theme, it) }.toByteArray()
-    private fun archive(entries: Map<String, ByteArray>): ByteArray = ByteArrayOutputStream().also { output ->
-        ZipOutputStream(output).use { zip -> entries.forEach { (name, bytes) -> zip.putNextEntry(ZipEntry(name)); zip.write(bytes); zip.closeEntry() } }
-    }.toByteArray()
+
+    private fun ownedFile(
+        theme: ThemeDocument,
+        reference: String,
+    ): File = ThemeAssetStore.assetFile(ThemeAssetStore.directory(context, theme.id), reference)
+
+    private fun packageBytes(theme: ThemeDocument): ByteArray =
+        ByteArrayOutputStream()
+            .also {
+                ThemeEngine.exportPackage(context, theme, it)
+            }.toByteArray()
+
+    private fun archive(entries: Map<String, ByteArray>): ByteArray =
+        ByteArrayOutputStream()
+            .also { output ->
+                ZipOutputStream(output).use { zip ->
+                    entries.forEach { (name, bytes) ->
+                        zip.putNextEntry(ZipEntry(name))
+                        zip.write(bytes)
+                        zip.closeEntry()
+                    }
+                }
+            }.toByteArray()
 
     @Test
     fun selectedMediaIsCopiedAndSavedThemeHasIndependentAssets() {
@@ -55,27 +73,50 @@ class ThemeAssetPackageTest {
         ThemeAssetStore.directory(context, CUSTOM_THEME_ID).deleteRecursively()
         ThemeEngine.beginEditing(context, saved)
         assertArrayEquals(gif, ownedFile(ThemeEngine.loadCustom(context), saved.backdrop.mediaUri!!).readBytes())
-        assertEquals(Uri.fromFile(ownedFile(ThemeEngine.loadCustom(context), saved.backdrop.mediaUri!!)).toString(), BackdropThemePreferences.load(context).mediaUri)
+        assertEquals(
+            Uri.fromFile(ownedFile(ThemeEngine.loadCustom(context), saved.backdrop.mediaUri!!)).toString(),
+            BackdropThemePreferences.load(context).mediaUri,
+        )
     }
 
     @Test
     fun packageSurvivesSourceDeletionAndIncludesFont() {
         ThemeEngine.ensureMigrated(context)
         val original = selectedGif()
-        val font = File(context.cacheDir, "example.otf").also { target -> context.resources.openRawResource(R.font.nasin_nanpa_4_0_2).use { input -> target.outputStream().use { input.copyTo(it) } } }
+        val font =
+            File(context.cacheDir, "example.otf").also { target ->
+                context.resources.openRawResource(R.font.nasin_nanpa_4_0_2).use { input ->
+                    target.outputStream().use { input.copyTo(it) }
+                }
+            }
         assertTrue(FontPreferences.importFont(context, Uri.fromFile(font)))
         val source = ThemeEngine.captureCurrent(context, "Custom", CUSTOM_THEME_ID)
-        ThemeEngine.saveCustom(context, source.copy(backdrop = source.backdrop.copy(mode = BackdropMode.GIF, mediaUri = Uri.fromFile(original).toString())))
+        ThemeEngine.saveCustom(
+            context,
+            source.copy(backdrop = source.backdrop.copy(mode = BackdropMode.GIF, mediaUri = Uri.fromFile(original).toString())),
+        )
         val saved = ThemeEngine.saveCustomAs(context, "Portable")
         val bytes = packageBytes(saved)
         val names = mutableListOf<String>()
         var document = ""
-        ZipInputStream(ByteArrayInputStream(bytes)).use { zip -> while (true) { val entry = zip.nextEntry ?: break; names += entry.name; if (entry.name == "theme.json") document = zip.readBytes().toString(Charsets.UTF_8) } }
+        ZipInputStream(ByteArrayInputStream(bytes)).use { zip ->
+            while (true) {
+                val entry =
+                    zip.nextEntry ?: break
+                names += entry.name
+                if (entry.name ==
+                    "theme.json"
+                ) {
+                    document = zip.readBytes().toString(Charsets.UTF_8)
+                }
+            }
+        }
         assertTrue(names.contains("theme.json"))
         assertEquals(3, names.size)
         assertFalse(document.contains("file://"))
         assertFalse(document.contains("content://"))
-        original.delete(); font.delete()
+        original.delete()
+        font.delete()
         ThemeAssetStore.directory(context, saved.id).deleteRecursively()
         ThemeAssetStore.directory(context, CUSTOM_THEME_ID).deleteRecursively()
         val imported = ThemeEngine.importPackage(context, ByteArrayInputStream(bytes)).getOrThrow()
@@ -90,26 +131,62 @@ class ThemeAssetPackageTest {
     fun migrationCopiesLegacyAssetsAndReportsMissingOnesWithoutLosingOriginals() {
         val original = selectedGif()
         val source = ThemeEngine.captureCurrent(context, "Legacy", "legacy-theme")
-        val legacy = source.copy(backdrop = source.backdrop.copy(mode = BackdropMode.GIF, mediaUri = Uri.fromFile(original).toString()), toolbar = source.toolbar.copy(mode = BackdropMode.IMAGE, mediaUri = Uri.fromFile(File(context.filesDir, "themes/missing.gif")).toString()))
-        val file = File(context.filesDir, "themes/legacy-theme.json").also { it.parentFile!!.mkdirs(); it.writeText(JSONObject(ThemeEngine.export(legacy)).put("schemaVersion", 1).toString()) }
-        context.getSharedPreferences("keywi_theme_engine", 0).edit().putBoolean("theme_engine_migrated", true).putString("active_theme_id", legacy.id).apply()
+        val legacy =
+            source.copy(
+                backdrop = source.backdrop.copy(mode = BackdropMode.GIF, mediaUri = Uri.fromFile(original).toString()),
+                toolbar =
+                    source.toolbar.copy(
+                        mode = BackdropMode.IMAGE,
+                        mediaUri = Uri.fromFile(File(context.filesDir, "themes/missing.gif")).toString(),
+                    ),
+            )
+        val file =
+            File(context.filesDir, "themes/legacy-theme.json").also {
+                it.parentFile!!.mkdirs()
+                it.writeText(JSONObject(ThemeEngine.export(legacy)).put("schemaVersion", 1).toString())
+            }
+        context
+            .getSharedPreferences(
+                "keywi_theme_engine",
+                0,
+            ).edit()
+            .putBoolean("theme_engine_migrated", true)
+            .putString("active_theme_id", legacy.id)
+            .apply()
         ThemeEngine.ensureMigrated(context)
         val migrated = requireNotNull(ThemeEngine.loadTheme(context, legacy.id))
         assertTrue(file.exists())
         assertTrue(File(ThemeAssetStore.directory(context, legacy.id), "theme.json").exists())
         original.delete()
         assertArrayEquals(gif, ownedFile(migrated, migrated.backdrop.mediaUri!!).readBytes())
-        assertEquals(listOf(Uri.fromFile(File(context.filesDir, "themes/missing.gif")).toString()), ThemeEngine.missingAssets(context, migrated))
+        assertEquals(
+            listOf(Uri.fromFile(File(context.filesDir, "themes/missing.gif")).toString()),
+            ThemeEngine.missingAssets(context, migrated),
+        )
         assertEquals(legacy.id, ThemeEngine.activeThemeId(context))
         val edited = ThemeEngine.beginEditing(context, migrated)
-        assertEquals(listOf(Uri.fromFile(File(context.filesDir, "themes/missing.gif")).toString()), ThemeEngine.missingAssets(context, edited))
+        assertEquals(
+            listOf(Uri.fromFile(File(context.filesDir, "themes/missing.gif")).toString()),
+            ThemeEngine.missingAssets(context, edited),
+        )
     }
 
     @Test
     fun migrationPreservesUnsavedCustomEdits() {
         val old = ThemeEngine.captureCurrent(context, "Custom", CUSTOM_THEME_ID)
-        val file = File(context.filesDir, "themes/custom.json").also { it.parentFile!!.mkdirs(); it.writeText(ThemeEngine.export(old)) }
-        context.getSharedPreferences("keywi_theme_engine", 0).edit().putBoolean("theme_engine_migrated", true).putString("active_theme_id", CUSTOM_THEME_ID).apply()
+        val file =
+            File(context.filesDir, "themes/custom.json").also {
+                it.parentFile!!.mkdirs()
+                it.writeText(ThemeEngine.export(old))
+            }
+        context
+            .getSharedPreferences(
+                "keywi_theme_engine",
+                0,
+            ).edit()
+            .putBoolean("theme_engine_migrated", true)
+            .putString("active_theme_id", CUSTOM_THEME_ID)
+            .apply()
         val editedKeys = old.keys.copy(shadowElevation = 9f)
         KeyThemePreferences.save(context, editedKeys)
         ThemeEngine.ensureMigrated(context)
@@ -124,11 +201,20 @@ class ThemeAssetPackageTest {
         val before = ThemeEngine.export(ThemeEngine.loadCustom(context))
         val source = ThemeEngine.loadCustom(context)
         val missing = source.copy(backdrop = source.backdrop.copy(mode = BackdropMode.GIF, mediaUri = "assets/absent.gif"))
-        val invalid = listOf(
-            archive(mapOf("../escaped" to byteArrayOf(1))),
-            archive(mapOf("theme.json" to ThemeEngine.export(missing).toByteArray())),
-            archive(mapOf("theme.json" to ThemeEngine.export(source.copy(backdrop = source.backdrop.copy(mediaUri = "file:///private/secret"))).toByteArray())),
-        )
+        val invalid =
+            listOf(
+                archive(mapOf("../escaped" to byteArrayOf(1))),
+                archive(mapOf("theme.json" to ThemeEngine.export(missing).toByteArray())),
+                archive(
+                    mapOf(
+                        "theme.json" to
+                            ThemeEngine
+                                .export(
+                                    source.copy(backdrop = source.backdrop.copy(mediaUri = "file:///private/secret")),
+                                ).toByteArray(),
+                    ),
+                ),
+            )
         invalid.forEach { bytes ->
             assertTrue(ThemeEngine.importPackage(context, ByteArrayInputStream(bytes)).isFailure)
             assertEquals(before, ThemeEngine.export(ThemeEngine.loadCustom(context)))
@@ -157,11 +243,17 @@ class ThemeAssetPackageTest {
         val background = Color(0x66F8BBDD)
         val highlight = Color(0xFF7D3FB0)
         val original = SuggestionLozengeThemePreferences.load(context)
-        SuggestionLozengeThemePreferences.save(context, original.copy(currentWordBackgroundColor = background, currentWordHighlightColor = highlight))
+        SuggestionLozengeThemePreferences.save(
+            context,
+            original.copy(currentWordBackgroundColor = background, currentWordHighlightColor = highlight),
+        )
         ThemeEngine.saveCustom(context, ThemeEngine.captureCurrent(context, "Custom", CUSTOM_THEME_ID))
         val saved = ThemeEngine.saveCustomAs(context, "Pink chip")
         val bytes = packageBytes(saved)
-        SuggestionLozengeThemePreferences.save(context, original.copy(currentWordBackgroundColor = Color.Transparent, currentWordHighlightColor = Color.Red))
+        SuggestionLozengeThemePreferences.save(
+            context,
+            original.copy(currentWordBackgroundColor = Color.Transparent, currentWordHighlightColor = Color.Red),
+        )
         ThemeEngine.importPackage(context, ByteArrayInputStream(bytes)).getOrThrow()
         val restored = SuggestionLozengeThemePreferences.load(context)
         assertEquals(background, restored.currentWordBackgroundColor)
@@ -174,11 +266,26 @@ class ThemeAssetPackageTest {
         val highlight = Color(0xFF9D79D8)
         AdvancedKeyWordPreferences.setNewWordHighlightColor(context, highlight)
         val legacy = JSONObject(ThemeEngine.export(ThemeEngine.builtInThemes().first())).put("schemaVersion", 2)
-        legacy.getJSONObject("suggestionLozenges").apply { remove("currentWordBackgroundColor"); remove("currentWordHighlightColor") }
+        legacy.getJSONObject("suggestionLozenges").apply {
+            remove("currentWordBackgroundColor")
+            remove("currentWordHighlightColor")
+        }
         ThemeEngine.importIntoCustom(context, legacy.toString()).getOrThrow()
         val restored = SuggestionLozengeThemePreferences.load(context)
         assertEquals(Color(0xFF031005), restored.currentWordBackgroundColor)
         assertEquals(highlight, restored.currentWordHighlightColor)
     }
 
+    @Test
+    fun customPreviewReflectsLiveEditsWithoutSavingOrReplacingInactiveCustom() {
+        ThemeEngine.ensureMigrated(context)
+        val savedCustom = ThemeEngine.loadCustom(context)
+        val before = ThemeEngine.export(savedCustom)
+        val live = savedCustom.backdrop.copy(mode = BackdropMode.IMAGE, mediaUri = "file:///live-background.png", opacity = .63f)
+        BackdropThemePreferences.save(context, live)
+        assertEquals(live, ThemeEngine.customPreview(context).backdrop)
+        assertEquals(before, ThemeEngine.export(ThemeEngine.loadCustom(context)))
+        ThemeEngine.apply(context, ThemeEngine.builtInThemes().first())
+        assertEquals(savedCustom, ThemeEngine.customPreview(context))
+    }
 }

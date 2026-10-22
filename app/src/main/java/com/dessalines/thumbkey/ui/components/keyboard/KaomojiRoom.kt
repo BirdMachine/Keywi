@@ -3,8 +3,9 @@ package com.dessalines.thumbkey.ui.components.keyboard
 import android.content.Intent
 import android.net.Uri
 import androidx.compose.foundation.BorderStroke
-import androidx.compose.foundation.background
 import androidx.compose.foundation.ExperimentalFoundationApi
+import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
@@ -21,9 +22,12 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -33,6 +37,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import kotlinx.coroutines.CancellationException
 
 private const val FAVORITES_CATEGORY = "__favorites__"
 private const val RECENTS_CATEGORY = "__recents__"
@@ -47,24 +52,51 @@ fun KaomojiRoom(
     modifier: Modifier = Modifier,
 ) {
     val context = LocalContext.current
-    var selectedCategoryId by remember { mutableStateOf(KaomojiLibrary.categories.first().id) }
+    var selectedCategoryId by rememberSaveable { mutableStateOf(KaomojiLibrary.categories.first().id) }
     val searchQuery = PaletteSearchCapture.query
     val searchActive = PaletteSearchCapture.active
     var favorites by remember { mutableStateOf(KaomojiPreferences.loadFavorites(context)) }
     var recents by remember { mutableStateOf(KaomojiPreferences.loadRecents(context)) }
     val lozengeTheme = SuggestionLozengeThemePreferences.load(context)
 
-    val items =
+    var webItems by remember { mutableStateOf<List<StringPaletteItem>>(emptyList()) }
+    var requestedQuery by remember { mutableStateOf<String?>(null) }
+    var requestNumber by remember { mutableIntStateOf(0) }
+    var webStatus by remember { mutableStateOf<String?>(null) }
+    var webLoading by remember { mutableStateOf(false) }
+    LaunchedEffect(searchQuery, requestedQuery, requestNumber) {
+        webItems = emptyList()
+        webStatus = null
+        webLoading = false
+        if (requestedQuery != searchQuery || searchQuery.isBlank()) {
+            requestedQuery = null
+            return@LaunchedEffect
+        }
+        val source = KaomojiSearchPreferences.active(context)
+        webLoading = true
+        try {
+            webItems = KaomojiWebSearch.search(source, searchQuery)
+            webStatus = "${source.name}: ${webItems.size} web results"
+        } catch (cancelled: CancellationException) {
+            throw cancelled
+        } catch (error: Exception) {
+            webStatus = error.message ?: "Web search unavailable. Try opening the website."
+        } finally {
+            webLoading = false
+        }
+    }
+
+    val localItems =
         if (searchQuery.isNotBlank()) {
             KaomojiLibrary.search(searchQuery).distinctBy { it.text }
         } else {
             when (selectedCategoryId) {
                 FAVORITES_CATEGORY -> {
-                    KaomojiLibrary.allItems.filter { it.text in favorites }
+                    favorites.map { text -> KaomojiLibrary.allItems.firstOrNull { it.text == text } ?: StringPaletteItem(text) }
                 }
 
                 RECENTS_CATEGORY -> {
-                    recents.mapNotNull { recent -> KaomojiLibrary.allItems.firstOrNull { it.text == recent } }
+                    recents.map { recent -> KaomojiLibrary.allItems.firstOrNull { it.text == recent } ?: StringPaletteItem(recent) }
                 }
 
                 else -> {
@@ -76,6 +108,8 @@ fun KaomojiRoom(
             }
         }
 
+    val items = (localItems + webItems).distinctBy { it.text }
+
     fun commit(text: String) {
         recents = KaomojiPreferences.recordRecent(context, text)
         onCommit(text)
@@ -86,31 +120,34 @@ fun KaomojiRoom(
         selectedCategoryId = id
     }
 
-    fun openEmojiCombos() {
-        val slug =
-            searchQuery
-                .trim()
-                .lowercase()
-                .replace(Regex("[^a-z0-9]+"), "-")
-                .trim('-')
-        if (slug.isEmpty()) return
-        val uri = Uri.parse("https://emojicombos.com/$slug-kaomoji")
-        context.startActivity(Intent(Intent.ACTION_VIEW, uri).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK))
+    fun openSearchWebsite() {
+        val source = KaomojiSearchPreferences.active(context)
+        runCatching {
+            val uri = Uri.parse(source.searchUrl(searchQuery))
+            validateSearchUri(uri.toString())
+            context.startActivity(Intent(Intent.ACTION_VIEW, uri).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK))
+        }.onFailure { webStatus = "Could not open the search website." }
     }
 
     Column(
-        modifier = modifier.clip(RoundedCornerShape(topStart = 18.dp, topEnd = 18.dp))
-            .background(MaterialTheme.colorScheme.surface.copy(alpha = 0.82f))
-            .padding(horizontal = 9.dp, vertical = 8.dp),
+        modifier =
+            modifier
+                .clip(RoundedCornerShape(topStart = 18.dp, topEnd = 18.dp))
+                .background(MaterialTheme.colorScheme.surface.copy(alpha = 0.82f))
+                .padding(horizontal = 9.dp, vertical = 8.dp),
         verticalArrangement = Arrangement.spacedBy(5.dp),
     ) {
-        Text("✧  KAOMOJI", style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.primary)
+        Text(
+            "✧  KAOMOJI",
+            style = MaterialTheme.typography.titleSmall,
+            fontWeight = FontWeight.Bold,
+            color = MaterialTheme.colorScheme.primary,
+        )
         Row(
             modifier = Modifier.fillMaxWidth(),
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(6.dp),
         ) {
-
             Surface(
                 onClick = { PaletteSearchCapture.activate() },
                 modifier = Modifier.weight(1f),
@@ -144,8 +181,8 @@ fun KaomojiRoom(
 
             if (searchQuery.isNotBlank()) {
                 PaletteLozengeButton(
-                    text = "EC↗",
-                    onClick = ::openEmojiCombos,
+                    text = "Web↗",
+                    onClick = ::openSearchWebsite,
                     theme = lozengeTheme,
                     compact = true,
                 )
@@ -159,15 +196,53 @@ fun KaomojiRoom(
                 )
             }
             if (showDismissButton) {
+                PaletteLozengeButton(
+                    text = "✕",
+                    onClick = {
+                        PaletteSearchCapture.release(clear = true)
+                        onBackToLetters()
+                    },
+                    theme = lozengeTheme,
+                )
+            }
+        }
+
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(5.dp),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            if (searchQuery.isNotBlank()) {
+                PaletteLozengeButton(
+                    text = if (webLoading) "Searching…" else "Search web",
+                    onClick = {
+                        if (!webLoading) {
+                            if (KaomojiSearchPreferences.active(context).selector.isBlank()) {
+                                openSearchWebsite()
+                            } else {
+                                requestedQuery = searchQuery
+                                requestNumber++
+                            }
+                        }
+                    },
+                    theme = lozengeTheme,
+                    compact = true,
+                )
+            }
             PaletteLozengeButton(
-                text = "✕",
+                text = "Search sources ⚙",
                 onClick = {
-                    PaletteSearchCapture.release(clear = true)
-                    onBackToLetters()
+                    PaletteSearchCapture.release()
+                    context.startActivity(
+                        Intent(context, KaomojiSearchSettingsActivity::class.java).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK),
+                    )
                 },
                 theme = lozengeTheme,
+                compact = true,
             )
-            }
+        }
+        webStatus?.let { status ->
+            Text(status, style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurface)
         }
 
         Row(
@@ -205,7 +280,7 @@ fun KaomojiRoom(
                 Text(
                     text =
                         when {
-                            searchQuery.isNotBlank() -> "No local kaomoji match “$searchQuery”. Try EC↗ for EmojiCombos."
+                            searchQuery.isNotBlank() -> "No local kaomoji match “$searchQuery”. Tap Search web for more."
                             selectedCategoryId == FAVORITES_CATEGORY -> "No favorites yet — double-tap a kaomoji to pin it here."
                             else -> "Nothing here yet. Your recently used kaomoji will appear here."
                         },
@@ -255,20 +330,28 @@ private fun PaletteKaomojiCell(
             .then(
                 when (theme.surfaceStyle) {
                     SuggestionLozengeSurfaceStyle.GRADIENT -> Modifier.keyboardGradientBackground(theme.surfaceGradient)
+
                     SuggestionLozengeSurfaceStyle.SOLID,
                     SuggestionLozengeSurfaceStyle.NONE,
                     -> Modifier
                 },
             ).then(
                 when {
-                    favorite -> Modifier.keyboardGradientBorder(BIRDIE_GOLD_BORDER, 2.dp, 10.dp)
-                    theme.borderStyle == SuggestionLozengeBorderStyle.GRADIENT ->
+                    favorite -> {
+                        Modifier.keyboardGradientBorder(BIRDIE_GOLD_BORDER, 2.dp, 10.dp)
+                    }
+
+                    theme.borderStyle == SuggestionLozengeBorderStyle.GRADIENT -> {
                         Modifier.keyboardGradientBorder(
                             backdrop = theme.borderGradient,
                             width = theme.borderWidth.coerceAtMost(2.5f).dp,
                             radius = 10.dp,
                         )
-                    else -> Modifier
+                    }
+
+                    else -> {
+                        Modifier
+                    }
                 },
             ).combinedClickable(
                 onClick = onClick,
@@ -285,12 +368,21 @@ private fun PaletteKaomojiCell(
             },
         border =
             when {
-                favorite -> null
-                theme.borderStyle == SuggestionLozengeBorderStyle.SOLID ->
+                favorite -> {
+                    null
+                }
+
+                theme.borderStyle == SuggestionLozengeBorderStyle.SOLID -> {
                     BorderStroke(theme.borderWidth.coerceAtMost(2.5f).dp, theme.borderColor)
-                theme.borderStyle == SuggestionLozengeBorderStyle.NONE ->
+                }
+
+                theme.borderStyle == SuggestionLozengeBorderStyle.NONE -> {
                     BorderStroke(1.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.55f))
-                else -> null
+                }
+
+                else -> {
+                    null
+                }
             },
         modifier = modifier,
     ) {
@@ -333,6 +425,7 @@ private fun PaletteCategoryChip(
             .then(
                 when (theme.surfaceStyle) {
                     SuggestionLozengeSurfaceStyle.GRADIENT -> Modifier.keyboardGradientBackground(theme.surfaceGradient)
+
                     SuggestionLozengeSurfaceStyle.SOLID,
                     SuggestionLozengeSurfaceStyle.NONE,
                     -> Modifier
@@ -340,7 +433,6 @@ private fun PaletteCategoryChip(
             )
 
     Surface(
-        onClick = onClick,
         shape = shape,
         color =
             when (theme.surfaceStyle) {
@@ -353,7 +445,7 @@ private fun PaletteCategoryChip(
                 if (selected) 2.dp else 1.dp,
                 if (selected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.outline.copy(alpha = 0.6f),
             ),
-        modifier = modifier,
+        modifier = modifier.clickable(onClick = onClick),
     ) {
         Text(
             text = text,
@@ -379,30 +471,35 @@ private fun PaletteLozengeButton(
             .then(
                 when (theme.surfaceStyle) {
                     SuggestionLozengeSurfaceStyle.GRADIENT -> Modifier.keyboardGradientBackground(theme.surfaceGradient)
+
                     SuggestionLozengeSurfaceStyle.SOLID,
                     SuggestionLozengeSurfaceStyle.NONE,
                     -> Modifier
                 },
             ).then(
                 when (theme.borderStyle) {
-                    SuggestionLozengeBorderStyle.GRADIENT ->
+                    SuggestionLozengeBorderStyle.GRADIENT -> {
                         Modifier.keyboardGradientBorder(
                             backdrop = theme.borderGradient,
                             width = theme.borderWidth.dp,
                             radius = 18.dp,
                         )
+                    }
+
                     SuggestionLozengeBorderStyle.SOLID,
                     SuggestionLozengeBorderStyle.NONE,
-                    -> Modifier
+                    -> {
+                        Modifier
+                    }
                 },
             )
 
     Surface(
-        onClick = onClick,
         shape = shape,
         color =
             when (theme.surfaceStyle) {
                 SuggestionLozengeSurfaceStyle.SOLID -> theme.surfaceColor
+
                 SuggestionLozengeSurfaceStyle.GRADIENT,
                 SuggestionLozengeSurfaceStyle.NONE,
                 -> Color.Transparent
@@ -410,13 +507,14 @@ private fun PaletteLozengeButton(
         border =
             when (theme.borderStyle) {
                 SuggestionLozengeBorderStyle.SOLID -> BorderStroke(theme.borderWidth.dp, theme.borderColor)
+
                 SuggestionLozengeBorderStyle.GRADIENT,
                 SuggestionLozengeBorderStyle.NONE,
                 -> null
             },
         tonalElevation = 2.dp,
         shadowElevation = 1.dp,
-        modifier = modifier,
+        modifier = modifier.clickable(onClick = onClick),
     ) {
         Text(
             text = text,

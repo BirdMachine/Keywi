@@ -8,7 +8,13 @@ class FancyTextFormatterTest {
     @Test
     fun categoriesCoverEveryAvailableStyle() {
         assertEquals(12, FancyTextFormatter.styles.size)
-        assertEquals(12, FancyTextFormatter.styles.map { it.id }.distinct().size)
+        assertEquals(
+            12,
+            FancyTextFormatter.styles
+                .map { it.id }
+                .distinct()
+                .size,
+        )
         assertTrue(FancyTextFormatter.styles.all { it.category in FancyTextFormatter.Category.entries })
     }
 

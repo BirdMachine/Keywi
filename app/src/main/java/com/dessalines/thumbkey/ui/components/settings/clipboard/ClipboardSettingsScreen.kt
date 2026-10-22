@@ -1,6 +1,5 @@
 package com.dessalines.thumbkey.ui.components.settings.clipboard
 
-import com.dessalines.thumbkey.ui.components.settings.gemPreferenceModifier
 import android.util.Log
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Column
@@ -48,7 +47,7 @@ import com.dessalines.thumbkey.db.DEFAULT_CLIPBOARD_SIZE_LIMIT_ENABLED
 import com.dessalines.thumbkey.db.DEFAULT_USE_PRIVATE_CLIPBOARD
 import com.dessalines.thumbkey.db.MAX_CLIPBOARD_MAX_SIZE
 import com.dessalines.thumbkey.db.MIN_CLIPBOARD_MAX_SIZE
-import com.dessalines.thumbkey.ui.components.settings.GemSettingsTopAppBar as SimpleTopAppBar
+import com.dessalines.thumbkey.ui.components.settings.gemPreferenceModifier
 import com.dessalines.thumbkey.utils.TAG
 import com.dessalines.thumbkey.utils.toBool
 import com.dessalines.thumbkey.utils.toInt
@@ -56,6 +55,7 @@ import kotlinx.coroutines.launch
 import me.zhanghai.compose.preference.ProvidePreferenceTheme
 import me.zhanghai.compose.preference.SliderPreference
 import me.zhanghai.compose.preference.SwitchPreference
+import com.dessalines.thumbkey.ui.components.settings.GemSettingsTopAppBar as SimpleTopAppBar
 
 enum class CleanupDuration(
     val minutes: Int,
@@ -133,6 +133,14 @@ fun ClipboardSettingsScreen(
     }
 
     Scaffold(
+        containerColor =
+            if (com.dessalines.thumbkey.ui.components.settings.LocalSettingsDrip.current !=
+                null
+            ) {
+                androidx.compose.ui.graphics.Color.Transparent
+            } else {
+                MaterialTheme.colorScheme.background
+            },
         snackbarHost = { SnackbarHost(snackbarHostState) },
         topBar = {
             SimpleTopAppBar(
@@ -146,8 +154,16 @@ fun ClipboardSettingsScreen(
                     Modifier
                         .padding(padding)
                         .verticalScroll(scrollState)
-                        .background(color = MaterialTheme.colorScheme.surface)
-                        .imePadding(),
+                        .background(
+                            color =
+                                if (com.dessalines.thumbkey.ui.components.settings.LocalSettingsDrip.current !=
+                                    null
+                                ) {
+                                    androidx.compose.ui.graphics.Color.Transparent
+                                } else {
+                                    MaterialTheme.colorScheme.surface
+                                },
+                        ).imePadding(),
             ) {
                 ProvidePreferenceTheme {
                     SwitchPreference(

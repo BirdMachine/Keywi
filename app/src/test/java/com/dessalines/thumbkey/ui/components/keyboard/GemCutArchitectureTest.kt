@@ -19,11 +19,12 @@ class GemCutArchitectureTest {
 
     @Test
     fun themeLayoutAndFacetAreIndependentSelectionAxes() {
-        val selection = GemCutSelection(
-            facet = FacetId.HK_LIKE,
-            layout = LayoutId("en-qwerty"),
-            theme = ThemeId("neon-aviary"),
-        )
+        val selection =
+            GemCutSelection(
+                facet = FacetId.HK_LIKE,
+                layout = LayoutId("en-qwerty"),
+                theme = ThemeId("neon-aviary"),
+            )
         assertEquals(FacetId.HK_LIKE, selection.facet)
         assertEquals("en-qwerty", selection.layout.value)
         assertEquals("neon-aviary", selection.theme.value)

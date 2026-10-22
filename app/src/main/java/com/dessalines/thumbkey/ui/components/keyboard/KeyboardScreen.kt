@@ -18,8 +18,8 @@ import androidx.compose.foundation.layout.safeDrawingPadding
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.runtime.mutableStateOf
@@ -121,14 +121,15 @@ fun KeyboardScreen(
     var boardId by remember { mutableStateOf<String?>(null) }
     val activeBoard = boards.firstOrNull { it.id == boardId }
     val keyMods = settings?.keyModifications
-    val baseDefinition = remember(layout, keyMods) {
-        if (!keyMods.isNullOrEmpty()) {
-            getModifiedKeyboardDefinition(layout, keyMods)
-                ?: layout.keyboardDefinition
-        } else {
-            layout.keyboardDefinition
+    val baseDefinition =
+        remember(layout, keyMods) {
+            if (!keyMods.isNullOrEmpty()) {
+                getModifiedKeyboardDefinition(layout, keyMods)
+                    ?: layout.keyboardDefinition
+            } else {
+                layout.keyboardDefinition
+            }
         }
-    }
     val keyboardDefinition = remember(baseDefinition, activeBoard) { activeBoard?.definition() ?: baseDefinition }
 
     var mode by remember {
@@ -191,20 +192,26 @@ fun KeyboardScreen(
 
     SideEffect { ctx.currentKeyboardDefinition = keyboardDefinition }
     LaunchedEffect(boardId, activeBoard?.id) {
-        if (boardId != null && activeBoard == null) { boardId = null; mode = KeyboardMode.MAIN; capsLock = false }
-    }
-    val keyboard = remember(baseKeyboard, baseDefinition, activeBoard, mode, boards.isNotEmpty()) {
-        if (activeBoard != null) {
-            // The custom 3x3 replaces only the main letter grid, never the right tools
-            // or the bottom spacebar/enter row from the selected host geometry.
-            val host = baseDefinition.modes.main
-            activeBoard.overlayOn(host, mode == KeyboardMode.NUMERIC).withBoardPaging()
-        } else if (boards.isNotEmpty()) {
-            baseKeyboard.withBoardPaging()
-        } else {
-            baseKeyboard
+        if (boardId != null && activeBoard == null) {
+            boardId = null
+            mode = KeyboardMode.MAIN
+            capsLock = false
         }
     }
+    val keyboard =
+        remember(baseKeyboard, baseDefinition, activeBoard, mode, boards.isNotEmpty()) {
+            if (activeBoard != null) {
+                // The custom 3x3 replaces only the main letter grid, never the right tools
+                // or the bottom spacebar/enter row from the selected host geometry.
+                val host = baseDefinition.modes.main
+                activeBoard.overlayOn(host, mode == KeyboardMode.NUMERIC).withBoardPaging()
+            } else if (boards.isNotEmpty()) {
+                baseKeyboard.withBoardPaging()
+            } else {
+                baseKeyboard
+            }
+        }
+
     fun boardEvent(action: KeyAction) {
         when (action) {
             KeyAction.CycleBoard -> {
@@ -215,12 +222,26 @@ fun KeyboardScreen(
                 lastAction.value = null
                 Toast.makeText(ctx, boards.firstOrNull { it.id == boardId }?.name ?: "ABC", Toast.LENGTH_SHORT).show()
             }
-            KeyAction.BoardHome -> { boardId = null; mode = KeyboardMode.MAIN; capsLock = false; lastAction.value = null }
+
+            KeyAction.BoardHome -> {
+                boardId = null
+                mode = KeyboardMode.MAIN
+                capsLock = false
+                lastAction.value = null
+            }
+
             is KeyAction.CommitText -> {
                 if (action.text.isNotEmpty()) onTyped()
-                if (activeBoard?.returnAfterInput == true) { boardId = null; mode = KeyboardMode.MAIN; capsLock = false }
+                if (activeBoard?.returnAfterInput == true) {
+                    boardId = null
+                    mode = KeyboardMode.MAIN
+                    capsLock = false
+                }
             }
-            else -> Unit
+
+            else -> {
+                Unit
+            }
         }
     }
 
@@ -350,10 +371,11 @@ fun KeyboardScreen(
                     }
                     Row {
                         val bottomRow = emojiModeLayout.arr.last()
-                        bottomRow.forEach { key ->
+                        bottomRow.forEachIndexed { effectCol, key ->
                             Column {
                                 KeyboardKey(
                                     key = key,
+                                    effectKeyId = "key${emojiModeLayout.arr.lastIndex}_$effectCol",
                                     lastAction = lastAction,
                                     legendHeight = legendHeight,
                                     legendWidth = legendWidth,
@@ -438,8 +460,8 @@ fun KeyboardScreen(
 
                                             KeyboardMode.NUMERIC -> {
                                                 if (activeBoard == null &&
-                                                        switchToLettersAfterSpace &&
-                                                        action is KeyAction.CommitText &&
+                                                    switchToLettersAfterSpace &&
+                                                    action is KeyAction.CommitText &&
                                                     action.text == " "
                                                 ) {
                                                     capsLock = false
@@ -508,10 +530,11 @@ fun KeyboardScreen(
                         )
                     }
                     Column {
-                        controllerKeys.forEach { key ->
+                        controllerKeys.forEachIndexed { effectRow, key ->
                             Column {
                                 KeyboardKey(
                                     key = key,
+                                    effectKeyId = "emoji_control_$effectRow",
                                     lastAction = lastAction,
                                     legendHeight = legendHeight,
                                     legendWidth = legendWidth,
@@ -596,8 +619,8 @@ fun KeyboardScreen(
 
                                             KeyboardMode.NUMERIC -> {
                                                 if (activeBoard == null &&
-                                                        switchToLettersAfterSpace &&
-                                                        action is KeyAction.CommitText &&
+                                                    switchToLettersAfterSpace &&
+                                                    action is KeyAction.CommitText &&
                                                     action.text == " "
                                                 ) {
                                                     capsLock = false
@@ -722,6 +745,12 @@ fun KeyboardScreen(
         val gradientCanvasWidth =
             keyboard.arr.maxOfOrNull { row -> row.sumOf { key -> (key.widthMultiplier * keyWidth).toDouble() }.toFloat() } ?: keyWidth
         val gradientCanvasHeight = keyboard.arr.size * keyHeight
+        val keyRectangles =
+            keyCanvasRects(
+                keyboard.arr.map { row -> row.map { it.widthMultiplier * keyWidth } },
+                List(keyboard.arr.size) { keyHeight },
+                padding = keyPadding.toFloat(),
+            )
         val keyTheme = KeyThemePreferences.current
         val keyGradient = if (keywiEnabled && keyTheme.surfaceStyle == KeySurfaceStyle.GRADIENT) keyTheme.surfaceGradient else null
 
@@ -785,6 +814,7 @@ fun KeyboardScreen(
                                         }
                                     KeyboardKey(
                                         key = key,
+                                        effectKeyId = "key${i}_$j",
                                         ghostKey = ghostKey,
                                         lastAction = lastAction,
                                         legendHeight = legendHeight,
@@ -802,7 +832,7 @@ fun KeyboardScreen(
                                         soundOnTap = soundOnTap,
                                         hideLetters = hideLetters,
                                         hideSymbols = hideSymbols,
-                                    hideSwipeHints = activeBoard?.showHints == false,
+                                        hideSwipeHints = activeBoard?.showHints == false,
                                         capsLock = capsLock,
                                         animationSpeed = settings?.animationSpeed ?: DEFAULT_ANIMATION_SPEED,
                                         animationHelperSpeed = settings?.animationHelperSpeed ?: DEFAULT_ANIMATION_HELPER_SPEED,
@@ -911,6 +941,9 @@ fun KeyboardScreen(
                                         keyGradient = keyGradient,
                                         keyGradientCanvasWidth = gradientCanvasWidth,
                                         keyGradientCanvasHeight = gradientCanvasHeight,
+                                        keyDesignId = "$i:$j",
+                                        keyRectangles = keyRectangles,
+                                        keySequenceIndex = keyboard.arr.take(i).sumOf { it.size } + j,
                                         keyGradientOffsetX = gradientOffsetX,
                                         keyGradientOffsetY = gradientOffsetY,
                                     )
