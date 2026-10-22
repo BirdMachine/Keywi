@@ -63,7 +63,7 @@ class ToolbarKiwiIconTest {
 
 
     @Test fun launcherUsesTransparentArtworkWithoutAnAdaptiveBackgroundLayer() {
-        val context = RuntimeEnvironment.getApplication<Application>()
+        val context = RuntimeEnvironment.getApplication()
         val icon = context.packageManager.getApplicationIcon(context.applicationInfo)
         assertFalse("Use the transparent artwork directly", icon is android.graphics.drawable.AdaptiveIconDrawable)
         val bitmap = android.graphics.BitmapFactory.decodeResource(
