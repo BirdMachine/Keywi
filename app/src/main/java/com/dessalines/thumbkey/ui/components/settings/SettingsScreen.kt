@@ -44,6 +44,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import com.dessalines.thumbkey.R
 import com.dessalines.thumbkey.db.AppSettingsViewModel
@@ -115,7 +116,7 @@ fun SettingsScreen(
                     lastViewedVersion = settings?.lastVersionCodeViewed,
                     onWelcomeViewed = { appSettingsViewModel.updateLastVersionCodeViewed(ctx.getVersionCode()) },
                 )
-                ProvidePreferenceTheme {
+                CompactMainSettings {
                     if (!(thumbkeyEnabled || thumbkeySelected)) {
                         Preference(
                             title = { Text(stringResource(R.string.setup)) },
@@ -220,4 +221,19 @@ fun SettingsScreen(
             }
         },
     )
+}
+
+/** Tighten text leading only on the main menu; font scaling and touch targets remain intact. */
+@Composable
+private fun CompactMainSettings(content: @Composable () -> Unit) {
+    val typography = MaterialTheme.typography
+    MaterialTheme(
+        typography = typography.copy(
+            bodyLarge = typography.bodyLarge.copy(lineHeight = 20.sp),
+            bodyMedium = typography.bodyMedium.copy(lineHeight = 17.sp),
+            bodySmall = typography.bodySmall.copy(lineHeight = 15.sp),
+        ),
+    ) {
+        ProvidePreferenceTheme(content = content)
+    }
 }

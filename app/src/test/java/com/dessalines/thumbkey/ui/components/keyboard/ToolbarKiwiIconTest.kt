@@ -18,6 +18,7 @@ import org.junit.Assert.assertTrue
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
+import org.robolectric.RuntimeEnvironment
 import org.robolectric.RobolectricTestRunner
 import org.robolectric.annotation.Config
 import org.robolectric.annotation.GraphicsMode
@@ -58,6 +59,23 @@ class ToolbarKiwiIconTest {
                 .asAndroidBitmap()
                 .compress(android.graphics.Bitmap.CompressFormat.PNG, 100, it)
         }
+    }
+
+
+    @Test fun launcherUsesTransparentArtworkWithoutAnAdaptiveBackgroundLayer() {
+        val context = RuntimeEnvironment.getApplication<Application>()
+        val icon = context.packageManager.getApplicationIcon(context.applicationInfo)
+        assertFalse("Use the transparent artwork directly", icon is android.graphics.drawable.AdaptiveIconDrawable)
+        val bitmap = android.graphics.BitmapFactory.decodeResource(
+            context.resources,
+            com.dessalines.thumbkey.R.drawable.keywi_launcher_foreground,
+            android.graphics.BitmapFactory.Options().apply { inScaled = false },
+        )
+        assertTrue("Launcher artwork retains alpha", bitmap.hasAlpha())
+        listOf(0 to 0, bitmap.width - 1 to 0, 0 to bitmap.height - 1, bitmap.width - 1 to bitmap.height - 1).forEach { (x, y) ->
+            assertTrue("Launcher corners are transparent", android.graphics.Color.alpha(bitmap.getPixel(x, y)) == 0)
+        }
+        bitmap.recycle()
     }
 
     @Test fun automaticContrastAndManualVariantsAreAvailable() {
