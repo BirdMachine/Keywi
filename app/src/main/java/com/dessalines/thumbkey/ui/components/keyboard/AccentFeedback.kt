@@ -115,7 +115,10 @@ fun KeyAccentOverlay(
             do { withFrameNanos { clock = SystemClock.uptimeMillis() } } while (clock < until)
         }
     }
-    if (onProgress != null) SideEffect { onProgress(progress) }
+    if (onProgress != null) {
+        val sampled = progress
+        SideEffect { onProgress(sampled) }
+    }
     Canvas(modifier) {
         if (!suppressed && config.durationMs > 0) {
             if (progress < 1f) drawRect(config.colorAt(progress, fallback))
