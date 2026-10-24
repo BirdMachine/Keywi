@@ -34,6 +34,8 @@ fun KeypressEffectsScreen(navController: NavController) {
             Modifier.padding(padding).verticalScroll(rememberScrollState()).imePadding(),
             verticalArrangement = Arrangement.spacedBy(8.dp),
         ) {
+            com.dessalines.thumbkey.effects.FeedbackModeControl()
+            AccentFeedbackEditor()
             GemSettingsGroupLabel("✦ ACTION FEEDBACK", "Give taps, swipes and holds their own character")
             GemNavigationPreference(
                 title = { Text("Sounds & sound packs") },
@@ -64,6 +66,7 @@ fun KeypressSoundSettingsScreen(navController: NavController) {
                 .padding(16.dp),
             verticalArrangement = Arrangement.spacedBy(12.dp),
         ) {
+            com.dessalines.thumbkey.effects.FeedbackModeControl()
             AdvancedSoundScreen()
             KeywiThemeTestBench()
         }

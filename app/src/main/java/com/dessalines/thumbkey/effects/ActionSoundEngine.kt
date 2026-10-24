@@ -24,6 +24,8 @@ object ActionSoundEngine {
 
     fun isEnabled(context: Context) = ActionSoundPreferences.get(context).enabled
 
+    fun stopAll() { handler.post { active.toList().forEach { release(it) } } }
+
     fun fire(
         context: Context,
         direction: String = "CENTER",
@@ -31,7 +33,13 @@ object ActionSoundEngine {
         phase: SoundTrigger = SoundTrigger.PRESS,
         event: SoundEvent = SoundEvent.KEY,
     ) {
+        if (!FeedbackPreferences.soundAllowed(context)) return
         val config = ActionSoundPreferences.get(context)
+        if (!config.enabled && event == SoundEvent.KEY && phase == SoundTrigger.PRESS) {
+            (context.getSystemService(Context.AUDIO_SERVICE) as android.media.AudioManager)
+                .playSoundEffect(android.media.AudioManager.FX_KEY_CLICK, .1f)
+            return
+        }
         if (!config.enabled || (event == SoundEvent.KEY && phase != config.trigger)) return
         if (event == SoundEvent.SUGGESTION_SCROLL) {
             val now = android.os.SystemClock.uptimeMillis()
@@ -87,6 +95,7 @@ object ActionSoundEngine {
                 }.getOrNull()
                     ?: return@execute
             handler.post {
+                if (!FeedbackPreferences.soundAllowed(context)) return@post
                 if (!config.overlap) active.toList().forEach { release(it) }
                 // Bound resources independently from the user's chosen tail duration.
                 while (active.size >= 24) release(active.first())
@@ -109,7 +118,7 @@ object ActionSoundEngine {
                         true
                     }
                     player.setOnPreparedListener { p ->
-                        if (p in active) {
+                        if (p in active && FeedbackPreferences.soundAllowed(context)) {
                             p.start()
                             if (config.maxDurationMs >
                                 0

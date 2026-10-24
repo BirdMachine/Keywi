@@ -329,7 +329,7 @@ private fun ClipboardItemRow(
                             onLongPress = { offset ->
                                 pressOffset = offset
                                 showContextMenu = true
-                                if (vibrateOnTap) {
+                                if (vibrateOnTap && com.dessalines.thumbkey.effects.FeedbackPreferences.hapticsAllowed(view.context)) {
                                     view.performHapticFeedback(HapticFeedbackConstants.KEYBOARD_TAP)
                                 }
                             },

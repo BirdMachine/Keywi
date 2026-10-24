@@ -354,6 +354,7 @@ private fun PaletteKaomojiCell(
                     }
                 },
             ).combinedClickable(
+                hapticFeedbackEnabled = false,
                 onClick = onClick,
                 onDoubleClick = onDoubleClick,
             )

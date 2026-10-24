@@ -309,6 +309,8 @@ private fun RowScope.HkKey(
     val interactions = remember { MutableInteractionSource() }
     val pressed by interactions.collectIsPressedAsState()
     val context = LocalContext.current
+    val feedbackMode = com.dessalines.thumbkey.effects.rememberFeedbackMode()
+    val view = androidx.compose.ui.platform.LocalView.current
     val password =
         (context as? IMEService)?.let {
             com.dessalines.thumbkey.utils
@@ -336,6 +338,9 @@ private fun RowScope.HkKey(
             soundPressDispatched = false
             gifPressDispatched = false
             holdPendingRelease = false
+            if (feedbackMode == com.dessalines.thumbkey.effects.FeedbackMode.VIBRATE) {
+                view.performHapticFeedback(android.view.HapticFeedbackConstants.KEYBOARD_TAP)
+            }
             val sounds = ActionSoundPreferences.get(context)
             if (sounds.selection != SoundSelection.DIRECTION && sounds.keys.isEmpty() && sounds.directions.isEmpty()) {
                 ActionSoundEngine.fire(context, keyId = effectKeyId, phase = SoundTrigger.PRESS)
@@ -464,6 +469,7 @@ private fun RowScope.HkKey(
                 }.combinedClickable(
                     interactionSource = interactions,
                     indication = null,
+                    hapticFeedbackEnabled = false,
                     onClick = {
                         effects("CENTER", SoundTrigger.PRESS)
                         if (!TaskerKeyBindings.dispatch(context, effectKeyId, "CENTER")) onClick()
@@ -477,9 +483,13 @@ private fun RowScope.HkKey(
                 ),
         contentAlignment = Alignment.Center,
     ) {
+        KeyAccentOverlay(pressed, Modifier.matchParentSize(), suppressed = password)
         val legendColor = if (pressed || active) MaterialTheme.colorScheme.onPrimaryContainer else MaterialTheme.colorScheme.onSurface
         TaskerCommandLegend(effectKeyId, "CENTER", 24.dp, legendColor) {
             Text(label, color = legendColor)
+        }
+        if (label == "⚙") {
+            com.dessalines.thumbkey.effects.FeedbackModeControl(Modifier.align(Alignment.BottomEnd).then(Modifier.height(32.dp)), compact = true)
         }
         Box(Modifier.matchParentSize().padding(3.dp), contentAlignment = Alignment.BottomEnd) {
             TaskerCommandLegend(effectKeyId, "HOLD", 12.dp, legendColor) {}

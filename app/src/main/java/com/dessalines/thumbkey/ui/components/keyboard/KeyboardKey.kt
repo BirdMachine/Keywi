@@ -232,6 +232,7 @@ fun KeyboardKey(
     var offsetY by remember { mutableFloatStateOf(0f) }
     var hasSlideMoveCursorTriggered by remember { mutableStateOf(false) }
     var timeOfLastAccelerationInput by remember { mutableLongStateOf(0L) }
+    var accentTrail by remember { mutableStateOf(emptyList<AccentTrailPoint>()) }
     var positions by remember { mutableStateOf(listOf<Offset>()) }
     var maxOffset by remember { mutableStateOf(Offset(0f, 0f)) }
 
@@ -354,13 +355,10 @@ fun KeyboardKey(
                 ActionGifRuntime.trigger(ctx, effectKeyId, "CENTER", "press", x.coerceIn(0f, 1f), y.coerceIn(0f, 1f))
                 gifPressDispatched = true
             }
-            if (vibrateOnTap) {
+            if (vibrateOnTap && com.dessalines.thumbkey.effects.FeedbackPreferences.hapticsAllowed(ctx)) {
                 // This is a workaround for only having LongPress
                 // https://stackoverflow.com/questions/68333741/how-to-perform-a-haptic-feedback-in-jetpack-compose
                 view.performHapticFeedback(HapticFeedbackConstants.KEYBOARD_TAP)
-            }
-            if (soundOnTap && !ActionSoundEngine.isEnabled(ctx)) {
-                audioManager.playSoundEffect(AudioManager.FX_KEY_CLICK, .1f)
             }
         } else if (heldEffectPendingRelease) {
             heldEffectPendingRelease = false
@@ -401,7 +399,7 @@ fun KeyboardKey(
             }
             tickCount++
             slideHoldTickCount = tickCount
-            if (vibrateOnSlide) view.performHapticFeedback(slideHapticConstant)
+            if (vibrateOnSlide && com.dessalines.thumbkey.effects.FeedbackPreferences.hapticsAllowed(ctx)) view.performHapticFeedback(slideHapticConstant)
         }
     }
 
@@ -423,7 +421,7 @@ fun KeyboardKey(
             }
             tickCount++
             slideHoldTickCount = tickCount
-            if (vibrateOnSlide) view.performHapticFeedback(slideHapticConstant)
+            if (vibrateOnSlide && com.dessalines.thumbkey.effects.FeedbackPreferences.hapticsAllowed(ctx)) view.performHapticFeedback(slideHapticConstant)
         }
     }
 
@@ -654,11 +652,8 @@ fun KeyboardKey(
                         )
                         doneKeyAction(scope, action, isDragged, releasedKey, animationHelperSpeed)
                         heldEffectPendingRelease = true
-                        if (vibrateOnTap) {
+                        if (vibrateOnTap && com.dessalines.thumbkey.effects.FeedbackPreferences.hapticsAllowed(ctx)) {
                             view.performHapticFeedback(HapticFeedbackConstants.KEYBOARD_TAP)
-                        }
-                        if (soundOnTap && !ActionSoundEngine.isEnabled(ctx)) {
-                            audioManager.playSoundEffect(AudioManager.FX_KEY_CLICK, .1f)
                         }
                     }
                 },
@@ -667,10 +662,12 @@ fun KeyboardKey(
             .pointerInput(key1 = id) {
                 detectDragGestures(
                     onDragStart = {
+                        if (!isPasswordField) accentTrail = listOf(AccentTrailPoint(it))
                         taskerReservesSwipe = TaskerKeyBindings.reservesSwipe(ctx, effectKeyId)
                         isDragged.value = true
                     },
                     onDrag = onDrag@{ change, dragAmount ->
+                        if (!isPasswordField) accentTrail = (accentTrail + AccentTrailPoint(change.position)).takeLast(96)
                         change.consume()
                         val (x, y) = dragAmount
                         offsetX += x
@@ -726,7 +723,7 @@ fun KeyboardKey(
                                     // reset offsetX, do not reset offsetY when sliding, it will break selecting
                                     offsetX = 0f
                                     // selection has changed; give feedback
-                                    if (vibrateOnSlide) view.performHapticFeedback(slideHapticConstant)
+                                    if (vibrateOnSlide && com.dessalines.thumbkey.effects.FeedbackPreferences.hapticsAllowed(ctx)) view.performHapticFeedback(slideHapticConstant)
                                 }
                             } else if ((
                                     slideSpacebarDeadzoneEnabled &&
@@ -802,7 +799,7 @@ fun KeyboardKey(
                                     // reset offsetX, do not reset offsetY when sliding, it will break selecting
                                     offsetX = 0f
                                     // selection has changed; give feedback
-                                    if (vibrateOnSlide) view.performHapticFeedback(slideHapticConstant)
+                                    if (vibrateOnSlide && com.dessalines.thumbkey.effects.FeedbackPreferences.hapticsAllowed(ctx)) view.performHapticFeedback(slideHapticConstant)
                                 }
                             }
                         } else if (key.slideType == SlideType.DELETE && slideEnabled) {
@@ -836,7 +833,7 @@ fun KeyboardKey(
                                     // reset offsetX, do not reset offsetY when sliding, it will break selecting
                                     offsetX = 0f
                                     // selection has changed; give feedback
-                                    if (vibrateOnSlide) view.performHapticFeedback(slideHapticConstant)
+                                    if (vibrateOnSlide && com.dessalines.thumbkey.effects.FeedbackPreferences.hapticsAllowed(ctx)) view.performHapticFeedback(slideHapticConstant)
                                 }
                             }
                         }
@@ -1008,7 +1005,7 @@ fun KeyboardKey(
                                     )
                                 }
                                 // Play an extra haptic effect on supported devices when slide deleting text
-                                if (vibrateOnSlide && Build.VERSION.SDK_INT >= 30) {
+                                if (vibrateOnSlide && com.dessalines.thumbkey.effects.FeedbackPreferences.hapticsAllowed(ctx) && Build.VERSION.SDK_INT >= 30) {
                                     view.performHapticFeedback(HapticFeedbackConstants.REJECT)
                                 }
                             }
@@ -1230,24 +1227,18 @@ fun KeyboardKey(
             }
         }
 
-        // The animated box that fades out.
-        AnimatedVisibility(
-            modifier =
-                Modifier
-                    .fillMaxSize()
-                    .background(color = Color(0, 0, 0, 0)),
-            visible = releasedKey.value != null && !isPasswordField,
-            enter = EnterTransition.None,
-            exit = fadeOut(tween(animationSpeed)),
-        ) {
-            Box(
-                contentAlignment = Alignment.Center,
-                modifier =
-                    Modifier
-                        .fillMaxSize()
-                        .background(color = MaterialTheme.colorScheme.tertiaryContainer),
-            ) {}
+        if (key.center.action is KeyAction.ToggleEmojiMode) {
+            com.dessalines.thumbkey.effects.FeedbackModeControl(
+                modifier = Modifier.align(Alignment.BottomEnd).size(40.dp), compact = true,
+            )
         }
+
+        KeyAccentOverlay(
+            pressed = isPressed || isDragged.value,
+            modifier = Modifier.matchParentSize(),
+            points = accentTrail,
+            suppressed = isPasswordField,
+        )
 
         // The animated key letter that falls downwards and then fades out.
         AnimatedVisibility(

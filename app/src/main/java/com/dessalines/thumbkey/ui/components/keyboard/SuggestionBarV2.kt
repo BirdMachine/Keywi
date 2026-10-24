@@ -334,6 +334,7 @@ private fun SuggestionLozengeSlot(
                                         }
                                     },
                             ).combinedClickable(
+                hapticFeedbackEnabled = false,
                                 onClick = { onSuggestionClick(currentSuggestion) },
                                 onLongClick = { onSuggestionLongClick?.invoke(currentSuggestion) },
                             ),

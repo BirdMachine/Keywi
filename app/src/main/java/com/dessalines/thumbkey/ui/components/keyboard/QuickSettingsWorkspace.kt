@@ -94,7 +94,8 @@ fun QuickSettingsWorkspace(
                         SuggestionPreferences.setEnabled(context, it)
                         onPreferencesChanged()
                     }
-                    QuickSettingToggle("Key sounds", sounds) {
+                    com.dessalines.thumbkey.effects.FeedbackModeControl(onChanged = onPreferencesChanged)
+                    QuickSettingToggle("Use custom sound pack", sounds) {
                         sounds = it
                         ActionSoundPreferences.save(context, ActionSoundPreferences.get(context).copy(enabled = it))
                         onPreferencesChanged()

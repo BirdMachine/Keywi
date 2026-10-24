@@ -45,7 +45,7 @@ class QuickSettingsWorkspaceTest {
     @Test fun quickTogglesPersistAndPowerChangesWithoutTouchingEditor() {
         show()
         compose.onNodeWithContentDescription("Suggestions").performClick()
-        compose.onNodeWithContentDescription("Key sounds").performClick()
+        compose.onNodeWithContentDescription("Use custom sound pack").performClick()
         compose.onNodeWithContentDescription("Keypress images & GIFs").performClick()
         compose.onNodeWithContentDescription("Power mode Restricted").performClick()
         compose.runOnIdle {
@@ -65,7 +65,7 @@ class QuickSettingsWorkspaceTest {
             KeywiPowerPreferences.save(context, KeywiPowerMode.RESTRICTED)
         }
         compose.onNodeWithContentDescription("Suggestions").assertIsOff()
-        compose.onNodeWithContentDescription("Key sounds").assertIsOn()
+        compose.onNodeWithContentDescription("Use custom sound pack").assertIsOn()
         compose.onNodeWithContentDescription("Power mode Restricted").assertIsSelected()
         compose.runOnIdle {
             SuggestionPreferences.setEnabled(context, true)
@@ -73,7 +73,7 @@ class QuickSettingsWorkspaceTest {
             KeywiPowerPreferences.save(context, KeywiPowerMode.UNBRIDLED)
         }
         compose.onNodeWithContentDescription("Suggestions").assertIsOn()
-        compose.onNodeWithContentDescription("Key sounds").assertIsOff()
+        compose.onNodeWithContentDescription("Use custom sound pack").assertIsOff()
         compose.onNodeWithContentDescription("Power mode Unbridled").assertIsSelected()
     }
 

@@ -257,7 +257,9 @@ fun KeyboardScreen(
     val slideSpacebarDeadzoneEnabled = (settings?.slideSpacebarDeadzoneEnabled ?: DEFAULT_SLIDE_SPACEBAR_DEADZONE_ENABLED).toBool()
     val slideBackspaceDeadzoneEnabled = (settings?.slideBackspaceDeadzoneEnabled ?: DEFAULT_SLIDE_BACKSPACE_DEADZONE_ENABLED).toBool()
     val keyBorderWidth = settings?.keyBorderWidth ?: DEFAULT_KEY_BORDER_WIDTH
-    val vibrateOnTap = activeBoard?.haptics != false && (settings?.vibrateOnTap ?: DEFAULT_VIBRATE_ON_TAP).toBool()
+    val feedbackMode = com.dessalines.thumbkey.effects.rememberFeedbackMode()
+    val vibrateOnTap = activeBoard?.haptics != false && feedbackMode != com.dessalines.thumbkey.effects.FeedbackMode.SILENT &&
+        (feedbackMode == com.dessalines.thumbkey.effects.FeedbackMode.VIBRATE || (settings?.vibrateOnTap ?: DEFAULT_VIBRATE_ON_TAP).toBool())
     val vibrateOnSlide = activeBoard?.haptics != false && (settings?.vibrateOnSlide ?: DEFAULT_VIBRATE_ON_SLIDE).toBool()
     val soundOnTap = (settings?.soundOnTap ?: DEFAULT_SOUND_ON_TAP).toBool()
     val hideLetters = (settings?.hideLetters ?: DEFAULT_HIDE_LETTERS).toBool()
@@ -359,8 +361,8 @@ fun KeyboardScreen(
                             factory = { context ->
                                 EmojiPickerView(context).also { picker ->
                                     picker.setOnEmojiPickedListener {
-                                        if (vibrateOnTap) view.performHapticFeedback(HapticFeedbackConstants.KEYBOARD_TAP)
-                                        if (soundOnTap) audioManager.playSoundEffect(AudioManager.FX_KEY_CLICK, .1f)
+                                        if (vibrateOnTap && com.dessalines.thumbkey.effects.FeedbackPreferences.hapticsAllowed(ctx)) view.performHapticFeedback(HapticFeedbackConstants.KEYBOARD_TAP)
+                                        com.dessalines.thumbkey.effects.ActionSoundEngine.fire(ctx)
                                         ctx.currentInputConnection.commitText(it.emoji, 1)
                                         onTyped()
                                     }
@@ -519,8 +521,8 @@ fun KeyboardScreen(
                             factory = { context ->
                                 EmojiPickerView(context).also { picker ->
                                     picker.setOnEmojiPickedListener {
-                                        if (vibrateOnTap) view.performHapticFeedback(HapticFeedbackConstants.KEYBOARD_TAP)
-                                        if (soundOnTap) audioManager.playSoundEffect(AudioManager.FX_KEY_CLICK, .1f)
+                                        if (vibrateOnTap && com.dessalines.thumbkey.effects.FeedbackPreferences.hapticsAllowed(ctx)) view.performHapticFeedback(HapticFeedbackConstants.KEYBOARD_TAP)
+                                        com.dessalines.thumbkey.effects.ActionSoundEngine.fire(ctx)
                                         ctx.currentInputConnection.commitText(it.emoji, 1)
                                         onTyped()
                                     }
@@ -664,8 +666,8 @@ fun KeyboardScreen(
             }
             KaomojiRoom(
                 onCommit = { text ->
-                    if (vibrateOnTap) view.performHapticFeedback(HapticFeedbackConstants.KEYBOARD_TAP)
-                    if (soundOnTap) audioManager.playSoundEffect(AudioManager.FX_KEY_CLICK, .1f)
+                    if (vibrateOnTap && com.dessalines.thumbkey.effects.FeedbackPreferences.hapticsAllowed(ctx)) view.performHapticFeedback(HapticFeedbackConstants.KEYBOARD_TAP)
+                    com.dessalines.thumbkey.effects.ActionSoundEngine.fire(ctx)
                     ctx.currentInputConnection.commitText(text, 1)
                 },
                 onBackToLetters = {
