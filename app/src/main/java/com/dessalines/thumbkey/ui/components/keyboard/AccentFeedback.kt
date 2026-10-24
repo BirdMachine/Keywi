@@ -3,19 +3,17 @@ package com.dessalines.thumbkey.ui.components.keyboard
 import android.content.Context
 import android.content.SharedPreferences
 import android.os.SystemClock
-import androidx.compose.animation.core.Animatable
-import androidx.compose.animation.core.LinearEasing
-import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Canvas
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableFloatStateOf
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableLongStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.withFrameNanos
 import androidx.compose.ui.Modifier
@@ -26,8 +24,6 @@ import androidx.compose.ui.graphics.lerp
 import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
-import kotlinx.coroutines.Job
-import kotlinx.coroutines.launch
 import org.json.JSONArray
 import org.json.JSONObject
 
@@ -92,21 +88,23 @@ fun KeyAccentOverlay(
 ) {
     val config = rememberAccentFeedback()
     val fallback = MaterialTheme.colorScheme.tertiaryContainer
-    val fade = remember { Animatable(1f) }
+    var progress by remember { mutableFloatStateOf(1f) }
+    var pulse by remember { mutableIntStateOf(0) }
     var clock by remember { mutableLongStateOf(0L) }
-    val scope = rememberCoroutineScope()
-    var fading by remember { mutableStateOf<Job?>(null) }
     LaunchedEffect(pressed, trigger, suppressed) {
-        if (suppressed) {
-            fading?.cancel()
-            fade.snapTo(1f)
-        } else if ((pressed || trigger > 0) && config.durationMs > 0) {
-            fading?.cancel()
-            // Owned by the surface: releasing a key must not cancel its fade.
-            fading = scope.launch {
-                fade.snapTo(0f)
-                fade.animateTo(1f, tween(config.durationMs, easing = LinearEasing))
-            }
+        if (!suppressed && (pressed || trigger > 0)) pulse++
+    }
+    // Finger lift does not change this effect's keys. Each new press restarts the
+    // sequence on the frame clock, independently of system transition scaling.
+    LaunchedEffect(pulse, suppressed) {
+        progress = 1f
+        if (pulse > 0 && !suppressed && config.durationMs > 0) {
+            val durationNanos = config.durationMs * 1_000_000L
+            val started = withFrameNanos { it }
+            progress = 0f
+            do {
+                withFrameNanos { frame -> progress = ((frame - started).toFloat() / durationNanos).coerceIn(0f, 1f) }
+            } while (progress < 1f)
         }
     }
     LaunchedEffect(points, config, suppressed) {
@@ -117,7 +115,7 @@ fun KeyAccentOverlay(
     }
     Canvas(modifier) {
         if (!suppressed && config.durationMs > 0) {
-            if (fade.value < 1f) drawRect(config.colorAt(fade.value, fallback))
+            if (progress < 1f) drawRect(config.colorAt(progress, fallback))
             if (config.trailEnabled) {
                 points.zipWithNext().forEach { (from, to) ->
                     val age = ((clock - to.createdAt).coerceAtLeast(0L).toFloat() / config.durationMs).coerceIn(0f, 1f)
