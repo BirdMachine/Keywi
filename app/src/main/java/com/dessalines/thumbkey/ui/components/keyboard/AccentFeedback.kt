@@ -7,6 +7,7 @@ import androidx.compose.foundation.Canvas
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
@@ -85,6 +86,7 @@ fun KeyAccentOverlay(
     points: List<AccentTrailPoint> = emptyList(),
     suppressed: Boolean = false,
     trigger: Int = 0,
+    onProgress: ((Float) -> Unit)? = null,
 ) {
     val config = rememberAccentFeedback()
     val fallback = MaterialTheme.colorScheme.tertiaryContainer
@@ -113,6 +115,7 @@ fun KeyAccentOverlay(
             do { withFrameNanos { clock = SystemClock.uptimeMillis() } } while (clock < until)
         }
     }
+    if (onProgress != null) SideEffect { onProgress(progress) }
     Canvas(modifier) {
         if (!suppressed && config.durationMs > 0) {
             if (progress < 1f) drawRect(config.colorAt(progress, fallback))
