@@ -37,7 +37,6 @@ class AccentFeedbackRenderTest {
 
     @Test fun releasingDoesNotFreezeFadeAndPasswordSuppressionClearsIt() {
         AccentFeedbackPreferences.save(RuntimeEnvironment.getApplication(), AccentFeedbackConfig(1000, listOf(Color.Red, Color.Green, Color.Blue)))
-        val trace = mutableListOf<String>()
         var observed = -1f
         var duration = -1
         var dimensions = "unknown"
@@ -48,15 +47,26 @@ class AccentFeedbackRenderTest {
                 val context = androidx.compose.ui.platform.LocalContext.current
                 androidx.compose.runtime.SideEffect { duration = AccentFeedbackPreferences.get(context).durationMs }
                 Box(Modifier.size(100.dp).background(Color.Black).testTag("flash")) {
-                    KeyAccentOverlay(pressed.value, Modifier.matchParentSize().then(Modifier.onSizeChanged { dimensions = it.toString() }), suppressed = suppressed.value, onProgress = { observed = it; trace.add("${compose.mainClock.currentTime}:$it") })
+                    KeyAccentOverlay(pressed.value, Modifier.matchParentSize().then(Modifier.onSizeChanged { dimensions = it.toString() }), suppressed = suppressed.value, onProgress = { observed = it })
                 }
             }
         }
         compose.mainClock.autoAdvance = false
+        fun frame() {
+            compose.mainClock.advanceTimeByFrame()
+            compose.waitForIdle()
+        }
         compose.runOnIdle { pressed.value = true }
+        // Android applies composition/layout separately from the virtual clock.
+        // Deliver the down frame before a later up frame, as a real touch does.
+        repeat(5) { if (observed >= 1f) frame() }
+        assertTrue("The down frame must start a fade", observed < 1f)
         compose.mainClock.advanceTimeBy(200)
+        compose.waitForIdle()
         compose.runOnIdle { pressed.value = false }
+        frame()
         compose.mainClock.advanceTimeBy(250)
+        compose.waitForIdle()
         fun pixel() = compose.onNodeWithTag("flash").captureToImage().toPixelMap()[50, 50]
         val beforeCapture = observed
         compose.waitForIdle()
@@ -64,13 +74,16 @@ class AccentFeedbackRenderTest {
         diagnostic.parentFile.mkdirs()
         diagnostic.outputStream().use { compose.onRoot().captureToImage().asAndroidBitmap().compress(android.graphics.Bitmap.CompressFormat.PNG, 100, it) }
         val middle = pixel()
-        assertTrue("Second color must appear after release: $middle, progress=$observed, duration=$duration, size=$dimensions, beforeCapture=$beforeCapture, trace=$trace", middle.green > middle.red && middle.green > middle.blue)
+        assertTrue("Second color must appear after release: $middle, progress=$observed, duration=$duration, size=$dimensions, beforeCapture=$beforeCapture", middle.green > middle.red && middle.green > middle.blue)
         compose.mainClock.advanceTimeBy(1500)
+        compose.waitForIdle()
         assertTrue("Fade must finish even after finger lift", pixel().green < .02f)
         compose.runOnIdle { pressed.value = true }
+        repeat(5) { if (observed >= 1f) frame() }
         compose.mainClock.advanceTimeBy(100)
+        compose.waitForIdle()
         compose.runOnIdle { suppressed.value = true }
-        compose.mainClock.advanceTimeByFrame()
+        frame()
         assertTrue("Password fields must suppress the accent", pixel().red < .02f)
     }
 

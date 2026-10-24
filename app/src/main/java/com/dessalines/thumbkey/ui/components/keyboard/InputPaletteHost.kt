@@ -124,7 +124,7 @@ fun ExpandedInputPaletteHost(
                     InputPalette.KAOMOJI -> {
                         KaomojiRoom(
                             onCommit = { text ->
-                                if (vibrateOnTap && com.dessalines.thumbkey.effects.FeedbackPreferences.hapticsAllowed(ime)) view.performHapticFeedback(HapticFeedbackConstants.KEYBOARD_TAP)
+                                if ((vibrateOnTap || com.dessalines.thumbkey.effects.FeedbackPreferences.get(ime) == com.dessalines.thumbkey.effects.FeedbackMode.VIBRATE) && com.dessalines.thumbkey.effects.FeedbackPreferences.hapticsAllowed(ime)) view.performHapticFeedback(HapticFeedbackConstants.KEYBOARD_TAP)
                                 com.dessalines.thumbkey.effects.ActionSoundEngine.fire(ime)
                                 PaletteSearchCapture.bypass {
                                     ime.currentInputConnection?.commitText(text, 1)
