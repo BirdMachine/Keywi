@@ -37,6 +37,7 @@ class AccentFeedbackRenderTest {
 
     @Test fun releasingDoesNotFreezeFadeAndPasswordSuppressionClearsIt() {
         AccentFeedbackPreferences.save(RuntimeEnvironment.getApplication(), AccentFeedbackConfig(1000, listOf(Color.Red, Color.Green, Color.Blue)))
+        val trace = mutableListOf<String>()
         var observed = -1f
         var duration = -1
         var dimensions = "unknown"
@@ -47,7 +48,7 @@ class AccentFeedbackRenderTest {
                 val context = androidx.compose.ui.platform.LocalContext.current
                 androidx.compose.runtime.SideEffect { duration = AccentFeedbackPreferences.get(context).durationMs }
                 Box(Modifier.size(100.dp).background(Color.Black).testTag("flash")) {
-                    KeyAccentOverlay(pressed.value, Modifier.matchParentSize().then(Modifier.onSizeChanged { dimensions = it.toString() }), suppressed = suppressed.value, onProgress = { observed = it })
+                    KeyAccentOverlay(pressed.value, Modifier.matchParentSize().then(Modifier.onSizeChanged { dimensions = it.toString() }), suppressed = suppressed.value, onProgress = { observed = it; trace.add("${compose.mainClock.currentTime}:$it") })
                 }
             }
         }
@@ -57,12 +58,13 @@ class AccentFeedbackRenderTest {
         compose.runOnIdle { pressed.value = false }
         compose.mainClock.advanceTimeBy(250)
         fun pixel() = compose.onNodeWithTag("flash").captureToImage().toPixelMap()[50, 50]
+        val beforeCapture = observed
         compose.waitForIdle()
         val diagnostic = File("build/outputs/color-review/feedback-mid-fade.png")
         diagnostic.parentFile.mkdirs()
         diagnostic.outputStream().use { compose.onRoot().captureToImage().asAndroidBitmap().compress(android.graphics.Bitmap.CompressFormat.PNG, 100, it) }
         val middle = pixel()
-        assertTrue("Second color must appear after release: $middle, progress=$observed, duration=$duration, size=$dimensions", middle.green > middle.red && middle.green > middle.blue)
+        assertTrue("Second color must appear after release: $middle, progress=$observed, duration=$duration, size=$dimensions, beforeCapture=$beforeCapture, trace=$trace", middle.green > middle.red && middle.green > middle.blue)
         compose.mainClock.advanceTimeBy(1500)
         assertTrue("Fade must finish even after finger lift", pixel().green < .02f)
         compose.runOnIdle { pressed.value = true }
