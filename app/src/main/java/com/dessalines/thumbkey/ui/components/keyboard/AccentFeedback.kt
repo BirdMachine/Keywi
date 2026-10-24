@@ -33,7 +33,7 @@ data class AccentFeedbackConfig(
         val t = progress.coerceIn(0f, 1f)
         val position = t * (stops.size - 1)
         val index = position.toInt().coerceAtMost(stops.lastIndex)
-        val color = lerp(stops[index], stops[(index + 1).coerceAtMost(stops.lastIndex)], position - index)
+        val color = if (position == index.toFloat()) stops[index] else lerp(stops[index], stops[(index + 1).coerceAtMost(stops.lastIndex)], position - index)
         return color.copy(alpha = color.alpha * (1f - t))
     }
 }

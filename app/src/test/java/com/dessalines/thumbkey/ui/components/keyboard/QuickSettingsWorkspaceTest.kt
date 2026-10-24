@@ -31,6 +31,7 @@ class QuickSettingsWorkspaceTest {
     private val context get() = RuntimeEnvironment.getApplication()
 
     private fun show() {
+        com.dessalines.thumbkey.effects.FeedbackPreferences.save(context, com.dessalines.thumbkey.effects.FeedbackMode.SOUND)
         SuggestionPreferences.setEnabled(context, true)
         ActionSoundPreferences.save(context, ActionSoundConfig())
         ActionGifPreferences.save(context, ActionGifState())
@@ -54,6 +55,19 @@ class QuickSettingsWorkspaceTest {
             assertTrue(ActionGifPreferences.current.enabled)
             assertEquals(KeywiPowerMode.RESTRICTED, KeywiPowerPreferences.load(context))
             assertEquals(4, changes)
+        }
+    }
+
+    @Test fun feedbackCyclePersistsWithoutChangingTheCustomSoundSwitch() {
+        show()
+        compose.onNodeWithText("Feedback: Sound → Vibrate only").performClick()
+        compose.runOnIdle { assertEquals(com.dessalines.thumbkey.effects.FeedbackMode.VIBRATE, com.dessalines.thumbkey.effects.FeedbackPreferences.get(context)) }
+        compose.onNodeWithText("Feedback: Vibrate only → Silent").performClick()
+        compose.runOnIdle { assertEquals(com.dessalines.thumbkey.effects.FeedbackMode.SILENT, com.dessalines.thumbkey.effects.FeedbackPreferences.get(context)) }
+        compose.onNodeWithText("Feedback: Silent → Sound").performClick()
+        compose.runOnIdle {
+            assertEquals(com.dessalines.thumbkey.effects.FeedbackMode.SOUND, com.dessalines.thumbkey.effects.FeedbackPreferences.get(context))
+            assertFalse(ActionSoundPreferences.get(context).enabled)
         }
     }
 
