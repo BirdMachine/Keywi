@@ -2,11 +2,11 @@ package com.dessalines.thumbkey.ui.components.keyboard
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
-import androidx.compose.foundation.layout.Row
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -34,11 +34,12 @@ fun GemCutPreviewScreen(
                     FilterChip(selected = layer == index, onClick = { layer = index }, label = { Text(label) })
                 }
             }
-            val keyboard = when (layer) {
-                1 -> definition.modes.shifted
-                2 -> definition.modes.numeric
-                else -> definition.modes.main
-            }
+            val keyboard =
+                when (layer) {
+                    1 -> definition.modes.shifted
+                    2 -> definition.modes.numeric
+                    else -> definition.modes.main
+                }
             GemCutGeometryPreview(facet, keyboard, Modifier.fillMaxWidth())
             Text(definition.title, style = MaterialTheme.typography.labelSmall)
         } else {

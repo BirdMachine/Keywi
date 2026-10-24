@@ -8,6 +8,7 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.TileMode
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.unit.Dp
 import kotlin.math.PI
@@ -146,6 +147,7 @@ private fun KeyboardBackdrop.brush(
     width: Float,
     height: Float,
     offset: Offset = Offset.Zero,
+    phaseDegrees: Float = 0f,
 ): Brush? {
     val orderedStops = sortedStops()
     if (orderedStops.isEmpty()) return null
@@ -154,13 +156,15 @@ private fun KeyboardBackdrop.brush(
     }
 
     val (globalStart, globalEnd) = gradientEndpoints(width, height, angleDegrees)
-    val localStart = globalStart - offset
-    val localEnd = globalEnd - offset
+    val phaseOffset = (globalEnd - globalStart) * (phaseDegrees / 360f)
+    val localStart = globalStart - offset - phaseOffset
+    val localEnd = globalEnd - offset - phaseOffset
     val colorStops = orderedStops.map { it.position to it.color }.toTypedArray()
     return Brush.linearGradient(
         colorStops = colorStops,
         start = localStart,
         end = localEnd,
+        tileMode = if (phaseDegrees == 0f) TileMode.Clamp else TileMode.Repeated,
     )
 }
 
@@ -187,11 +191,22 @@ fun Modifier.keyboardGradientBorder(
     backdrop: KeyboardBackdrop,
     width: Dp,
     radius: Dp,
+    canvasWidth: Float = 0f,
+    canvasHeight: Float = 0f,
+    offsetX: Float = 0f,
+    offsetY: Float = 0f,
+    phaseDegrees: Float = 0f,
 ): Modifier {
     if (width.value <= 0f) return this
 
     return drawWithCache {
-        val brush = backdrop.brush(size.width, size.height)
+        val brush =
+            backdrop.brush(
+                canvasWidth.coerceAtLeast(size.width),
+                canvasHeight.coerceAtLeast(size.height),
+                Offset(offsetX, offsetY),
+                phaseDegrees,
+            )
         val strokeWidth = width.toPx().coerceAtMost(minOf(size.width, size.height))
         val inset = strokeWidth / 2f
         val strokeSize =

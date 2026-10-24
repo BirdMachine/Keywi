@@ -1,15 +1,13 @@
 package com.dessalines.thumbkey.ui.components.keyboard
 
-import android.content.Context
-import android.media.AudioManager
 import android.view.HapticFeedbackConstants
 import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -26,10 +24,11 @@ import com.dessalines.thumbkey.IMEService
 import com.dessalines.thumbkey.inputcontext.ContextEnginePolicy
 import com.dessalines.thumbkey.inputcontext.ContextEnginePreferences
 
-/** Browsable input surfaces that are deliberately opened instead of cycled as keyboard modes. */
+/** Tool pages hosted above the character keyboard and selected by the toolbar cycler. */
 enum class InputPalette {
     KAOMOJI,
     FANCY_TEXT,
+    QUICK_SETTINGS,
 }
 
 @Composable
@@ -43,17 +42,18 @@ fun ExpandedInputPaletteHost(
     modifier: Modifier = Modifier,
     onFancyApply: (String) -> Unit = {},
     onSwitchPalette: (InputPalette) -> Unit = {},
+    onPreferencesChanged: () -> Unit = {},
 ) {
     val capabilities =
         ContextEnginePolicy.evaluate(
             context = ime.inputContext,
             settings = ContextEnginePreferences.load(ime),
         )
-    if (!capabilities.canOfferInputPalettes) return
+    if (!capabilities.canOfferInputPalettes && palette != InputPalette.QUICK_SETTINGS) return
 
     val configuration = LocalConfiguration.current
     val view = LocalView.current
-    val audioManager = ime.getSystemService(Context.AUDIO_SERVICE) as AudioManager
+
     val searchActive = palette == InputPalette.KAOMOJI && PaletteSearchCapture.active
     val browseHeight =
         (configuration.screenHeightDp * 0.62f)
@@ -112,27 +112,31 @@ fun ExpandedInputPaletteHost(
             }
 
             Column(modifier = Modifier.fillMaxSize()) {
-                PaletteWorkspaceHeader(palette, onSwitchPalette, onDismiss)
-            when (palette) {
-                InputPalette.FANCY_TEXT -> {
-                    FancyTextWorkspace(onApply = onFancyApply, modifier = Modifier.fillMaxSize())
+                when (palette) {
+                    InputPalette.QUICK_SETTINGS -> {
+                        QuickSettingsWorkspace(onPreferencesChanged = onPreferencesChanged)
+                    }
+
+                    InputPalette.FANCY_TEXT -> {
+                        FancyTextWorkspace(onApply = onFancyApply, modifier = Modifier.fillMaxSize())
+                    }
+
+                    InputPalette.KAOMOJI -> {
+                        KaomojiRoom(
+                            onCommit = { text ->
+                                if ((vibrateOnTap || com.dessalines.thumbkey.effects.FeedbackPreferences.get(ime) == com.dessalines.thumbkey.effects.FeedbackMode.VIBRATE) && com.dessalines.thumbkey.effects.FeedbackPreferences.hapticsAllowed(ime)) view.performHapticFeedback(HapticFeedbackConstants.KEYBOARD_TAP)
+                                com.dessalines.thumbkey.effects.ActionSoundEngine.fire(ime)
+                                PaletteSearchCapture.bypass {
+                                    ime.currentInputConnection?.commitText(text, 1)
+                                }
+                            },
+                            onBackToLetters = onDismiss,
+                            onGoToEmoji = null,
+                            showDismissButton = false,
+                            modifier = Modifier.fillMaxSize(),
+                        )
+                    }
                 }
-                InputPalette.KAOMOJI -> {
-                    KaomojiRoom(
-                        onCommit = { text ->
-                            if (vibrateOnTap) view.performHapticFeedback(HapticFeedbackConstants.KEYBOARD_TAP)
-                            if (soundOnTap) audioManager.playSoundEffect(AudioManager.FX_KEY_CLICK, .1f)
-                            PaletteSearchCapture.bypass {
-                                ime.currentInputConnection?.commitText(text, 1)
-                            }
-                        },
-                        onBackToLetters = onDismiss,
-                        onGoToEmoji = null,
-                        showDismissButton = false,
-                        modifier = Modifier.fillMaxSize(),
-                    )
-                }
-            }
             }
         }
     }

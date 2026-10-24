@@ -1,6 +1,5 @@
 package com.dessalines.thumbkey.ui.components.settings.lookandfeel
 
-import com.dessalines.thumbkey.ui.components.settings.gemPreferenceModifier
 import android.util.Log
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Column
@@ -73,8 +72,8 @@ import com.dessalines.thumbkey.db.DEFAULT_VIBRATE_ON_TAP
 import com.dessalines.thumbkey.db.LookAndFeelUpdate
 import com.dessalines.thumbkey.ui.components.common.TestOutTextField
 import com.dessalines.thumbkey.ui.components.settings.about.SettingsDivider
+import com.dessalines.thumbkey.ui.components.settings.gemPreferenceModifier
 import com.dessalines.thumbkey.utils.KeyboardPosition
-import com.dessalines.thumbkey.ui.components.settings.GemSettingsTopAppBar as SimpleTopAppBar
 import com.dessalines.thumbkey.utils.TAG
 import com.dessalines.thumbkey.utils.ThemeColor
 import com.dessalines.thumbkey.utils.ThemeMode
@@ -85,6 +84,7 @@ import me.zhanghai.compose.preference.ListPreferenceType
 import me.zhanghai.compose.preference.ProvidePreferenceTheme
 import me.zhanghai.compose.preference.SliderPreference
 import me.zhanghai.compose.preference.SwitchPreference
+import com.dessalines.thumbkey.ui.components.settings.GemSettingsTopAppBar as SimpleTopAppBar
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -130,7 +130,6 @@ fun LookAndFeelScreen(
 
     var vibrateOnTapState = (settings?.vibrateOnTap ?: DEFAULT_VIBRATE_ON_TAP).toBool()
     var vibrateOnSlideState = (settings?.vibrateOnSlide ?: DEFAULT_VIBRATE_ON_SLIDE).toBool()
-    var soundOnTapState = (settings?.soundOnTap ?: DEFAULT_SOUND_ON_TAP).toBool()
     var hideLettersState = (settings?.hideLetters ?: DEFAULT_HIDE_LETTERS).toBool()
     var hideSymbolsState = (settings?.hideSymbols ?: DEFAULT_HIDE_SYMBOLS).toBool()
     var ignoreBottomPaddingState = (settings?.ignoreBottomPadding ?: DEFAULT_IGNORE_BOTTOM_PADDING).toBool()
@@ -151,7 +150,7 @@ fun LookAndFeelScreen(
                 positionPadding = positionPaddingState.toInt(),
                 vibrateOnTap = vibrateOnTapState.toInt(),
                 vibrateOnSlide = vibrateOnSlideState.toInt(),
-                soundOnTap = soundOnTapState.toInt(),
+                soundOnTap = settings?.soundOnTap ?: DEFAULT_SOUND_ON_TAP,
                 hideLetters = hideLettersState.toInt(),
                 hideSymbols = hideSymbolsState.toInt(),
                 ignoreBottomPadding = ignoreBottomPaddingState.toInt(),
@@ -218,7 +217,6 @@ fun LookAndFeelScreen(
                     )
 
                     ListPreference(
-
                         modifier = gemPreferenceModifier(),
                         type = ListPreferenceType.DROPDOWN_MENU,
                         value = themeColorState,
@@ -245,7 +243,6 @@ fun LookAndFeelScreen(
                     )
 
                     ListPreference(
-
                         modifier = gemPreferenceModifier(),
                         type = ListPreferenceType.DROPDOWN_MENU,
                         value = positionState,
@@ -272,7 +269,6 @@ fun LookAndFeelScreen(
                     )
 
                     SliderPreference(
-
                         modifier = gemPreferenceModifier(),
                         value = positionPaddingState,
                         sliderValue = positionPaddingSliderState,
@@ -301,7 +297,6 @@ fun LookAndFeelScreen(
                     )
 
                     SwitchPreference(
-
                         modifier = gemPreferenceModifier(),
                         value = hideLettersState,
                         onValueChange = {
@@ -320,7 +315,6 @@ fun LookAndFeelScreen(
                     )
 
                     SwitchPreference(
-
                         modifier = gemPreferenceModifier(),
                         value = hideSymbolsState,
                         onValueChange = {
@@ -338,9 +332,7 @@ fun LookAndFeelScreen(
                         },
                     )
 
-
                     SwitchPreference(
-
                         modifier = gemPreferenceModifier(),
                         value = ignoreBottomPaddingState,
                         onValueChange = {
@@ -359,7 +351,6 @@ fun LookAndFeelScreen(
                     )
 
                     SwitchPreference(
-
                         modifier = gemPreferenceModifier(),
                         value = showToastOnLayoutSwitchState,
                         onValueChange = {
@@ -395,7 +386,6 @@ fun LookAndFeelScreen(
                     )
 
                     SwitchPreference(
-
                         modifier = gemPreferenceModifier(),
                         value = autoSizeKeysState,
                         onValueChange = {
@@ -444,7 +434,6 @@ fun LookAndFeelScreen(
                     }
 
                     SwitchPreference(
-
                         modifier = gemPreferenceModifier(),
                         value = nonSquareKeysState,
                         onValueChange = {
@@ -493,7 +482,6 @@ fun LookAndFeelScreen(
                     }
 
                     SliderPreference(
-
                         modifier = gemPreferenceModifier(),
                         value = keyPaddingState,
                         sliderValue = keyPaddingSliderState,
@@ -671,23 +659,7 @@ fun LookAndFeelScreen(
                             )
                         },
                     )
-                    SwitchPreference(
-                        modifier = gemPreferenceModifier(),
-                        value = soundOnTapState,
-                        onValueChange = {
-                            soundOnTapState = it
-                            updateLookAndFeel()
-                        },
-                        title = {
-                            Text(stringResource(R.string.play_sound_on_tap))
-                        },
-                        icon = {
-                            Icon(
-                                imageVector = Icons.Outlined.MusicNote,
-                                contentDescription = null,
-                            )
-                        },
-                    )
+                    com.dessalines.thumbkey.effects.FeedbackModeControl()
                     SettingsDivider()
                     TestOutTextField()
                 }

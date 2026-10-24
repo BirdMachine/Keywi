@@ -22,6 +22,7 @@ import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveableStateHolder
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -35,30 +36,35 @@ import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.zIndex
 import androidx.lifecycle.lifecycleScope
-import com.dessalines.thumbkey.db.DEFAULT_KEY_BORDER_WIDTH
-import com.dessalines.thumbkey.db.DEFAULT_KEY_RADIUS
+import com.dessalines.thumbkey.automation.TaskerThemeAutomation
 import com.dessalines.thumbkey.db.AppSettingsRepository
 import com.dessalines.thumbkey.db.ClipboardRepository
+import com.dessalines.thumbkey.db.DEFAULT_KEY_BORDER_WIDTH
+import com.dessalines.thumbkey.db.DEFAULT_KEY_RADIUS
 import com.dessalines.thumbkey.db.DEFAULT_SOUND_ON_TAP
 import com.dessalines.thumbkey.db.DEFAULT_VIBRATE_ON_TAP
 import com.dessalines.thumbkey.diagnostics.KeywiDiagnostics
+import com.dessalines.thumbkey.inputcontext.ContextEnginePolicy
+import com.dessalines.thumbkey.inputcontext.ContextEnginePreferences
+import com.dessalines.thumbkey.ui.components.keyboard.ActionGifOverlayLayer
+import com.dessalines.thumbkey.ui.components.keyboard.ActionGifPreferences
 import com.dessalines.thumbkey.ui.components.keyboard.BackdropMode
 import com.dessalines.thumbkey.ui.components.keyboard.BackdropThemePreferences
 import com.dessalines.thumbkey.ui.components.keyboard.BackdropVisualLayer
-import com.dessalines.thumbkey.ui.components.keyboard.FancyTextFormatter
 import com.dessalines.thumbkey.ui.components.keyboard.ExpandedInputPaletteHost
+import com.dessalines.thumbkey.ui.components.keyboard.FacetId
+import com.dessalines.thumbkey.ui.components.keyboard.FancyTextFormatter
+import com.dessalines.thumbkey.ui.components.keyboard.GemCutPreferences
 import com.dessalines.thumbkey.ui.components.keyboard.InputPalette
 import com.dessalines.thumbkey.ui.components.keyboard.KeyboardScreen
-import com.dessalines.thumbkey.ui.components.keyboard.GemCutPreferences
-import com.dessalines.thumbkey.ui.components.keyboard.FacetId
-import com.dessalines.thumbkey.ui.components.keyboard.MachineCutSkeleton
 import com.dessalines.thumbkey.ui.components.keyboard.KeywiAppearancePreferences
+import com.dessalines.thumbkey.ui.components.keyboard.MachineCutSkeleton
 import com.dessalines.thumbkey.ui.components.keyboard.PaletteSearchCapture
 import com.dessalines.thumbkey.ui.components.keyboard.SuggestionBarV2
 import com.dessalines.thumbkey.ui.components.keyboard.ToolbarBorderPreferences
 import com.dessalines.thumbkey.ui.components.keyboard.ToolbarLayoutPreferences
+import com.dessalines.thumbkey.ui.components.keyboard.ToolbarPage
 import com.dessalines.thumbkey.ui.components.keyboard.ToolbarThemePreferences
-import com.dessalines.thumbkey.ui.components.keyboard.TypingOverlayPreferences
 import com.dessalines.thumbkey.ui.theme.ThumbkeyTheme
 import com.dessalines.thumbkey.utils.KeyboardPosition
 import com.dessalines.thumbkey.utils.keyboardLayoutsSetFromDbIndexString
@@ -79,16 +85,24 @@ class ComposeKeyboardView(
         val ctx = context as IMEService
 
         ThumbkeyTheme(settings = settings) {
-            val keywiEnabled = KeywiAppearancePreferences.load(ctx)
+            val themeAutomationRevision = TaskerThemeAutomation.revision
+            var quickSettingsRevision by remember { mutableIntStateOf(0) }
+            val keywiEnabled = remember(quickSettingsRevision, themeAutomationRevision) { KeywiAppearancePreferences.load(ctx) }
             val mainBackdrop = BackdropThemePreferences.load(ctx)
             val toolbarBackdrop = ToolbarThemePreferences.load(ctx)
-            val keyboardColorScheme = if (keywiEnabled) MaterialTheme.colorScheme.copy(background = Color.Transparent) else MaterialTheme.colorScheme
+            val keyboardColorScheme =
+                if (keywiEnabled) {
+                    MaterialTheme.colorScheme.copy(
+                        background = Color.Transparent,
+                    )
+                } else {
+                    MaterialTheme.colorScheme
+                }
             val density = LocalDensity.current
-            val typingPulse = remember { androidx.compose.runtime.mutableLongStateOf(0L) }
-            val overlayTriggerGate = remember { com.dessalines.thumbkey.ui.components.keyboard.OverlayTriggerGate() }
-            remember(ctx) { TypingOverlayPreferences.load(ctx) }
+            remember(ctx) { ActionGifPreferences.load(ctx) }
             var keyboardHeightPx by remember { mutableIntStateOf(0) }
             var activePalette by remember { mutableStateOf<InputPalette?>(null) }
+            val paletteStateHolder = rememberSaveableStateHolder()
 
             CompositionLocalProvider(LocalLayoutDirection provides LayoutDirection.Ltr) {
                 MaterialTheme(colorScheme = keyboardColorScheme) {
@@ -103,11 +117,32 @@ class ComposeKeyboardView(
                             }
                         }
                         if (keywiEnabled) {
-
                             Box(Modifier.fillMaxWidth().zIndex(1f)) {
-                                if (toolbarBackdrop.mode != BackdropMode.NONE) BackdropVisualLayer(toolbarBackdrop, Modifier.fillMaxWidth().height(42.dp))
+                                if (toolbarBackdrop.mode !=
+                                    BackdropMode.NONE
+                                ) {
+                                    BackdropVisualLayer(toolbarBackdrop, Modifier.fillMaxWidth().height(42.dp))
+                                }
                                 SuggestionBarV2(
                                     ctx,
+                                    page = ToolbarPage.from(activePalette),
+                                    onPage = { page ->
+                                        PaletteSearchCapture.release(clear = true)
+                                        val allowed =
+                                            ContextEnginePolicy
+                                                .evaluate(
+                                                    ctx.inputContext,
+                                                    ContextEnginePreferences.load(ctx),
+                                                ).canOfferInputPalettes
+                                        activePalette =
+                                            if (page == ToolbarPage.CHARACTERS || page == ToolbarPage.QUICK_SETTINGS ||
+                                                allowed
+                                            ) {
+                                                page.palette
+                                            } else {
+                                                null
+                                            }
+                                    },
                                     onKaomoji = {
                                         if (activePalette == InputPalette.KAOMOJI) {
                                             PaletteSearchCapture.release(clear = true)
@@ -125,10 +160,30 @@ class ComposeKeyboardView(
                                 )
                                 val width = ToolbarBorderPreferences.loadWidth(ctx)
                                 val color = ToolbarBorderPreferences.loadColor(ctx)
-                                if (width > 0f) Canvas(Modifier.fillMaxWidth().height(42.dp)) {
-                                    val stroke = width.coerceAtLeast(1f)
-                                    drawLine(color, androidx.compose.ui.geometry.Offset(0f, stroke / 2f), androidx.compose.ui.geometry.Offset(size.width, stroke / 2f), strokeWidth = stroke)
-                                    drawLine(color, androidx.compose.ui.geometry.Offset(0f, size.height - stroke / 2f), androidx.compose.ui.geometry.Offset(size.width, size.height - stroke / 2f), strokeWidth = stroke)
+                                if (width > 0f) {
+                                    Canvas(Modifier.fillMaxWidth().height(42.dp)) {
+                                        val stroke = width.coerceAtLeast(1f)
+                                        drawLine(
+                                            color,
+                                            androidx.compose.ui.geometry
+                                                .Offset(0f, stroke / 2f),
+                                            androidx.compose.ui.geometry.Offset(
+                                                size.width,
+                                                stroke / 2f,
+                                            ),
+                                            strokeWidth = stroke,
+                                        )
+                                        drawLine(
+                                            color,
+                                            androidx.compose.ui.geometry
+                                                .Offset(0f, size.height - stroke / 2f),
+                                            androidx.compose.ui.geometry.Offset(
+                                                size.width,
+                                                size.height - stroke / 2f,
+                                            ),
+                                            strokeWidth = stroke,
+                                        )
+                                    }
                                 }
                             }
                             val gap = ToolbarLayoutPreferences.loadKeyboardGap(ctx)
@@ -136,73 +191,130 @@ class ComposeKeyboardView(
                         }
 
                         Box(Modifier.fillMaxWidth().clipToBounds().zIndex(0f)) {
-                            if (keywiEnabled && keyboardHeightPx > 0 && mainBackdrop.mode != BackdropMode.COLORFUL && mainBackdrop.mode != BackdropMode.NONE) {
-                                BackdropVisualLayer(mainBackdrop, Modifier.align(Alignment.BottomCenter).fillMaxWidth().height(with(density) { keyboardHeightPx.toDp() }))
+                            if (keywiEnabled && keyboardHeightPx > 0 && mainBackdrop.mode != BackdropMode.COLORFUL &&
+                                mainBackdrop.mode != BackdropMode.NONE
+                            ) {
+                                BackdropVisualLayer(
+                                    mainBackdrop,
+                                    Modifier.align(Alignment.BottomCenter).fillMaxWidth().height(with(density) { keyboardHeightPx.toDp() }),
+                                )
                             }
-                            val keyboardSettings = if (!keywiEnabled) settings else if (mainBackdrop.mode == BackdropMode.COLORFUL) settings?.copy(backdropEnabled = 1) else settings?.copy(backdropEnabled = 0)
-                            Box(Modifier.align(Alignment.BottomCenter).onSizeChanged { if (it.height != keyboardHeightPx) keyboardHeightPx = it.height }) {
+                            val keyboardSettings =
+                                if (!keywiEnabled) {
+                                    settings
+                                } else if (mainBackdrop.mode ==
+                                    BackdropMode.COLORFUL
+                                ) {
+                                    settings?.copy(backdropEnabled = 1)
+                                } else {
+                                    settings?.copy(backdropEnabled = 0)
+                                }
+                            ActionGifOverlayLayer(aboveKeys = false, modifier = Modifier.matchParentSize())
+                            Box(
+                                Modifier.align(Alignment.BottomCenter).onSizeChanged {
+                                    if (it.height !=
+                                        keyboardHeightPx
+                                    ) {
+                                        keyboardHeightPx = it.height
+                                    }
+                                },
+                            ) {
                                 when (GemCutPreferences.load(ctx)) {
-                                    FacetId.HK_LIKE -> MachineCutSkeleton(
-                                        keyBorderWidth = (settings?.keyBorderWidth ?: DEFAULT_KEY_BORDER_WIDTH) / 10f,
-                                        keyRadius = settings?.keyRadius ?: DEFAULT_KEY_RADIUS,
-                                    )
-                                    FacetId.ME_LIKE -> KeyboardScreen(
-                                    settings = keyboardSettings,
-                                    onTyped = {
-                                        KeywiDiagnostics.inputPulse()
-                                        val overlay = TypingOverlayPreferences.current
-                                        if (overlay.enabled && overlay.uri != null && overlayTriggerGate.accept(android.os.SystemClock.uptimeMillis(), overlay.cooldownMs)) {
-                                            typingPulse.longValue++
-                                        }
-                                    },
-                                    clipboardRepository = clipboardRepo,
-                                    onSwitchLanguage = {
-                                        ctx.lifecycleScope.launch {
-                                            settingsState.value?.let { s ->
-                                                val layouts = keyboardLayoutsSetFromDbIndexString(s.keyboardLayouts).toList()
-                                                val index = layouts.map { it.ordinal }.indexOf(s.keyboardLayout)
-                                                val nextIndex = (index + 1).mod(layouts.size)
-                                                layouts.getOrNull(nextIndex)?.let { layout ->
-                                                    settingsRepo.update(s.copy(keyboardLayout = layout.ordinal))
-                                                    ctx.currentKeyboardDefinition?.settings?.textProcessor?.handleFinishInput(ctx)
-                                                    ctx.currentKeyboardDefinition = layouts[nextIndex].keyboardDefinition
-                                                    ctx.currentKeyboardDefinition?.settings?.textProcessor?.updateCursorPosition(ctx)
-                                                    if (s.showToastOnLayoutSwitch.toBool()) Toast.makeText(context, layout.keyboardDefinition.title, Toast.LENGTH_SHORT).show()
+                                    FacetId.HK_LIKE -> {
+                                        MachineCutSkeleton(
+                                            keyBorderWidth = (settings?.keyBorderWidth ?: DEFAULT_KEY_BORDER_WIDTH) / 10f,
+                                            keyRadius = settings?.keyRadius ?: DEFAULT_KEY_RADIUS,
+                                        )
+                                    }
+
+                                    FacetId.ME_LIKE -> {
+                                        KeyboardScreen(
+                                            settings = keyboardSettings,
+                                            onTyped = {
+                                                KeywiDiagnostics.inputPulse()
+                                            },
+                                            clipboardRepository = clipboardRepo,
+                                            onSwitchLanguage = {
+                                                ctx.lifecycleScope.launch {
+                                                    settingsState.value?.let { s ->
+                                                        val layouts = keyboardLayoutsSetFromDbIndexString(s.keyboardLayouts).toList()
+                                                        val index = layouts.map { it.ordinal }.indexOf(s.keyboardLayout)
+                                                        val nextIndex = (index + 1).mod(layouts.size)
+                                                        layouts.getOrNull(nextIndex)?.let { layout ->
+                                                            settingsRepo.update(s.copy(keyboardLayout = layout.ordinal))
+                                                            ctx.currentKeyboardDefinition
+                                                                ?.settings
+                                                                ?.textProcessor
+                                                                ?.handleFinishInput(ctx)
+                                                            ctx.currentKeyboardDefinition = layouts[nextIndex].keyboardDefinition
+                                                            ctx.currentKeyboardDefinition
+                                                                ?.settings
+                                                                ?.textProcessor
+                                                                ?.updateCursorPosition(ctx)
+                                                            if (s.showToastOnLayoutSwitch.toBool()) {
+                                                                Toast
+                                                                    .makeText(
+                                                                        context,
+                                                                        layout.keyboardDefinition.title,
+                                                                        Toast.LENGTH_SHORT,
+                                                                    ).show()
+                                                            }
+                                                        }
+                                                    }
                                                 }
-                                            }
-                                        }
-                                    },
-                                    onChangePosition = { f -> ctx.lifecycleScope.launch { settingsState.value?.let { settingsRepo.update(it.copy(position = f(KeyboardPosition.entries[it.position]).ordinal)) } } },
-                                    onToggleHideLetters = { ctx.lifecycleScope.launch { settingsState.value?.let { settingsRepo.update(it.copy(hideLetters = (!it.hideLetters.toBool()).toInt())) } } },
-                                    onGoToClipboardSettings = {
-                                        context.startActivity(Intent(context, MainActivity::class.java).apply { putExtra("startRoute", "clipboardSettings"); addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK) })
-                                    },
-                                    )
+                                            },
+                                            onChangePosition = { f ->
+                                                ctx.lifecycleScope.launch {
+                                                    settingsState.value?.let {
+                                                        settingsRepo.update(
+                                                            it.copy(position = f(KeyboardPosition.entries[it.position]).ordinal),
+                                                        )
+                                                    }
+                                                }
+                                            },
+                                            onToggleHideLetters = {
+                                                ctx.lifecycleScope.launch {
+                                                    settingsState.value?.let {
+                                                        settingsRepo.update(
+                                                            it.copy(hideLetters = (!it.hideLetters.toBool()).toInt()),
+                                                        )
+                                                    }
+                                                }
+                                            },
+                                            onGoToClipboardSettings = {
+                                                context.startActivity(
+                                                    Intent(context, MainActivity::class.java).apply {
+                                                        putExtra("startRoute", "clipboardSettings")
+                                                        addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK)
+                                                    },
+                                                )
+                                            },
+                                        )
+                                    }
                                 }
                             }
-                            com.dessalines.thumbkey.ui.components.keyboard.TypingOverlayLayer(
-                                typingPulse,
-                                TypingOverlayPreferences.current,
-                                Modifier.matchParentSize().zIndex(4f),
-                            )
+                            ActionGifOverlayLayer(aboveKeys = true, modifier = Modifier.matchParentSize().zIndex(4f))
                             activePalette?.let { palette ->
-                                ExpandedInputPaletteHost(
-                                    palette = palette,
-                                    ime = ctx,
-                                    vibrateOnTap = (settings?.vibrateOnTap ?: DEFAULT_VIBRATE_ON_TAP).toBool(),
-                                    soundOnTap = (settings?.soundOnTap ?: DEFAULT_SOUND_ON_TAP).toBool(),
-                                    onDismiss = {
-                                        PaletteSearchCapture.release(clear = true)
-                                        activePalette = null
-                                    },
-                                    keyboardHeight = with(density) { keyboardHeightPx.toDp() },
-                                    modifier = Modifier.align(Alignment.BottomCenter).zIndex(5f),
-                                    onFancyApply = applyFancyText,
-                                    onSwitchPalette = { next ->
-                                        PaletteSearchCapture.release(clear = true)
-                                        activePalette = next
-                                    },
-                                )
+                                paletteStateHolder.SaveableStateProvider(palette.name) {
+                                    ExpandedInputPaletteHost(
+                                        palette = palette,
+                                        ime = ctx,
+                                        vibrateOnTap = (settings?.vibrateOnTap ?: DEFAULT_VIBRATE_ON_TAP).toBool(),
+                                        soundOnTap = (settings?.soundOnTap ?: DEFAULT_SOUND_ON_TAP).toBool(),
+                                        onDismiss = {
+                                            PaletteSearchCapture.release(clear = true)
+                                            activePalette = null
+                                        },
+                                        keyboardHeight = with(density) { keyboardHeightPx.toDp() },
+                                        modifier = Modifier.align(Alignment.BottomCenter).zIndex(5f),
+                                        onFancyApply = applyFancyText,
+                                        onPreferencesChanged = { quickSettingsRevision++ },
+                                        onSwitchPalette = { next ->
+                                            PaletteSearchCapture.release(clear = true)
+                                            activePalette = next
+                                        },
+                                    )
+                                }
                             }
                         }
                     }

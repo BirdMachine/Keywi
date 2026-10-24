@@ -36,7 +36,10 @@ class ComposeComboProcessor : TextProcessor {
         Log.d(TAG, "ComposeCombo: armed at $base")
     }
 
-    override fun handleCommitText(ime: IMEService, input: CharSequence) {
+    override fun handleCommitText(
+        ime: IMEService,
+        input: CharSequence,
+    ) {
         val ic = ime.currentInputConnection ?: return
         if (!composing) {
             ic.commitText(input, 1)
@@ -60,7 +63,10 @@ class ComposeComboProcessor : TextProcessor {
         flushLiterally(ic)
     }
 
-    override fun handleKeyEvent(ime: IMEService, ev: KeyEvent) {
+    override fun handleKeyEvent(
+        ime: IMEService,
+        ev: KeyEvent,
+    ) {
         val ic = ime.currentInputConnection ?: return
         if (!composing) {
             ic.sendKeyEvent(ev)
@@ -106,7 +112,10 @@ class ComposeComboProcessor : TextProcessor {
         base = extracted.selectionStart
     }
 
-    private fun show(ic: InputConnection, text: String) {
+    private fun show(
+        ic: InputConnection,
+        text: String,
+    ) {
         display = text
         ic.setComposingText(text, 1)
     }

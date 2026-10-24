@@ -350,7 +350,9 @@ fun performKeyAction(
     onKeyEvent: (action: KeyAction) -> Unit,
 ) {
     when (action) {
-        KeyAction.CycleBoard, KeyAction.BoardHome -> onKeyEvent(action)
+        KeyAction.CycleBoard, KeyAction.BoardHome -> {
+            onKeyEvent(action)
+        }
 
         is KeyAction.CommitText -> {
             val text = action.text

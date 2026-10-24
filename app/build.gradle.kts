@@ -115,6 +115,7 @@ android {
 }
 
 dependencies {
+    implementation("org.jsoup:jsoup:1.23.2")
     implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.9.0")
     testImplementation("junit:junit:4.13.2")
     testImplementation("org.robolectric:robolectric:4.17")
@@ -151,4 +152,9 @@ dependencies {
     implementation("org.jetbrains.kotlin:kotlin-reflect:2.4.20")
     implementation("io.arrow-kt:arrow-optics:2.2.3")
     ksp("io.arrow-kt:arrow-optics-ksp-plugin:2.2.3")
+}
+
+// Keep CI failures actionable when rendering or gesture regressions fail.
+tasks.withType<Test>().configureEach {
+    testLogging.exceptionFormat = org.gradle.api.tasks.testing.logging.TestExceptionFormat.FULL
 }

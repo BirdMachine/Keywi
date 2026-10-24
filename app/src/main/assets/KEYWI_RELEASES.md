@@ -1,5 +1,23 @@
 Keywi is your colorful keyboard playground, built on Thumb-Key's open-source foundation.
 
+## What's changed — October 24, 2026
+
+### Sound, vibrate, or silence
+- Tap the feedback icon in the emoji/tools key’s lower-right corner to cycle **Sound → Vibrate only → Silent**. Quick Settings has the same control for every cut, including HK-Like.
+- Sound uses your enabled sound pack, or Thumb-Key’s standard Android click if custom sounds are off. Vibrate only suppresses all keyboard sounds; Silent suppresses sound and vibration. Pack selections are preserved.
+
+### Color that lingers
+- **Settings → Keypress effects → Key flash & drag trails** now controls fade-out duration and an ordered sequence of color frames.
+- Add, edit, reorder, or remove frames with the Chroma Desk picker. Colors blend through the sequence as the accent fades. Clear the sequence to follow your theme accent; a zero duration turns the effect off.
+- Optional drag trails share the sequence and fade time. GIF/PNG effects remain above the accent layer. Password fields hide visual typing effects.
+
+### Bringing the recent work together
+- Chroma Desk color disc with precise HEX/RGB inputs; Oklab Broad and Tight gradient presets.
+- Theme artwork and sculpted settings surfaces, clearer key/group selection and fitted gradients.
+- Kiwi toolbar page controls, Fancy Text, Kaomoji web search and Quick Settings.
+- Tasker key actions and opt-in appearance automation; sound packs and per-action GIF/PNG overlays.
+- Transparent launcher artwork and tighter main-settings text leading.
+
 ## What's changed — October 12, 2026
 
 ### Welcome, in full color

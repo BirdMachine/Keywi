@@ -17,17 +17,30 @@ class CustomBoardsTest {
     fun wholeUnicodeStringsSurviveBothSidesAndSerialization() {
         val emoji = "👩🏽‍💻"
         val kaomoji = "(ﾉ◕ヮ◕)ﾉ*:･ﾟ✧"
-        val board = CustomBoard(
-            sideA = listOf(BoardCell(mapOf("center" to BoardBinding(text = emoji)))),
-            sideB = listOf(BoardCell(mapOf("center" to BoardBinding(text = kaomoji)))),
-            returnAfterInput = true,
-            haptics = false,
-        )
+        val board =
+            CustomBoard(
+                sideA = listOf(BoardCell(mapOf("center" to BoardBinding(text = emoji)))),
+                sideB = listOf(BoardCell(mapOf("center" to BoardBinding(text = kaomoji)))),
+                returnAfterInput = true,
+                haptics = false,
+            )
         val restored = Json.decodeFromString<CustomBoard>(Json.encodeToString(board))
         assertEquals(board, restored)
         val definition = restored.definition()
-        assertEquals(emoji, (definition.modes.main.arr[0][0].center.action as KeyAction.CommitText).text)
-        assertEquals(kaomoji, (definition.modes.numeric.arr[0][0].center.action as KeyAction.CommitText).text)
+        assertEquals(
+            emoji,
+            (
+                definition.modes.main.arr[0][0]
+                    .center.action as KeyAction.CommitText
+            ).text,
+        )
+        assertEquals(
+            kaomoji,
+            (
+                definition.modes.numeric.arr[0][0]
+                    .center.action as KeyAction.CommitText
+            ).text,
+        )
         assertFalse(definition.settings.autoShift)
     }
 
@@ -55,13 +68,30 @@ class CustomBoardsTest {
             assertSame(KeyAction.BoardHome, navigation.longPress)
             assertSame(KeyAction.CycleBoard, navigation.right?.action)
         }
-        assertTrue((modes.main.arr.last().first().center.action as KeyAction.ToggleNumericMode).enable)
-        assertFalse((modes.numeric.arr.last().first().center.action as KeyAction.ToggleNumericMode).enable)
+        assertTrue(
+            (
+                modes.main.arr
+                    .last()
+                    .first()
+                    .center.action as KeyAction.ToggleNumericMode
+            ).enable,
+        )
+        assertFalse(
+            (
+                modes.numeric.arr
+                    .last()
+                    .first()
+                    .center.action as KeyAction.ToggleNumericMode
+            ).enable,
+        )
     }
 
     @Test
     fun swipeAndHoldActionsAreIndependent() {
-        val key = BoardCell(mapOf("center" to BoardBinding(text = "°"), "right" to BoardBinding(text = "→"), "hold" to BoardBinding("paste"))).key()
+        val key =
+            BoardCell(
+                mapOf("center" to BoardBinding(text = "°"), "right" to BoardBinding(text = "→"), "hold" to BoardBinding("paste")),
+            ).key()
         assertEquals("°", (key.center.action as KeyAction.CommitText).text)
         assertEquals("→", (key.right?.action as KeyAction.CommitText).text)
         assertSame(KeyAction.Paste, key.longPress)

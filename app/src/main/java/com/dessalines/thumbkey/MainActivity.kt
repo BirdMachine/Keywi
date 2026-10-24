@@ -9,17 +9,15 @@ import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
 import androidx.compose.animation.AnimatedContentTransitionScope
 import androidx.compose.animation.core.tween
+import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.platform.LocalContext
+import androidx.navigation.NavGraphBuilder
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
-import androidx.navigation.NavGraphBuilder
-import androidx.compose.runtime.Composable
-import com.dessalines.thumbkey.ui.components.settings.GemSettingsTheme
-import com.dessalines.thumbkey.ui.components.settings.usesGemSettingsTheme
 import androidx.navigation.compose.rememberNavController
 import com.dessalines.thumbkey.db.AppDB
 import com.dessalines.thumbkey.db.AppSettingsRepository
@@ -28,7 +26,9 @@ import com.dessalines.thumbkey.db.AppSettingsViewModelFactory
 import com.dessalines.thumbkey.db.ClipboardDB
 import com.dessalines.thumbkey.db.ClipboardRepository
 import com.dessalines.thumbkey.diagnostics.KeywiDiagnostics
+import com.dessalines.thumbkey.ui.components.settings.GemSettingsTheme
 import com.dessalines.thumbkey.ui.components.settings.SettingsScreen
+import com.dessalines.thumbkey.ui.components.settings.TaskerThemeSettingsScreen
 import com.dessalines.thumbkey.ui.components.settings.about.AboutScreen
 import com.dessalines.thumbkey.ui.components.settings.advancedinput.AdvancedCharactersScreen
 import com.dessalines.thumbkey.ui.components.settings.advancedinput.AdvancedInputScreen
@@ -44,6 +44,7 @@ import com.dessalines.thumbkey.ui.components.settings.modifykeys.AdvancedKeyWord
 import com.dessalines.thumbkey.ui.components.settings.modifykeys.ModifyKeysScreen
 import com.dessalines.thumbkey.ui.components.settings.other.OtherSettingsScreen
 import com.dessalines.thumbkey.ui.components.settings.power.AdvancedPowerOptionsScreen
+import com.dessalines.thumbkey.ui.components.settings.usesGemSettingsTheme
 import com.dessalines.thumbkey.ui.components.setup.SetupScreen
 import com.dessalines.thumbkey.ui.theme.ThumbkeyTheme
 import com.dessalines.thumbkey.utils.ANIMATION_SPEED
@@ -92,16 +93,48 @@ class MainActivity : AppCompatActivity() {
                     startDestination = startDestination,
                     enterTransition = { slideIntoContainer(AnimatedContentTransitionScope.SlideDirection.Left, tween(ANIMATION_SPEED)) },
                     exitTransition = { slideOutOfContainer(AnimatedContentTransitionScope.SlideDirection.Left, tween(ANIMATION_SPEED)) },
-                    popEnterTransition = { slideIntoContainer(AnimatedContentTransitionScope.SlideDirection.Right, tween(ANIMATION_SPEED)) },
-                    popExitTransition = { slideOutOfContainer(AnimatedContentTransitionScope.SlideDirection.Right, tween(ANIMATION_SPEED)) },
+                    popEnterTransition = {
+                        slideIntoContainer(
+                            AnimatedContentTransitionScope.SlideDirection.Right,
+                            tween(ANIMATION_SPEED),
+                        )
+                    },
+                    popExitTransition = {
+                        slideOutOfContainer(
+                            AnimatedContentTransitionScope.SlideDirection.Right,
+                            tween(ANIMATION_SPEED),
+                        )
+                    },
                 ) {
                     composable("setup") { SetupScreen(navController, thumbkeyEnabled, thumbkeySelected) }
-                    gemSettingsDestination("settings") { SettingsScreen(navController, appSettingsViewModel, thumbkeyEnabled, thumbkeySelected) }
+                    gemSettingsDestination(
+                        "settings",
+                    ) { SettingsScreen(navController, appSettingsViewModel, thumbkeyEnabled, thumbkeySelected) }
                     gemSettingsDestination("lookAndFeel") { LookAndFeelScreen(navController, appSettingsViewModel) }
-                    gemSettingsDestination("advancedBoards") { com.dessalines.thumbkey.ui.components.settings.boards.AdvancedBoardManagementScreen(navController) }
-                    gemSettingsDestination("gemCuts") { com.dessalines.thumbkey.ui.components.settings.GemCutSettingsScreen(navController, appSettingsViewModel) }
-                    gemSettingsDestination("typingOverlay") { com.dessalines.thumbkey.ui.components.settings.boards.TypingOverlaySettingsScreen(navController) }
+                    gemSettingsDestination("advancedBoards") {
+                        com.dessalines.thumbkey.ui.components.settings.boards
+                            .AdvancedBoardManagementScreen(navController)
+                    }
+                    gemSettingsDestination("gemCuts") {
+                        com.dessalines.thumbkey.ui.components.settings
+                            .GemCutSettingsScreen(navController, appSettingsViewModel)
+                    }
+                    gemSettingsDestination(
+                        "typingOverlay",
+                    ) {
+                        com.dessalines.thumbkey.ui.components.settings.boards
+                            .TypingOverlaySettingsScreen(navController)
+                    }
+                    gemSettingsDestination("keypressEffects") {
+                        com.dessalines.thumbkey.ui.components.settings
+                            .KeypressEffectsScreen(navController)
+                    }
+                    gemSettingsDestination("keypressSounds") {
+                        com.dessalines.thumbkey.ui.components.settings
+                            .KeypressSoundSettingsScreen(navController)
+                    }
                     gemSettingsDestination("advancedLookAndFeel") { ThemeManagerScreen(navController) }
+                    gemSettingsDestination("taskerThemeUpdates") { TaskerThemeSettingsScreen(navController) }
                     gemSettingsDestination("advancedLookAndFeelEditor") { AdvancedLookAndFeelScreen(navController) }
                     composable("advancedKeyWordSelection") { AdvancedKeyWordSelectionScreen(navController, appSettingsViewModel) }
                     gemSettingsDestination("behavior") { BehaviorScreen(navController, appSettingsViewModel) }
@@ -111,7 +144,11 @@ class MainActivity : AppCompatActivity() {
                     gemSettingsDestination("advancedPowerOptions") { AdvancedPowerOptionsScreen(navController) }
                     gemSettingsDestination("advancedDebug") { AdvancedDebugScreen(navController) }
                     gemSettingsDestination("clipboardSettings") {
-                        ClipboardSettingsScreen(navController, appSettingsViewModel, (application as ThumbkeyApplication).clipboardRepository)
+                        ClipboardSettingsScreen(
+                            navController,
+                            appSettingsViewModel,
+                            (application as ThumbkeyApplication).clipboardRepository,
+                        )
                     }
                     gemSettingsDestination("modifyKeys") { ModifyKeysScreen(navController, appSettingsViewModel) }
                     gemSettingsDestination("about") { AboutScreen(navController) }
@@ -124,8 +161,17 @@ class MainActivity : AppCompatActivity() {
 }
 
 /** Each destination keeps its own chrome throughout enter/exit animations. */
-private fun NavGraphBuilder.gemSettingsDestination(route: String, content: @Composable () -> Unit) {
+private fun NavGraphBuilder.gemSettingsDestination(
+    route: String,
+    content: @Composable () -> Unit,
+) {
     composable(route) {
-        GemSettingsTheme(usesGemSettingsTheme(route), content)
+        GemSettingsTheme(
+            usesGemSettingsTheme(route),
+            dripEnabled =
+                com.dessalines.thumbkey.ui.components.settings
+                    .usesSettingsDrip(route),
+            content = content,
+        )
     }
 }

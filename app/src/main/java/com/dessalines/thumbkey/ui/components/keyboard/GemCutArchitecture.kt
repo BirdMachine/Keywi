@@ -13,10 +13,14 @@ package com.dessalines.thumbkey.ui.components.keyboard
  * should be reusable without smuggling geometry into its identity.
  */
 @JvmInline
-value class ThemeId(val value: String)
+value class ThemeId(
+    val value: String,
+)
 
 @JvmInline
-value class LayoutId(val value: String)
+value class LayoutId(
+    val value: String,
+)
 
 enum class FacetId {
     /** Existing MessageEase-inspired Keywi geometry. */
@@ -42,17 +46,19 @@ data class FacetSpec(
 )
 
 object KeywiFacets {
-    val meLike = FacetSpec(
-        id = FacetId.ME_LIKE,
-        displayName = "ME-Like",
-        description = "Keywi's MessageEase-like facet: a central 3×3 surface with persistent surrounding controls.",
-    )
+    val meLike =
+        FacetSpec(
+            id = FacetId.ME_LIKE,
+            displayName = "ME-Like",
+            description = "Keywi's MessageEase-like facet: a central 3×3 surface with persistent surrounding controls.",
+        )
 
-    val hkLike = FacetSpec(
-        id = FacetId.HK_LIKE,
-        displayName = "HK-Like",
-        description = "Dense Hacker's Keyboard-inspired power-user facet with desktop-like rows and controls.",
-    )
+    val hkLike =
+        FacetSpec(
+            id = FacetId.HK_LIKE,
+            displayName = "HK-Like",
+            description = "Dense Hacker's Keyboard-inspired power-user facet with desktop-like rows and controls.",
+        )
 
     val all = listOf(meLike, hkLike)
 }
