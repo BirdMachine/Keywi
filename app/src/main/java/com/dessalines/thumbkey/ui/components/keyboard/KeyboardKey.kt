@@ -1,6 +1,5 @@
 package com.dessalines.thumbkey.ui.components.keyboard
 import android.content.Context
-import android.media.AudioManager
 import android.os.Build
 import android.util.Log
 import android.view.HapticFeedbackConstants
@@ -317,7 +316,7 @@ fun KeyboardKey(
     val keyBorderColour = if (appearanceEnabled) keyTheme.borderColor else MaterialTheme.colorScheme.outline
     val keySize = (keyHeight + keyWidth) / 2.0
     val view = LocalView.current
-    val audioManager = ctx.getSystemService(Context.AUDIO_SERVICE) as AudioManager
+
 
     /**
      * The type of haptic feedback to use when moving the cursor with slide

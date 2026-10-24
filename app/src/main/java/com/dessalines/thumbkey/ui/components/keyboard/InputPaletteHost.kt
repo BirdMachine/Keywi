@@ -1,7 +1,5 @@
 package com.dessalines.thumbkey.ui.components.keyboard
 
-import android.content.Context
-import android.media.AudioManager
 import android.view.HapticFeedbackConstants
 import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.animation.core.animateDpAsState
@@ -55,7 +53,7 @@ fun ExpandedInputPaletteHost(
 
     val configuration = LocalConfiguration.current
     val view = LocalView.current
-    val audioManager = ime.getSystemService(Context.AUDIO_SERVICE) as AudioManager
+
     val searchActive = palette == InputPalette.KAOMOJI && PaletteSearchCapture.active
     val browseHeight =
         (configuration.screenHeightDp * 0.62f)

@@ -153,3 +153,8 @@ dependencies {
     implementation("io.arrow-kt:arrow-optics:2.2.3")
     ksp("io.arrow-kt:arrow-optics-ksp-plugin:2.2.3")
 }
+
+// Keep CI failures actionable when rendering or gesture regressions fail.
+tasks.withType<Test>().configureEach {
+    testLogging.exceptionFormat = org.gradle.api.tasks.testing.logging.TestExceptionFormat.FULL
+}

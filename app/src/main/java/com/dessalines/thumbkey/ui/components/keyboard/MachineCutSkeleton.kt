@@ -488,9 +488,6 @@ private fun RowScope.HkKey(
         TaskerCommandLegend(effectKeyId, "CENTER", 24.dp, legendColor) {
             Text(label, color = legendColor)
         }
-        if (label == "⚙") {
-            com.dessalines.thumbkey.effects.FeedbackModeControl(Modifier.align(Alignment.BottomEnd).then(Modifier.height(32.dp)), compact = true)
-        }
         Box(Modifier.matchParentSize().padding(3.dp), contentAlignment = Alignment.BottomEnd) {
             TaskerCommandLegend(effectKeyId, "HOLD", 12.dp, legendColor) {}
         }

@@ -51,6 +51,10 @@ class AccentFeedbackRenderTest {
         compose.runOnIdle { pressed.value = false }
         compose.mainClock.advanceTimeBy(250)
         fun pixel() = compose.onNodeWithTag("flash").captureToImage().toPixelMap()[50, 50]
+        compose.waitForIdle()
+        val diagnostic = File("build/outputs/color-review/feedback-mid-fade.png")
+        diagnostic.parentFile.mkdirs()
+        diagnostic.outputStream().use { compose.onRoot().captureToImage().asAndroidBitmap().compress(android.graphics.Bitmap.CompressFormat.PNG, 100, it) }
         val middle = pixel()
         assertTrue("Second color must appear after release: $middle", middle.green > middle.red && middle.green > middle.blue)
         compose.mainClock.advanceTimeBy(1500)

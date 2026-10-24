@@ -130,7 +130,6 @@ fun LookAndFeelScreen(
 
     var vibrateOnTapState = (settings?.vibrateOnTap ?: DEFAULT_VIBRATE_ON_TAP).toBool()
     var vibrateOnSlideState = (settings?.vibrateOnSlide ?: DEFAULT_VIBRATE_ON_SLIDE).toBool()
-    var soundOnTapState = (settings?.soundOnTap ?: DEFAULT_SOUND_ON_TAP).toBool()
     var hideLettersState = (settings?.hideLetters ?: DEFAULT_HIDE_LETTERS).toBool()
     var hideSymbolsState = (settings?.hideSymbols ?: DEFAULT_HIDE_SYMBOLS).toBool()
     var ignoreBottomPaddingState = (settings?.ignoreBottomPadding ?: DEFAULT_IGNORE_BOTTOM_PADDING).toBool()
@@ -151,7 +150,7 @@ fun LookAndFeelScreen(
                 positionPadding = positionPaddingState.toInt(),
                 vibrateOnTap = vibrateOnTapState.toInt(),
                 vibrateOnSlide = vibrateOnSlideState.toInt(),
-                soundOnTap = soundOnTapState.toInt(),
+                soundOnTap = settings?.soundOnTap ?: DEFAULT_SOUND_ON_TAP,
                 hideLetters = hideLettersState.toInt(),
                 hideSymbols = hideSymbolsState.toInt(),
                 ignoreBottomPadding = ignoreBottomPaddingState.toInt(),
@@ -660,23 +659,7 @@ fun LookAndFeelScreen(
                             )
                         },
                     )
-                    SwitchPreference(
-                        modifier = gemPreferenceModifier(),
-                        value = soundOnTapState,
-                        onValueChange = {
-                            soundOnTapState = it
-                            updateLookAndFeel()
-                        },
-                        title = {
-                            Text(stringResource(R.string.play_sound_on_tap))
-                        },
-                        icon = {
-                            Icon(
-                                imageVector = Icons.Outlined.MusicNote,
-                                contentDescription = null,
-                            )
-                        },
-                    )
+                    com.dessalines.thumbkey.effects.FeedbackModeControl()
                     SettingsDivider()
                     TestOutTextField()
                 }

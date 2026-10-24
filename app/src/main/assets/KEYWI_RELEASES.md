@@ -3,7 +3,7 @@ Keywi is your colorful keyboard playground, built on Thumb-Key's open-source fou
 ## What's changed — October 24, 2026
 
 ### Sound, vibrate, or silence
-- Tap the feedback icon in the emoji/tools key’s lower-right corner to cycle **Sound → Vibrate only → Silent**. HK-Like and Quick Settings also have a feedback control.
+- Tap the feedback icon in the emoji/tools key’s lower-right corner to cycle **Sound → Vibrate only → Silent**. Quick Settings has the same control for every cut, including HK-Like.
 - Sound uses your enabled sound pack, or Thumb-Key’s standard Android click if custom sounds are off. Vibrate only suppresses all keyboard sounds; Silent suppresses sound and vibration. Pack selections are preserved.
 
 ### Color that lingers

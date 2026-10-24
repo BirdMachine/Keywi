@@ -1,7 +1,6 @@
 package com.dessalines.thumbkey.ui.components.keyboard
 
 import android.content.Context
-import android.media.AudioManager
 import android.util.Log
 import android.view.HapticFeedbackConstants
 import android.view.inputmethod.InputConnection.CURSOR_UPDATE_MONITOR
@@ -356,7 +355,7 @@ fun KeyboardScreen(
                                 ).background(MaterialTheme.colorScheme.surface),
                     ) {
                         val view = LocalView.current
-                        val audioManager = ctx.getSystemService(Context.AUDIO_SERVICE) as AudioManager
+
                         AndroidView(
                             factory = { context ->
                                 EmojiPickerView(context).also { picker ->
@@ -516,7 +515,7 @@ fun KeyboardScreen(
                                 ).background(MaterialTheme.colorScheme.surface),
                     ) {
                         val view = LocalView.current
-                        val audioManager = ctx.getSystemService(Context.AUDIO_SERVICE) as AudioManager
+
                         AndroidView(
                             factory = { context ->
                                 EmojiPickerView(context).also { picker ->
@@ -649,7 +648,7 @@ fun KeyboardScreen(
         val rowCount = keyboardDefinition.modes.main.arr.size
         val keyboardHeight = Dp(keyHeight * rowCount)
         val view = LocalView.current
-        val audioManager = ctx.getSystemService(Context.AUDIO_SERVICE) as AudioManager
+
         ctx.currentInputConnection.requestCursorUpdates(0)
         Box(
             modifier = Modifier.then(if (backdropEnabled) Modifier.keyboardGradientBackground(backdropGradient) else Modifier),
