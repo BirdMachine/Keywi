@@ -6,7 +6,18 @@ import android.media.RingtoneManager
 import android.net.Uri
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.expandVertically
+import androidx.compose.animation.shrinkVertically
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.foundation.clickable
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.semantics.stateDescription
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -16,7 +27,7 @@ import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.Slider
+import com.dessalines.thumbkey.ui.components.settings.GemGlassSlider as Slider
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -32,6 +43,12 @@ import androidx.compose.ui.unit.dp
 import com.dessalines.thumbkey.effects.ActionSoundConfig
 import com.dessalines.thumbkey.effects.ActionSoundEngine
 import com.dessalines.thumbkey.effects.ActionSoundPreferences
+import com.dessalines.thumbkey.effects.KeySoundSource
+import com.dessalines.thumbkey.effects.source
+import com.dessalines.thumbkey.effects.withSource
+import com.dessalines.thumbkey.effects.NoteScale
+import com.dessalines.thumbkey.effects.ScaleToneEngine
+import com.dessalines.thumbkey.effects.noteRoots
 import com.dessalines.thumbkey.effects.SoundClip
 import com.dessalines.thumbkey.effects.SoundSelection
 import com.dessalines.thumbkey.effects.SoundTrigger
@@ -54,8 +71,8 @@ fun AdvancedSoundScreen(modifier: Modifier = Modifier) {
     var rename by remember { mutableStateOf("") }
 
     fun update(value: ActionSoundConfig) {
-        config = value
         ActionSoundPreferences.save(context, value)
+        config = ActionSoundPreferences.get(context)
     }
     val files =
         rememberLauncherForActivityResult(ActivityResultContracts.OpenMultipleDocuments()) { uris ->
@@ -95,12 +112,57 @@ fun AdvancedSoundScreen(modifier: Modifier = Modifier) {
             }
         }
     Column(modifier, verticalArrangement = Arrangement.spacedBy(12.dp)) {
-        AdvancedSettingsSection("Action sounds", "Build a named sound pack, then map its clips to your keys and gestures.") {
-            SoundToggle("Enable action sounds", config.enabled) { update(config.copy(enabled = it)) }
-            Text("These controls replace the ordinary keyboard click while enabled.", style = MaterialTheme.typography.bodySmall)
+        AdvancedSettingsSection("Keyboard sound", "Choose your sound source; expand a section to fine-tune it.") {
+            Text("Key sound source", style = MaterialTheme.typography.titleMedium)
+            var sourceExpanded by remember { mutableStateOf(false) }
+            Box(Modifier.fillMaxWidth()) {
+                AdvancedSettingsChoice("${config.source.title}  ⌄", false, { sourceExpanded = true }, Modifier.fillMaxWidth())
+                DropdownMenu(expanded = sourceExpanded, onDismissRequest = { sourceExpanded = false }) {
+                    KeySoundSource.entries.forEach { source ->
+                        DropdownMenuItem(text = { Text(source.title) }, onClick = {
+                            ActionSoundEngine.stopAll()
+                            update(config.withSource(source))
+                            sourceExpanded = false
+                        })
+                    }
+                }
+            }
+            Text("Imported clips stay saved when you switch.", style = MaterialTheme.typography.bodySmall)
         }
-        AdvancedSettingsCard {
-            Text("Sound pack · ${config.clips.size} clips", style = MaterialTheme.typography.titleMedium)
+        SoundSection("Generated scale", "${noteRoots[config.toneRoot]} · ${config.toneScale.title} · gentle room reverb", config.source == KeySoundSource.GENERATED, config.source) {
+            Text(
+                "Soft, short notes randomly chosen from your scale, with a subtle room tail. Sound / Vibrate / Silent still applies.",
+                style = MaterialTheme.typography.bodySmall,
+            )
+            var rootExpanded by remember { mutableStateOf(false) }
+            var scaleExpanded by remember { mutableStateOf(false) }
+            Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                Box {
+                    TextButton(onClick = { rootExpanded = true }) { Text("Root: ${noteRoots[config.toneRoot]}") }
+                    DropdownMenu(expanded = rootExpanded, onDismissRequest = { rootExpanded = false }) {
+                        noteRoots.forEachIndexed { index, label ->
+                            DropdownMenuItem(text = { Text(label) }, onClick = {
+                                update(config.copy(toneRoot = index)); rootExpanded = false
+                            })
+                        }
+                    }
+                }
+                Box {
+                    TextButton(onClick = { scaleExpanded = true }) { Text(config.toneScale.title) }
+                    DropdownMenu(expanded = scaleExpanded, onDismissRequest = { scaleExpanded = false }) {
+                        NoteScale.entries.forEach { scale ->
+                            DropdownMenuItem(text = { Text(scale.title) }, onClick = {
+                                update(config.copy(toneScale = scale)); scaleExpanded = false
+                            })
+                        }
+                    }
+                }
+            }
+            Text("Tone level · ${(config.toneVolume * 100).toInt()}%", style = MaterialTheme.typography.bodySmall)
+            Slider(config.toneVolume, { update(config.copy(toneVolume = it)) })
+            TextButton(onClick = { ScaleToneEngine.fire(context, preview = true) }) { Text("Preview a note") }
+        }
+        SoundSection("Sound library", "${config.clips.size} clips · import, preview & rename", config.source == KeySoundSource.CLIPS, config.source) {
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 TextButton(onClick = { files.launch(arrayOf("audio/*")) }) { Text("Import files") }
                 TextButton(onClick = {
@@ -149,8 +211,7 @@ fun AdvancedSoundScreen(modifier: Modifier = Modifier) {
             }) { Text("Restore subtle starter clips") }
             feedback?.let { Text(it, style = MaterialTheme.typography.bodySmall) }
         }
-        AdvancedSettingsCard {
-            Text("Choose playback", style = MaterialTheme.typography.titleMedium)
+        SoundSection("Pack playback & mapping", config.selection.name.lowercase().replaceFirstChar { it.uppercase() }) {
             SoundSelection.entries.chunked(2).forEach { modes ->
                 Row(Modifier.padding(vertical = 4.dp), horizontalArrangement = Arrangement.spacedBy(6.dp)) {
                     modes.forEach { mode ->
@@ -208,8 +269,7 @@ fun AdvancedSoundScreen(modifier: Modifier = Modifier) {
             }
             Text("Per-key assignments in the matrix override these rules.", style = MaterialTheme.typography.bodySmall)
         }
-        AdvancedSettingsCard {
-            Text("Timing & tails", style = MaterialTheme.typography.titleMedium)
+        SoundSection("Volume, timing & overlap", "${(config.volume * 100).toInt()}% · ${config.trigger.name.lowercase()}") {
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 SoundTrigger.entries.forEach { phase ->
                     AdvancedSettingsChoice(
@@ -223,8 +283,8 @@ fun AdvancedSoundScreen(modifier: Modifier = Modifier) {
                 "Press plays when the gesture resolves; release plays when that action is released. Swipes must resolve before their direction is known.",
                 style = MaterialTheme.typography.bodySmall,
             )
-            SoundToggle("Overlap clips / let tails stack", config.overlap) { update(config.copy(overlap = it)) }
-            SoundToggle("Limit playback duration", config.maxDurationMs > 0) { update(config.copy(maxDurationMs = if (it) 50 else 0)) }
+            SoundToggle("Let sound tails overlap", config.overlap) { update(config.copy(overlap = it)) }
+            SoundToggle("Limit clip playback duration", config.maxDurationMs > 0) { update(config.copy(maxDurationMs = if (it) 50 else 0)) }
             if (config.maxDurationMs > 0) {
                 Text("Cut off after ${config.maxDurationMs} ms (${config.maxDurationMs / 1000f} sec)")
                 Slider(config.maxDurationMs.toFloat(), { update(config.copy(maxDurationMs = it.toInt())) }, valueRange = 10f..2000f)
@@ -234,8 +294,7 @@ fun AdvancedSoundScreen(modifier: Modifier = Modifier) {
             Text("Volume · ${(config.volume * 100).toInt()}%")
             Slider(config.volume, { update(config.copy(volume = it)) })
         }
-        AdvancedSettingsCard {
-            Text("Suggestion strip", style = MaterialTheme.typography.titleMedium)
+        SoundSection("Suggestion sounds", "Separate sounds for scrolling & selecting") {
             ClipPicker("Scroll / slide", config.suggestionScrollId, config.clips) { update(config.copy(suggestionScrollId = it)) }
             ClipPicker("Select a suggestion", config.suggestionSelectedId, config.clips) { update(config.copy(suggestionSelectedId = it)) }
             Text(
@@ -271,6 +330,34 @@ fun AdvancedSoundScreen(modifier: Modifier = Modifier) {
                     null
             }) { Text("Cancel") }
         })
+    }
+}
+
+@Composable
+internal fun SoundSection(
+    title: String,
+    summary: String,
+    initiallyExpanded: Boolean = false,
+    resetKey: Any? = null,
+    content: @Composable () -> Unit,
+) {
+    var expanded by rememberSaveable(resetKey) { mutableStateOf(initiallyExpanded) }
+    AdvancedSettingsCard {
+        Row(
+            Modifier.fillMaxWidth().semantics { stateDescription = if (expanded) "Expanded" else "Collapsed" }
+                .clickable(onClickLabel = if (expanded) "Collapse $title" else "Expand $title") { expanded = !expanded }
+                .padding(vertical = 8.dp),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                Text(title, style = MaterialTheme.typography.titleMedium)
+                Text(summary, style = MaterialTheme.typography.bodySmall)
+            }
+            Text(if (expanded) "⌃" else "⌄", Modifier.padding(start = 12.dp))
+        }
+        AnimatedVisibility(expanded, enter = expandVertically() + fadeIn(), exit = shrinkVertically() + fadeOut()) {
+            Column(verticalArrangement = Arrangement.spacedBy(12.dp)) { content() }
+        }
     }
 }
 

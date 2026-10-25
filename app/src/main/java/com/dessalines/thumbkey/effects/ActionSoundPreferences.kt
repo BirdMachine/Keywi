@@ -29,11 +29,24 @@ data class ActionSoundConfig(
     val overlap: Boolean = true,
     val maxDurationMs: Int = 0,
     val volume: Float = 0.6f,
+    val toneEnabled: Boolean = false,
+    val toneRoot: Int = 0,
+    val toneScale: NoteScale = NoteScale.MAJOR,
+    val toneVolume: Float = .35f,
     val directions: Map<String, String> = emptyMap(),
     val keys: Map<String, String> = emptyMap(),
     val suggestionScrollId: String? = null,
     val suggestionSelectedId: String? = null,
 )
+
+
+enum class KeySoundSource(val title: String) { DEFAULT("Default click"), CLIPS("Sound pack"), GENERATED("Generated scale") }
+
+val ActionSoundConfig.source: KeySoundSource
+    get() = when { toneEnabled -> KeySoundSource.GENERATED; enabled -> KeySoundSource.CLIPS; else -> KeySoundSource.DEFAULT }
+
+fun ActionSoundConfig.withSource(source: KeySoundSource): ActionSoundConfig =
+    copy(enabled = source == KeySoundSource.CLIPS, toneEnabled = source == KeySoundSource.GENERATED)
 
 /** Removing a selected clip keeps single playback usable and clears every stale assignment. */
 fun ActionSoundConfig.withoutClip(id: String): ActionSoundConfig {
@@ -94,7 +107,7 @@ object ActionSoundPreferences {
             val j = JSONObject(raw ?: return ActionSoundConfig())
             val array = j.optJSONArray("clips") ?: JSONArray()
             ActionSoundConfig(
-                enabled = j.optBoolean("enabled"),
+                enabled = j.optBoolean("enabled") && !j.optBoolean("toneEnabled", false),
                 clips =
                     (0 until array.length()).map { i ->
                         array.getJSONObject(i).let { SoundClip(it.getString("id"), it.getString("name"), it.getString("uri")) }
@@ -105,6 +118,10 @@ object ActionSoundPreferences {
                 overlap = j.optBoolean("overlap", true),
                 maxDurationMs = j.optInt("maxDurationMs", 0).coerceIn(0, 120_000),
                 volume = j.optDouble("volume", 0.6).toFloat().coerceIn(0f, 1f),
+                toneEnabled = j.optBoolean("toneEnabled", false),
+                toneRoot = j.optInt("toneRoot", 0).coerceIn(0, 11),
+                toneScale = runCatching { NoteScale.valueOf(j.optString("toneScale", "MAJOR")) }.getOrDefault(NoteScale.MAJOR),
+                toneVolume = j.optDouble("toneVolume", .35).toFloat().coerceIn(0f, 1f),
                 directions = j.optJSONObject("directions")?.stringMap().orEmpty(),
                 keys = j.optJSONObject("keys")?.stringMap().orEmpty(),
                 suggestionScrollId = j.optString("suggestionScrollId").takeIf { it.isNotEmpty() },
@@ -114,8 +131,10 @@ object ActionSoundPreferences {
 
     fun save(
         context: Context,
-        value: ActionSoundConfig,
+        requested: ActionSoundConfig,
     ) {
+        val value = requested.withSource(requested.source)
+        if (get(context).source != value.source) ActionSoundEngine.stopAll()
         val j =
             JSONObject()
                 .put("enabled", value.enabled)
@@ -125,6 +144,10 @@ object ActionSoundPreferences {
                 .put("overlap", value.overlap)
                 .put("maxDurationMs", value.maxDurationMs)
                 .put("volume", value.volume.toDouble())
+                .put("toneEnabled", value.toneEnabled)
+                .put("toneRoot", value.toneRoot.coerceIn(0, 11))
+                .put("toneScale", value.toneScale.name)
+                .put("toneVolume", value.toneVolume.coerceIn(0f, 1f).toDouble())
                 .put("directions", JSONObject(value.directions))
                 .put("keys", JSONObject(value.keys))
                 .put("suggestionScrollId", value.suggestionScrollId ?: "")

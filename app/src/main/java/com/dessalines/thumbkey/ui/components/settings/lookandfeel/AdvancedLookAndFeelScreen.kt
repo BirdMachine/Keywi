@@ -27,7 +27,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Slider
+import com.dessalines.thumbkey.ui.components.settings.GemGlassSlider as Slider
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
@@ -97,12 +97,13 @@ fun AdvancedLookAndFeelScreen(navController: NavController) {
     var editNotice by remember { mutableStateOf<String?>(null) }
     var editorRevision by remember { mutableIntStateOf(0) }
 
-    Scaffold(topBar = { SimpleTopAppBar(text = "Theme editor", navController = navController) }) { padding ->
+    val editorBackground = if (com.dessalines.thumbkey.ui.components.settings.LocalSettingsDrip.current != null) androidx.compose.ui.graphics.Color.Transparent else MaterialTheme.colorScheme.surface
+    Scaffold(containerColor = editorBackground, topBar = { SimpleTopAppBar(text = "Theme editor", navController = navController) }) { padding ->
         Column(
             Modifier
                 .padding(padding)
                 .verticalScroll(scrollState)
-                .background(MaterialTheme.colorScheme.surface)
+                .background(editorBackground)
                 .imePadding(),
         ) {
             Row(gemSectionModifier(), Arrangement.SpaceBetween, Alignment.CenterVertically) {
@@ -168,11 +169,9 @@ fun AdvancedLookAndFeelScreen(navController: NavController) {
                         FontAndSuggestionSection()
                     }
                 }
-                Text(
-                    "Planned surface slot: one-shot key-press overlays (GIF/image effects).",
-                    Modifier.padding(16.dp),
-                    style = MaterialTheme.typography.bodySmall,
-                )
+                OutlinedButton(onClick = { navController.navigate("keypressEffects") }, modifier = Modifier.padding(16.dp)) {
+                    Text("Key flashes, drag trails & GIF / PNG effects")
+                }
             } else {
                 Column(
                     Modifier.fillMaxWidth().alpha(0.42f).padding(horizontal = 16.dp, vertical = 10.dp),

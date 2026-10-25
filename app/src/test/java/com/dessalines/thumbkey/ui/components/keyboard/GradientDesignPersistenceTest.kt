@@ -19,13 +19,13 @@ class GradientDesignPersistenceTest {
                 borderDistribution = GradientDistribution.INCREMENTAL,
                 borderPhaseStepDegrees = -47f,
                 borderRandomSeed = 701,
-                keyOverrides = mapOf("0:1" to KeyDesignOverride(surfaceColor = Color.Red, borderGradient = BIRDIE_GOLD_BORDER)),
+                keyOverrides = mapOf("0:1" to KeyDesignOverride(surfaceColor = Color.Red, borderGradient = BIRDIE_GOLD_BORDER, glyphColor = Color.Green)),
                 keyGroups =
                     listOf(
                         KeyDesignGroup(
                             "Navigation",
                             setOf("1:0", "1:1"),
-                            KeyDesignOverride(borderColor = Color.Cyan, surfaceGradient = BIRDIE_KEY_GRADIENT),
+                            KeyDesignOverride(borderColor = Color.Cyan, surfaceGradient = BIRDIE_KEY_GRADIENT, glyphColor = Color.Yellow),
                             sharedGradientCanvas = true,
                         ),
                     ),
@@ -36,6 +36,21 @@ class GradientDesignPersistenceTest {
         val restored = ThemeEngine.importIntoCustom(context, ThemeEngine.export(source)).getOrThrow()
         assertEquals(keys, restored.keys)
         assertEquals(keys, KeyThemePreferences.load(context))
+    }
+
+    @Test fun glyphColorsFollowGroupOrderAndIndividualOverrides() {
+        val state = KeyThemeState(
+            keyGroups = listOf(
+                KeyDesignGroup("First", setOf("0:0", "0:1"), KeyDesignOverride(glyphColor = Color.Red)),
+                KeyDesignGroup("Later", setOf("0:0"), KeyDesignOverride(glyphColor = Color.Blue)),
+            ),
+            keyOverrides = mapOf("0:0" to KeyDesignOverride(glyphColor = Color.Green)),
+        )
+        assertEquals(Color.Green, state.forKey("0:0").glyphColor)
+        assertEquals(Color.Red, state.forKey("0:1").glyphColor)
+        assertEquals(null, state.forKey("1:1").glyphColor)
+        assertEquals(Color.Blue, state.copy(keyOverrides = emptyMap()).forKey("0:0").glyphColor)
+        assertEquals(null, decodeDesign(org.json.JSONObject()).glyphColor)
     }
 
     @Test fun oldGroupDocumentsKeepIndependentCanvases() {

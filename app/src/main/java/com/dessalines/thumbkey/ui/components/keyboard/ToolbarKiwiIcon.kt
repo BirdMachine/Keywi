@@ -19,8 +19,8 @@ enum class ToolbarIconStyle(
     val title: String,
 ) {
     AUTOMATIC("Automatic contrast"),
-    LIGHT("Light kiwi"),
-    DARK("Dark kiwi"),
+    LIGHT("Light diamond"),
+    DARK("Dark diamond"),
 }
 
 internal fun toolbarIconIsLight(

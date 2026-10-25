@@ -76,6 +76,15 @@ jobs:
           if-no-files-found: ignore
           retention-days: 14
 
+      - name: Upload tool page review
+        if: always()
+        uses: actions/upload-artifact@v6
+        with:
+          name: tool-page-review
+          path: app/build/outputs/tool-page-review/
+          if-no-files-found: ignore
+          retention-days: 14
+
       - name: Run Android lint
         run: ./gradlew lint
 

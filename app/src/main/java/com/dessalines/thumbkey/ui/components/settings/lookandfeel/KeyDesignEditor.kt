@@ -13,7 +13,7 @@ import androidx.compose.material3.FilterChip
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.Slider
+import com.dessalines.thumbkey.ui.components.settings.GemGlassSlider as Slider
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -89,6 +89,7 @@ internal fun KeyDesignOverrideEditor(
     var sharedCanvas by remember(groupMode, draftTarget, newGroupRevision, existingGroup?.sharedGradientCanvas) {
         mutableStateOf(existingGroup?.sharedGradientCanvas ?: true)
     }
+    val inheritedGlyphColor = MaterialTheme.colorScheme.onSurface
     var message by remember(selectedIds, groupMode) { mutableStateOf<String?>(null) }
     val nameCollision =
         groupMode && groupName.isNotBlank() &&
@@ -173,6 +174,13 @@ internal fun KeyDesignOverrideEditor(
                     "Assigned fill gradients fit this key. Inherit follows its group or theme.",
                     style = MaterialTheme.typography.bodySmall,
                 )
+            }
+            Text("Font / glyph color", style = MaterialTheme.typography.titleSmall)
+            ChoiceChips(listOf("Inherit", "Custom"), if (design.glyphColor == null) "Inherit" else "Custom", { it }) {
+                design = design.copy(glyphColor = if (it == "Inherit") null else design.glyphColor ?: inheritedGlyphColor)
+            }
+            if (design.glyphColor != null) {
+                ColorEditor("Glyph color", requireNotNull(design.glyphColor)) { design = design.copy(glyphColor = it) }
             }
             OverrideSurfaceEditor(
                 "Border / highlight",

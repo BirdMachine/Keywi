@@ -2,11 +2,7 @@ package com.dessalines.thumbkey.ui.components.keyboard
 
 import android.content.Intent
 import android.net.Uri
-import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.ExperimentalFoundationApi
-import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
-import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -32,7 +28,6 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
@@ -133,7 +128,7 @@ fun KaomojiRoom(
         modifier =
             modifier
                 .clip(RoundedCornerShape(topStart = 18.dp, topEnd = 18.dp))
-                .background(MaterialTheme.colorScheme.surface.copy(alpha = 0.82f))
+                .toolPageBackground()
                 .padding(horizontal = 9.dp, vertical = 8.dp),
         verticalArrangement = Arrangement.spacedBy(5.dp),
     ) {
@@ -148,16 +143,9 @@ fun KaomojiRoom(
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(6.dp),
         ) {
-            Surface(
+            ToolPageSurface(
                 onClick = { PaletteSearchCapture.activate() },
-                modifier = Modifier.weight(1f),
-                shape = RoundedCornerShape(12.dp),
-                color = MaterialTheme.colorScheme.surface.copy(alpha = if (searchActive) 0.88f else 0.62f),
-                border =
-                    BorderStroke(
-                        if (searchActive) 2.dp else 1.dp,
-                        if (searchActive) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.outline,
-                    ),
+                modifier = Modifier.weight(1f), selected = searchActive, designId = "kaomoji-search",
             ) {
                 Text(
                     text =
@@ -321,71 +309,9 @@ private fun PaletteKaomojiCell(
     onClick: () -> Unit,
     onDoubleClick: () -> Unit,
 ) {
-    val shape = RoundedCornerShape(10.dp)
-    val favoriteColor = MaterialTheme.colorScheme.tertiary
-    val modifier =
-        Modifier
-            .fillMaxWidth()
-            .clip(shape)
-            .then(
-                when (theme.surfaceStyle) {
-                    SuggestionLozengeSurfaceStyle.GRADIENT -> Modifier.keyboardGradientBackground(theme.surfaceGradient)
-
-                    SuggestionLozengeSurfaceStyle.SOLID,
-                    SuggestionLozengeSurfaceStyle.NONE,
-                    -> Modifier
-                },
-            ).then(
-                when {
-                    favorite -> {
-                        Modifier.keyboardGradientBorder(BIRDIE_GOLD_BORDER, 2.dp, 10.dp)
-                    }
-
-                    theme.borderStyle == SuggestionLozengeBorderStyle.GRADIENT -> {
-                        Modifier.keyboardGradientBorder(
-                            backdrop = theme.borderGradient,
-                            width = theme.borderWidth.coerceAtMost(2.5f).dp,
-                            radius = 10.dp,
-                        )
-                    }
-
-                    else -> {
-                        Modifier
-                    }
-                },
-            ).combinedClickable(
-                hapticFeedbackEnabled = false,
-                onClick = onClick,
-                onDoubleClick = onDoubleClick,
-            )
-
-    Surface(
-        shape = shape,
-        color =
-            when (theme.surfaceStyle) {
-                SuggestionLozengeSurfaceStyle.SOLID -> theme.surfaceColor.copy(alpha = if (favorite) 0.92f else 0.78f)
-                SuggestionLozengeSurfaceStyle.GRADIENT -> Color.Transparent
-                SuggestionLozengeSurfaceStyle.NONE -> MaterialTheme.colorScheme.surface.copy(alpha = 0.46f)
-            },
-        border =
-            when {
-                favorite -> {
-                    null
-                }
-
-                theme.borderStyle == SuggestionLozengeBorderStyle.SOLID -> {
-                    BorderStroke(theme.borderWidth.coerceAtMost(2.5f).dp, theme.borderColor)
-                }
-
-                theme.borderStyle == SuggestionLozengeBorderStyle.NONE -> {
-                    BorderStroke(1.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.55f))
-                }
-
-                else -> {
-                    null
-                }
-            },
-        modifier = modifier,
+    ToolPageSurface(
+        onClick = onClick, onDoubleClick = onDoubleClick, selected = favorite,
+        designId = "kaomoji:${entry.text}", modifier = Modifier.fillMaxWidth(),
     ) {
         Column(
             modifier = Modifier.fillMaxWidth().padding(horizontal = 9.dp, vertical = 7.dp),
@@ -394,7 +320,7 @@ private fun PaletteKaomojiCell(
             Text(
                 text = entry.text,
                 style = MaterialTheme.typography.bodyLarge,
-                color = if (favorite) favoriteColor else MaterialTheme.colorScheme.onSurface,
+                color = MaterialTheme.colorScheme.onSurface,
                 fontWeight = if (favorite) FontWeight.SemiBold else FontWeight.Normal,
                 maxLines = 2,
                 overflow = TextOverflow.Ellipsis,
@@ -403,7 +329,7 @@ private fun PaletteKaomojiCell(
                 Text(
                     text = label,
                     style = MaterialTheme.typography.labelSmall,
-                    color = if (favorite) favoriteColor else MaterialTheme.colorScheme.onSurfaceVariant,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis,
                 )
@@ -419,35 +345,7 @@ private fun PaletteCategoryChip(
     theme: SuggestionLozengeThemeState,
     onClick: () -> Unit,
 ) {
-    val shape = RoundedCornerShape(14.dp)
-    val modifier =
-        Modifier
-            .clip(shape)
-            .then(
-                when (theme.surfaceStyle) {
-                    SuggestionLozengeSurfaceStyle.GRADIENT -> Modifier.keyboardGradientBackground(theme.surfaceGradient)
-
-                    SuggestionLozengeSurfaceStyle.SOLID,
-                    SuggestionLozengeSurfaceStyle.NONE,
-                    -> Modifier
-                },
-            )
-
-    Surface(
-        shape = shape,
-        color =
-            when (theme.surfaceStyle) {
-                SuggestionLozengeSurfaceStyle.SOLID -> theme.surfaceColor.copy(alpha = if (selected) 0.95f else 0.72f)
-                SuggestionLozengeSurfaceStyle.GRADIENT -> Color.Transparent
-                SuggestionLozengeSurfaceStyle.NONE -> MaterialTheme.colorScheme.surface.copy(alpha = if (selected) 0.72f else 0.46f)
-            },
-        border =
-            BorderStroke(
-                if (selected) 2.dp else 1.dp,
-                if (selected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.outline.copy(alpha = 0.6f),
-            ),
-        modifier = modifier.clickable(onClick = onClick),
-    ) {
+    ToolPageSurface(onClick = onClick, selected = selected, designId = "kaomoji-category:$text") {
         Text(
             text = text,
             modifier = Modifier.padding(horizontal = 9.dp, vertical = 5.dp),
@@ -465,58 +363,7 @@ private fun PaletteLozengeButton(
     theme: SuggestionLozengeThemeState,
     compact: Boolean = false,
 ) {
-    val shape = RoundedCornerShape(18.dp)
-    val modifier =
-        Modifier
-            .clip(shape)
-            .then(
-                when (theme.surfaceStyle) {
-                    SuggestionLozengeSurfaceStyle.GRADIENT -> Modifier.keyboardGradientBackground(theme.surfaceGradient)
-
-                    SuggestionLozengeSurfaceStyle.SOLID,
-                    SuggestionLozengeSurfaceStyle.NONE,
-                    -> Modifier
-                },
-            ).then(
-                when (theme.borderStyle) {
-                    SuggestionLozengeBorderStyle.GRADIENT -> {
-                        Modifier.keyboardGradientBorder(
-                            backdrop = theme.borderGradient,
-                            width = theme.borderWidth.dp,
-                            radius = 18.dp,
-                        )
-                    }
-
-                    SuggestionLozengeBorderStyle.SOLID,
-                    SuggestionLozengeBorderStyle.NONE,
-                    -> {
-                        Modifier
-                    }
-                },
-            )
-
-    Surface(
-        shape = shape,
-        color =
-            when (theme.surfaceStyle) {
-                SuggestionLozengeSurfaceStyle.SOLID -> theme.surfaceColor
-
-                SuggestionLozengeSurfaceStyle.GRADIENT,
-                SuggestionLozengeSurfaceStyle.NONE,
-                -> Color.Transparent
-            },
-        border =
-            when (theme.borderStyle) {
-                SuggestionLozengeBorderStyle.SOLID -> BorderStroke(theme.borderWidth.dp, theme.borderColor)
-
-                SuggestionLozengeBorderStyle.GRADIENT,
-                SuggestionLozengeBorderStyle.NONE,
-                -> null
-            },
-        tonalElevation = 2.dp,
-        shadowElevation = 1.dp,
-        modifier = modifier.clickable(onClick = onClick),
-    ) {
+    ToolPageSurface(onClick = onClick, designId = "kaomoji-control:$text") {
         Text(
             text = text,
             modifier =

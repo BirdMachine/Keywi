@@ -172,6 +172,8 @@ sealed class KeyDisplay {
 }
 
 sealed class KeyAction {
+    data object CycleFeedbackMode : KeyAction()
+
     data object CycleBoard : KeyAction()
 
     data object BoardHome : KeyAction()

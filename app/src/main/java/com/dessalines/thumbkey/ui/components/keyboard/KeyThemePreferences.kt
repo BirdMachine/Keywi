@@ -17,6 +17,7 @@ data class KeyDesignOverride(
     val borderColor: Color? = null,
     val surfaceGradient: KeyboardBackdrop? = null,
     val borderGradient: KeyboardBackdrop? = null,
+    val glyphColor: Color? = null,
 )
 
 data class KeyDesignGroup(
@@ -41,6 +42,7 @@ data class KeyThemeState(
     val borderRandomSeed: Int = 0,
     val keyOverrides: Map<String, KeyDesignOverride> = emptyMap(),
     val keyGroups: List<KeyDesignGroup> = emptyList(),
+    val glyphColor: Color? = null,
 )
 
 object KeyThemePreferences {
@@ -190,6 +192,7 @@ fun KeyThemeState.forKey(keyId: String): KeyThemeState {
                     } else {
                         theme.borderStyle
                     },
+                glyphColor = design.glyphColor ?: theme.glyphColor,
                 borderColor = design.borderColor ?: theme.borderColor,
                 borderGradient = design.borderGradient ?: theme.borderGradient,
             )
@@ -201,6 +204,7 @@ fun KeyThemeState.forKey(keyId: String): KeyThemeState {
 
 internal fun encodeDesign(design: KeyDesignOverride): JSONObject =
     JSONObject().apply {
+        design.glyphColor?.let { put("glyphColor", it.value.toString()) }
         design.surfaceColor?.let { put("surfaceColor", it.value.toString()) }
         design.borderColor?.let { put("borderColor", it.value.toString()) }
 
@@ -244,7 +248,7 @@ internal fun decodeDesign(json: JSONObject): KeyDesignOverride {
             }
         return parsed.takeIf { it.isNotEmpty() }?.let { KeyboardBackdrop(it, value.optDouble("angle", 135.0).toFloat()) }
     }
-    return KeyDesignOverride(color("surfaceColor"), color("borderColor"), gradient("surfaceGradient"), gradient("borderGradient"))
+    return KeyDesignOverride(color("surfaceColor"), color("borderColor"), gradient("surfaceGradient"), gradient("borderGradient"), color("glyphColor"))
 }
 
 internal fun decodeOverrides(raw: String?): Map<String, KeyDesignOverride> =

@@ -34,6 +34,7 @@ object FeedbackPreferences {
         prefs(context).edit().putString("mode", mode.name).apply()
         if (mode != FeedbackMode.SOUND) ActionSoundEngine.stopAll()
     }
+    fun cycle(context: Context) { save(context, get(context).next()) }
     fun soundAllowed(context: Context) = get(context) == FeedbackMode.SOUND
     fun hapticsAllowed(context: Context) = get(context) != FeedbackMode.SILENT
 }
@@ -67,4 +68,15 @@ fun FeedbackModeControl(modifier: Modifier = Modifier, compact: Boolean = false,
     } else {
         TextButton(onClick = cycle, modifier = modifier) { Text("Feedback: "+mode.title+" → "+mode.next().title) }
     }
+}
+
+/** A normal key legend: gesture ownership stays with KeyboardKey. */
+@Composable
+fun FeedbackModeLegend(modifier: Modifier = Modifier, tint: androidx.compose.ui.graphics.Color = androidx.compose.material3.LocalContentColor.current) {
+    val mode = rememberFeedbackMode()
+    Icon(when (mode) {
+        FeedbackMode.SOUND -> Icons.AutoMirrored.Outlined.VolumeUp
+        FeedbackMode.VIBRATE -> Icons.Outlined.Vibration
+        FeedbackMode.SILENT -> Icons.Outlined.VolumeOff
+    }, contentDescription = "Feedback: " + mode.title, modifier = modifier, tint = tint)
 }

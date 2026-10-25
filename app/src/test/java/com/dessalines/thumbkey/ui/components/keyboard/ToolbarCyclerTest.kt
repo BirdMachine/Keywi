@@ -72,11 +72,11 @@ class ToolbarCyclerTest {
     @Test fun swipeWrapsBothWaysAndDoubleTapResetsWithoutToggling() {
         show()
         cycler().performTouchInput { swipeDown() }
-        compose.runOnIdle { assertEquals(ToolbarPage.QUICK_SETTINGS, current) }
+        compose.runOnIdle { assertEquals(ToolbarPage.FORMATTING, current) }
         cycler().performTouchInput { swipeUp() }
         compose.runOnIdle { assertEquals(ToolbarPage.CHARACTERS, current) }
         cycler().performTouchInput { swipeUp() }
-        compose.runOnIdle { assertEquals(ToolbarPage.FORMATTING, current) }
+        compose.runOnIdle { assertEquals(ToolbarPage.QUICK_SETTINGS, current) }
         cycler().performTouchInput { doubleClick() }
         settleTaps()
         compose.runOnIdle {
@@ -86,6 +86,19 @@ class ToolbarCyclerTest {
         cycler().performTouchInput { click() }
         settleTaps()
         compose.runOnIdle { assertEquals(1, toggles) }
+    }
+
+    @Test fun invertToolScrollChangesLiveGesturesAndPersists() {
+        show()
+        cycler().performTouchInput { longClick() }
+        compose.onNodeWithContentDescription("Invert tool scroll").performClick()
+        compose.runOnIdle { org.junit.Assert.assertTrue(ToolbarViewPreferences.invertScroll(RuntimeEnvironment.getApplication())) }
+        compose.onNodeWithText("Done").performClick()
+        cycler().performTouchInput { swipeUp() }
+        compose.runOnIdle { assertEquals(ToolbarPage.FORMATTING, current) }
+        cycler().performTouchInput { swipeDown() }
+        compose.runOnIdle { assertEquals(ToolbarPage.CHARACTERS, current) }
+        compose.runOnIdle { assertEquals(0, toggles) }
     }
 
     @Test fun tripleTapOpensQuickSettingsWithoutSingleOrDoubleAction() {

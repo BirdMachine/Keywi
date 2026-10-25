@@ -3,12 +3,14 @@ package com.dessalines.thumbkey.ui.components.keyboard
 import android.content.Context
 import android.content.Intent
 import android.widget.Toast
+import androidx.compose.foundation.border
 import androidx.compose.foundation.background
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.gestures.detectVerticalDragGestures
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -16,6 +18,10 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.outlined.Diamond
+import androidx.compose.material3.Icon
+import androidx.compose.material3.Switch
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
@@ -34,6 +40,7 @@ import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalContext
@@ -103,6 +110,9 @@ enum class ToolbarGesture(
 object ToolbarViewPreferences {
     private fun preferences(context: Context) = context.getSharedPreferences("toolbar_views", Context.MODE_PRIVATE)
 
+    fun invertScroll(context: Context) = preferences(context).getBoolean("invert_tool_scroll", false)
+    fun setInvertScroll(context: Context, inverted: Boolean) { preferences(context).edit().putBoolean("invert_tool_scroll", inverted).apply() }
+
     fun iconStyle(context: Context): ToolbarIconStyle =
         runCatching {
             ToolbarIconStyle.valueOf(preferences(context).getString("icon_style", ToolbarIconStyle.AUTOMATIC.name)!!)
@@ -143,6 +153,8 @@ object ToolbarViewPreferences {
         preferences(context).edit().putString(gesture.name, action.name).apply()
     }
 }
+
+internal fun toolbarSwipeStep(distance: Float, inverted: Boolean): Int = (if (distance > 0f) 1 else -1) * if (inverted) -1 else 1
 
 /** Wait for the chain to finish; double/triple taps never fire an earlier single tap. */
 internal class ToolbarTapSequence(
@@ -335,18 +347,21 @@ fun ToolbarCycler(
                         },
                         onDragCancel = { distance = 0f },
                         onDragEnd = {
-                            if (kotlin.math.abs(distance) > 12.dp.toPx()) changePage(currentPage.step(if (distance < 0) 1 else -1))
+                            if (kotlin.math.abs(distance) > 12.dp.toPx()) changePage(currentPage.step(toolbarSwipeStep(distance, ToolbarViewPreferences.invertScroll(context))))
                             distance = 0f
                         },
                     )
                 },
     ) {
         Box(contentAlignment = Alignment.Center) {
-            ToolbarKiwiIcon(
-                light = toolbarIconIsLight(iconStyle, iconBackground),
-                modifier = Modifier.size(28.dp),
-                alpha = if (enabled || page != ToolbarPage.CHARACTERS) 1f else .65f,
-            )
+            val light = toolbarIconIsLight(iconStyle, iconBackground)
+            val tint = (if (light) Color.White else Color.Black).copy(alpha = if (enabled || page != ToolbarPage.CHARACTERS) 1f else .65f)
+            Box(
+                Modifier.size(30.dp).clip(CircleShape)
+                    .background((if (light) Color.Black else Color.White).copy(alpha = .35f))
+                    .border(1.dp, tint.copy(alpha = .55f), CircleShape),
+                contentAlignment = Alignment.Center,
+            ) { Icon(Icons.Outlined.Diamond, null, Modifier.size(21.dp), tint = tint) }
             Column(
                 modifier = Modifier.align(Alignment.CenterEnd).padding(end = 3.dp),
                 verticalArrangement = Arrangement.spacedBy(3.dp),
@@ -371,6 +386,7 @@ fun ToolbarControlsDialog(onDismiss: () -> Unit) {
     val context = LocalContext.current
     var home by remember { mutableStateOf(ToolbarViewPreferences.home(context)) }
     var iconStyle by remember { mutableStateOf(ToolbarViewPreferences.iconStyle(context)) }
+    var inverted by remember { mutableStateOf(ToolbarViewPreferences.invertScroll(context)) }
     var actions by remember { mutableStateOf(ToolbarGesture.entries.associateWith { ToolbarViewPreferences.action(context, it) }) }
     AlertDialog(
         onDismissRequest = onDismiss,
@@ -378,6 +394,14 @@ fun ToolbarControlsDialog(onDismiss: () -> Unit) {
         text = {
             Column(Modifier.verticalScroll(rememberScrollState()), verticalArrangement = Arrangement.spacedBy(8.dp)) {
                 Text("Tap to toggle suggestions. Swipe up or down to change views. Scroll suggestions left or right.")
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Text("Invert tool scroll", Modifier.weight(1f))
+                    Switch(checked = inverted, onCheckedChange = {
+                        inverted = it
+                        ToolbarViewPreferences.setInvertScroll(context, it)
+                    }, modifier = Modifier.semantics { contentDescription = "Invert tool scroll" })
+                }
+                Text(if (inverted) "Swipe up: next view · down: previous view" else "Swipe down: next view · up: previous view", style = MaterialTheme.typography.bodySmall)
                 ToolbarChoice(
                     title = "Home view",
                     selected = home.title,

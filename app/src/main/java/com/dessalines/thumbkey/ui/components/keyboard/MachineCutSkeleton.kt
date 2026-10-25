@@ -484,7 +484,7 @@ private fun RowScope.HkKey(
         contentAlignment = Alignment.Center,
     ) {
         KeyAccentOverlay(pressed, Modifier.matchParentSize(), suppressed = password)
-        val legendColor = if (pressed || active) MaterialTheme.colorScheme.onPrimaryContainer else MaterialTheme.colorScheme.onSurface
+        val legendColor = (if (appearanceEnabled) theme.glyphColor else null) ?: if (pressed || active) MaterialTheme.colorScheme.onPrimaryContainer else MaterialTheme.colorScheme.onSurface
         TaskerCommandLegend(effectKeyId, "CENTER", 24.dp, legendColor) {
             Text(label, color = legendColor)
         }

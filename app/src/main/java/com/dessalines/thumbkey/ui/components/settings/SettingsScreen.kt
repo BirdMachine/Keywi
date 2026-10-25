@@ -77,6 +77,7 @@ fun SettingsScreen(
     val snackbarHostState = remember { SnackbarHostState() }
     val ctx = LocalContext.current
     val settings by appSettingsViewModel.appSettings.observeAsState()
+    val feedbackMode = com.dessalines.thumbkey.effects.rememberFeedbackMode()
     val scrollState = rememberScrollState()
     val layoutsState = keyboardLayoutsSetFromDbIndexString(settings?.keyboardLayouts)
 
@@ -124,6 +125,13 @@ fun SettingsScreen(
                             onClick = { navController.navigate("setup") },
                         )
                     }
+
+                    Preference(
+                        title = { Text("Feedback mode") },
+                        summary = { Text("${feedbackMode.title} · tap to switch to ${feedbackMode.next().title}") },
+                        icon = { com.dessalines.thumbkey.effects.FeedbackModeLegend() },
+                        onClick = { com.dessalines.thumbkey.effects.FeedbackPreferences.cycle(ctx) },
+                    )
 
                     GemSettingsGroupLabel("◇ ADVANCED", "Shape, surfaces and input tools")
                     Preference(

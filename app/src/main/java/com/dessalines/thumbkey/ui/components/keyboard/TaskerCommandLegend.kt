@@ -46,7 +46,7 @@ fun TaskerCommandLegend(
     val context = LocalContext.current
     val revision = TaskerKeyBindings.revision
     val display = remember(context, keyId, direction, revision) { TaskerKeyBindings.get(context, keyId, direction)?.display }
-    if (display != null) TaskerCommandSymbol(display, size, tint, fallback = fallback) else fallback()
+    if (display != null) TaskerCommandSymbol(display, size, LocalKeyGlyphColor.current ?: tint, fallback = fallback) else fallback()
 }
 
 @Composable
