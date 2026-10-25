@@ -68,9 +68,13 @@ enum class ToolbarPage(
     FORMATTING("Formatting", "𝕱"),
     KAOMOJI("Kaomoji", "☺"),
     QUICK_SETTINGS("Quick Settings", "⚙"),
+    SNIPPETS("String palettes", "▤"),
     ;
 
-    fun step(delta: Int) = entries[Math.floorMod(ordinal + delta, entries.size)]
+    fun step(delta: Int): ToolbarPage {
+        val defaults = entries.filter { it != SNIPPETS }
+        return defaults[Math.floorMod(defaults.indexOf(this).coerceAtLeast(0) + delta, defaults.size)]
+    }
 
     val palette: InputPalette?
         get() =
@@ -79,6 +83,7 @@ enum class ToolbarPage(
                 FORMATTING -> InputPalette.FANCY_TEXT
                 KAOMOJI -> InputPalette.KAOMOJI
                 QUICK_SETTINGS -> InputPalette.QUICK_SETTINGS
+                SNIPPETS -> InputPalette.SNIPPETS
             }
 
     companion object {
@@ -242,6 +247,8 @@ fun ToolbarCycler(
             MaterialTheme.colorScheme.surface
         }
     var showSettings by remember { mutableStateOf(false) }
+    val toolConfig = rememberToolPageConfig()
+    val visiblePages = toolConfig.visiblePages()
     val currentPage by rememberUpdatedState(page)
     val toggle by rememberUpdatedState(onToggle)
     val changePage by rememberUpdatedState(onPage)
@@ -249,9 +256,9 @@ fun ToolbarCycler(
     val performAction: (ToolbarGestureAction) -> Unit = { action ->
         when (action) {
             ToolbarGestureAction.NONE -> Unit
-            ToolbarGestureAction.NEXT -> changePage(currentPage.step(1))
-            ToolbarGestureAction.PREVIOUS -> changePage(currentPage.step(-1))
-            ToolbarGestureAction.HOME -> changePage(ToolbarViewPreferences.home(context))
+            ToolbarGestureAction.NEXT -> changePage(toolConfig.next(currentPage, 1))
+            ToolbarGestureAction.PREVIOUS -> changePage(toolConfig.next(currentPage, -1))
+            ToolbarGestureAction.HOME -> changePage(ToolbarViewPreferences.home(context).takeIf { it in visiblePages } ?: ToolbarPage.CHARACTERS)
             ToolbarGestureAction.QUICK_SETTINGS -> changePage(ToolbarPage.QUICK_SETTINGS)
             ToolbarGestureAction.OPEN_SETTINGS -> openSettings?.invoke() ?: openKeywiSettings(context)
             ToolbarGestureAction.CONFIGURE -> showSettings = true
@@ -282,7 +289,7 @@ fun ToolbarCycler(
                 .width(54.dp)
                 .fillMaxHeight()
                 .semantics {
-                    contentDescription = "${page.title}, page ${page.ordinal + 1} of ${ToolbarPage.entries.size}"
+                    contentDescription = "${page.title}, page ${(visiblePages.indexOf(page) + 1).coerceAtLeast(1)} of ${visiblePages.size}"
                     onClick("Toggle suggestions") {
                         toggle()
                         true
@@ -294,15 +301,15 @@ fun ToolbarCycler(
                     customActions =
                         listOf(
                             CustomAccessibilityAction("Next view") {
-                                changePage(currentPage.step(1))
+                                changePage(toolConfig.next(currentPage, 1))
                                 true
                             },
                             CustomAccessibilityAction("Previous view") {
-                                changePage(currentPage.step(-1))
+                                changePage(toolConfig.next(currentPage, -1))
                                 true
                             },
                             CustomAccessibilityAction("Home view") {
-                                changePage(ToolbarViewPreferences.home(context))
+                                changePage(ToolbarViewPreferences.home(context).takeIf { it in visiblePages } ?: ToolbarPage.CHARACTERS)
                                 true
                             },
                             CustomAccessibilityAction("Double tap action") {
@@ -322,7 +329,7 @@ fun ToolbarCycler(
                                 true
                             },
                         )
-                }.pointerInput(taps) {
+                }.pointerInput(taps, toolConfig) {
                     detectTapGestures(
                         onPress = {
                             taps.pause()
@@ -334,7 +341,7 @@ fun ToolbarCycler(
                             action(ToolbarViewPreferences.action(context, ToolbarGesture.HOLD))
                         },
                     )
-                }.pointerInput(taps) {
+                }.pointerInput(taps, toolConfig) {
                     var distance = 0f
                     detectVerticalDragGestures(
                         onDragStart = {
@@ -347,7 +354,7 @@ fun ToolbarCycler(
                         },
                         onDragCancel = { distance = 0f },
                         onDragEnd = {
-                            if (kotlin.math.abs(distance) > 12.dp.toPx()) changePage(currentPage.step(toolbarSwipeStep(distance, ToolbarViewPreferences.invertScroll(context))))
+                            if (kotlin.math.abs(distance) > 12.dp.toPx()) changePage(toolConfig.next(currentPage, toolbarSwipeStep(distance, ToolbarViewPreferences.invertScroll(context))))
                             distance = 0f
                         },
                     )
@@ -367,7 +374,7 @@ fun ToolbarCycler(
                 verticalArrangement = Arrangement.spacedBy(3.dp),
                 horizontalAlignment = Alignment.CenterHorizontally,
             ) {
-                ToolbarPage.entries.forEach { entry ->
+                visiblePages.forEach { entry ->
                     Box(
                         Modifier.size(width = if (entry == page) 4.dp else 3.dp, height = 5.dp).background(
                             if (entry == page) Color(0xFFB6DC58) else MaterialTheme.colorScheme.onSurface.copy(alpha = .4f),
@@ -384,6 +391,7 @@ fun ToolbarCycler(
 @Composable
 fun ToolbarControlsDialog(onDismiss: () -> Unit) {
     val context = LocalContext.current
+    val visiblePages = rememberToolPageConfig().visiblePages()
     var home by remember { mutableStateOf(ToolbarViewPreferences.home(context)) }
     var iconStyle by remember { mutableStateOf(ToolbarViewPreferences.iconStyle(context)) }
     var inverted by remember { mutableStateOf(ToolbarViewPreferences.invertScroll(context)) }
@@ -405,9 +413,9 @@ fun ToolbarControlsDialog(onDismiss: () -> Unit) {
                 ToolbarChoice(
                     title = "Home view",
                     selected = home.title,
-                    choices = ToolbarPage.entries.map { it.title },
+                    choices = visiblePages.map { it.title },
                     onSelect = { index ->
-                        home = ToolbarPage.entries[index]
+                        home = visiblePages[index]
                         ToolbarViewPreferences.setHome(context, home)
                     },
                 )

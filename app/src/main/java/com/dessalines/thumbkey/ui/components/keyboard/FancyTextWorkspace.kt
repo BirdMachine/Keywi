@@ -42,7 +42,11 @@ fun FancyTextWorkspace(
     var category by rememberSaveable { mutableStateOf<FancyTextFormatter.Category?>(null) }
     var lastApplied by remember(previewText) { mutableStateOf<String?>(null) }
     val sample = previewText.ifEmpty { "Keywi 123" }
-    val styles = FancyTextFormatter.styles.filter { category == null || it.category == category }
+    val config = rememberToolPageConfig()
+    val visibleCategories = ordered(config.formatCategories, FancyTextFormatter.Category.entries.map { it.name })
+        .filterNot { it in config.hiddenFormatCategories }.map { FancyTextFormatter.Category.valueOf(it) }
+    val activeCategory = category?.takeIf { it in visibleCategories }
+    val styles = config.visibleFormats().filter { activeCategory == null || it.category == activeCategory }
 
     Surface(
         modifier = modifier.fillMaxSize(),
@@ -75,14 +79,14 @@ fun FancyTextWorkspace(
             ) {
                 PaletteWorkspaceCategoryChip(
                     text = "All",
-                    selected = category == null,
+                    selected = activeCategory == null,
                     theme = theme,
                     onClick = { category = null },
                 )
-                FancyTextFormatter.Category.entries.forEach { entry ->
+                visibleCategories.forEach { entry ->
                     PaletteWorkspaceCategoryChip(
                         text = entry.title,
-                        selected = category == entry,
+                        selected = activeCategory == entry,
                         theme = theme,
                         onClick = { category = entry },
                     )
@@ -92,6 +96,7 @@ fun FancyTextWorkspace(
                 modifier = Modifier.fillMaxWidth().verticalScroll(rememberScrollState()),
                 verticalArrangement = Arrangement.spacedBy(7.dp),
             ) {
+                if (styles.isEmpty()) Text("No styles enabled. Add them in Tool pages & palettes.")
                 styles.forEachIndexed { index, style ->
                     PaletteKeySurface(
                         onClick = { lastApplied = style.id; onApply(style.id) },

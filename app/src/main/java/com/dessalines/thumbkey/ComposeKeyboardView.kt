@@ -102,6 +102,10 @@ class ComposeKeyboardView(
             remember(ctx) { ActionGifPreferences.load(ctx) }
             var keyboardHeightPx by remember { mutableIntStateOf(0) }
             var activePalette by remember { mutableStateOf<InputPalette?>(null) }
+            val toolConfig = com.dessalines.thumbkey.ui.components.keyboard.rememberToolPageConfig()
+            androidx.compose.runtime.LaunchedEffect(toolConfig) {
+                if (ToolbarPage.from(activePalette) !in toolConfig.visiblePages()) activePalette = null
+            }
             val paletteStateHolder = rememberSaveableStateHolder()
 
             CompositionLocalProvider(LocalLayoutDirection provides LayoutDirection.Ltr) {

@@ -4,6 +4,9 @@ import android.content.Intent
 import android.net.Uri
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.horizontalScroll
+import androidx.compose.foundation.layout.Box
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -48,6 +51,9 @@ fun KaomojiRoom(
 ) {
     val context = LocalContext.current
     var selectedCategoryId by rememberSaveable { mutableStateOf(KaomojiLibrary.categories.first().id) }
+    val config = rememberToolPageConfig()
+    val categories = config.kaomoji.filter { it.enabled }.map { c -> StringPaletteCategory(c.id, c.title, c.glyph, c.entries.filter { it.enabled }.map { it.item() }) }
+    val allItems = categories.flatMap { it.items }
     val searchQuery = PaletteSearchCapture.query
     val searchActive = PaletteSearchCapture.active
     var favorites by remember { mutableStateOf(KaomojiPreferences.loadFavorites(context)) }
@@ -83,22 +89,22 @@ fun KaomojiRoom(
 
     val localItems =
         if (searchQuery.isNotBlank()) {
-            KaomojiLibrary.search(searchQuery).distinctBy { it.text }
+            allItems.filter { it.text.contains(searchQuery, true) || it.label?.contains(searchQuery, true) == true || it.tags.any { tag -> tag.contains(searchQuery, true) } }.distinctBy { it.text }
         } else {
             when (selectedCategoryId) {
                 FAVORITES_CATEGORY -> {
-                    favorites.map { text -> KaomojiLibrary.allItems.firstOrNull { it.text == text } ?: StringPaletteItem(text) }
+                    favorites.map { text -> allItems.firstOrNull { it.text == text } ?: StringPaletteItem(text) }
                 }
 
                 RECENTS_CATEGORY -> {
-                    recents.map { recent -> KaomojiLibrary.allItems.firstOrNull { it.text == recent } ?: StringPaletteItem(recent) }
+                    recents.map { recent -> allItems.firstOrNull { it.text == recent } ?: StringPaletteItem(recent) }
                 }
 
                 else -> {
-                    KaomojiLibrary.categories
+                    categories
                         .firstOrNull { it.id == selectedCategoryId }
                         ?.items
-                        ?: KaomojiLibrary.categories.first().items
+                        ?: categories.firstOrNull()?.items.orEmpty()
                 }
             }
         }
@@ -249,7 +255,7 @@ fun KaomojiRoom(
                 theme = lozengeTheme,
                 onClick = { chooseCategory(RECENTS_CATEGORY) },
             )
-            KaomojiLibrary.categories.forEach { entry ->
+            categories.forEach { entry ->
                 PaletteCategoryChip(
                     text = "${entry.glyph} ${entry.title}",
                     selected = selectedCategoryId == entry.id && searchQuery.isBlank(),
@@ -283,13 +289,14 @@ fun KaomojiRoom(
                 verticalArrangement = Arrangement.spacedBy(4.dp),
                 modifier = Modifier.weight(1f),
             ) {
-                items(items, key = { it.text }) { entry ->
+                items(items.distinctBy { it.text }, key = { it.text }) { entry ->
                     val favorite = entry.text in favorites
                     PaletteKaomojiCell(
                         entry = entry,
                         favorite = favorite,
                         theme = lozengeTheme,
                         onClick = { commit(entry.text) },
+                        onAlternate = ::commit,
                         onDoubleClick = {
                             favorites = KaomojiPreferences.toggleFavorite(context, entry.text)
                         },
@@ -308,9 +315,13 @@ private fun PaletteKaomojiCell(
     theme: SuggestionLozengeThemeState,
     onClick: () -> Unit,
     onDoubleClick: () -> Unit,
+    onAlternate: (String) -> Unit,
 ) {
+    var alternatives by remember(entry) { mutableStateOf(false) }
+    Box {
     ToolPageSurface(
         onClick = onClick, onDoubleClick = onDoubleClick, selected = favorite,
+        onLongClick = if (entry.alternates.isEmpty()) null else ({ alternatives = true }),
         designId = "kaomoji:${entry.text}", modifier = Modifier.fillMaxWidth(),
     ) {
         Column(
@@ -334,6 +345,10 @@ private fun PaletteKaomojiCell(
                     overflow = TextOverflow.Ellipsis,
                 )
             }
+        }
+    }
+        DropdownMenu(alternatives, { alternatives = false }) {
+            entry.alternates.forEach { alternate -> DropdownMenuItem(text = { Text(alternate) }, onClick = { alternatives = false; onAlternate(alternate) }) }
         }
     }
 }

@@ -165,6 +165,7 @@ internal fun ToolPageSurface(
     designId: String = "tool",
     sequenceIndex: Int = 0,
     onDoubleClick: (() -> Unit)? = null,
+    onLongClick: (() -> Unit)? = null,
     content: @Composable () -> Unit,
 ) {
     val style = LocalToolPageStyle.current ?: ToolPageStyle(MaterialTheme.colorScheme.background.luminance() < .5f)
@@ -234,7 +235,7 @@ internal fun ToolPageSurface(
                     }
                 }
             }.heightIn(min = 48.dp).semantics { this.selected = selected }.combinedClickable(
-                onClick = onClick, onDoubleClick = onDoubleClick, hapticFeedbackEnabled = false,
+                onClick = onClick, onDoubleClick = onDoubleClick, onLongClick = onLongClick, hapticFeedbackEnabled = false,
             ),
             contentAlignment = Alignment.CenterStart,
         ) { content() }
