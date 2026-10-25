@@ -114,15 +114,20 @@ fun AdvancedSoundScreen(modifier: Modifier = Modifier) {
     Column(modifier, verticalArrangement = Arrangement.spacedBy(12.dp)) {
         AdvancedSettingsSection("Keyboard sound", "Choose your sound source; expand a section to fine-tune it.") {
             Text("Key sound source", style = MaterialTheme.typography.titleMedium)
-            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-                KeySoundSource.entries.forEach { source ->
-                    AdvancedSettingsChoice(source.title, config.source == source, {
-                        ActionSoundEngine.stopAll()
-                        update(config.withSource(source))
-                    }, Modifier.weight(1f))
+            var sourceExpanded by remember { mutableStateOf(false) }
+            Box(Modifier.fillMaxWidth()) {
+                AdvancedSettingsChoice("${config.source.title}  ⌄", false, { sourceExpanded = true }, Modifier.fillMaxWidth())
+                DropdownMenu(expanded = sourceExpanded, onDismissRequest = { sourceExpanded = false }) {
+                    KeySoundSource.entries.forEach { source ->
+                        DropdownMenuItem(text = { Text(source.title) }, onClick = {
+                            ActionSoundEngine.stopAll()
+                            update(config.withSource(source))
+                            sourceExpanded = false
+                        })
+                    }
                 }
             }
-            Text("Choose one source. Generated scale is a built-in instrument; your imported pack stays saved when you switch.", style = MaterialTheme.typography.bodySmall)
+            Text("Imported clips stay saved when you switch.", style = MaterialTheme.typography.bodySmall)
         }
         SoundSection("Generated scale", "${noteRoots[config.toneRoot]} · ${config.toneScale.title} · gentle room reverb", config.source == KeySoundSource.GENERATED, config.source) {
             Text(
