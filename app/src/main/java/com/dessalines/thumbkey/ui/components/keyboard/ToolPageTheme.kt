@@ -23,6 +23,7 @@ import androidx.compose.runtime.produceState
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.staticCompositionLocalOf
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.drawWithCache
@@ -200,7 +201,8 @@ internal fun ToolPageSurface(
             }
         }
     }
-    Box(outer) {
+    // Weighted/fill-width callers must pass their minimum width to the painted well.
+    Box(outer, propagateMinConstraints = true) {
         Box(
             Modifier.clip(shape).drawWithCache {
                 val fillBrush = fill.brush(size.width, size.height)
@@ -234,6 +236,7 @@ internal fun ToolPageSurface(
             }.heightIn(min = 48.dp).semantics { this.selected = selected }.combinedClickable(
                 onClick = onClick, onDoubleClick = onDoubleClick, hapticFeedbackEnabled = false,
             ),
+            contentAlignment = Alignment.CenterStart,
         ) { content() }
     }
 }
