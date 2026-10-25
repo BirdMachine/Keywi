@@ -136,7 +136,7 @@ dependencies {
     implementation("androidx.activity:activity-ktx:1.13.0")
     implementation("androidx.lifecycle:lifecycle-runtime-compose")
     implementation("androidx.navigation:navigation-compose:2.10.1")
-    implementation("androidx.emoji2:emoji2-emojipicker:1.6.0")
+    implementation("androidx.emoji2:emoji2-emojipicker:1.7.0")
     implementation("com.github.jeziellago:compose-markdown:0.7.2")
     implementation("me.zhanghai.compose.preference:library:1.1.1")
     implementation("com.louiscad.splitties:splitties-systemservices:3.0.0")
