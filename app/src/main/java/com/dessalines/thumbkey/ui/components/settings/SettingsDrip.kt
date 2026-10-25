@@ -404,8 +404,8 @@ fun settingsDripBorder(): Brush {
 fun SettingsThemeBanner() {
     if (LocalSettingsDrip.current == null) return
     Column(gemSectionModifier().padding(vertical = 6.dp), verticalArrangement = Arrangement.spacedBy(5.dp)) {
-        Text("YOUR THEME, EVERYWHERE", style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.primary)
-        Text("A little keyboard atmosphere.", style = MaterialTheme.typography.titleLarge)
-        Text("Background art · sculpted edges · your key-border colors", style = MaterialTheme.typography.bodySmall)
+        Text("A little keyboard atmosphere.", style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.primary)
+        Text("KEYWI ✦", style = MaterialTheme.typography.titleLarge)
+        Text("YOUR THEME, EVERYWHERE", style = MaterialTheme.typography.bodySmall)
     }
 }
