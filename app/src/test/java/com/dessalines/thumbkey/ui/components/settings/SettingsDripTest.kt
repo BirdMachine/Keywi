@@ -39,7 +39,6 @@ class SettingsDripTest {
 
     @Test fun limitsOpticsAndStylingToAuthorizedScope() {
         listOf(
-            "advancedLookAndFeel",
             "lookAndFeel",
             "behavior",
             "modifyKeys",
@@ -49,6 +48,7 @@ class SettingsDripTest {
         ).forEach {
             assertFalse(usesSettingsDrip(it))
         }
+        assertTrue(usesSettingsDrip("advancedLookAndFeel"))
         assertTrue(usesSettingsDrip("settings"))
         assertTrue(usesSettingsDrip("advancedLookAndFeelEditor"))
         for (mode in KeywiPowerMode.entries) {

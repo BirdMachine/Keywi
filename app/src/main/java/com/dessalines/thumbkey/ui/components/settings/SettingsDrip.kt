@@ -65,6 +65,7 @@ fun usesSettingsDrip(route: String?): Boolean =
     route in
         setOf(
             "settings",
+            "advancedLookAndFeel",
             "advancedLookAndFeelEditor",
             "advancedPowerOptions",
             "clipboardSettings",

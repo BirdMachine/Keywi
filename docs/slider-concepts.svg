@@ -1,0 +1,60 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1080" height="660" viewBox="0 0 1080 660">
+<defs>
+ <linearGradient id="panel" x2=".6" y2="1"><stop stop-color="#373d49"/><stop offset="1" stop-color="#252c37"/></linearGradient>
+ <linearGradient id="rim"><stop stop-color="#76dccf"/><stop offset=".5" stop-color="#b69adf"/><stop offset="1" stop-color="#e4bd88"/></linearGradient>
+ <linearGradient id="glass" x2=".4" y2="1"><stop stop-color="#effaff" stop-opacity=".36"/><stop offset=".28" stop-color="#b5cadd" stop-opacity=".08"/><stop offset=".8" stop-color="#101623" stop-opacity=".35"/><stop offset="1" stop-color="#e4f3ff" stop-opacity=".2"/></linearGradient>
+ <radialGradient id="orb"><stop stop-color="#9b90d3" stop-opacity=".55"/><stop offset="1" stop-color="#2a3f53" stop-opacity="0"/></radialGradient>
+ <filter id="shadow" x="-100%" y="-100%" width="300%" height="300%"><feGaussianBlur stdDeviation="4"/></filter>
+ <filter id="grain"><feTurbulence baseFrequency=".7" numOctaves="3" stitchTiles="stitch"/></filter>
+ <clipPath id="lens"><circle cx="900" cy="340" r="22"/></clipPath>
+ <style>text{font-family:Manrope,Arial,sans-serif;fill:#eaf0f7}.muted{fill:#b0bccb;font-size:14px}.label{font-size:12px;letter-spacing:1px;fill:#b5c1d0}</style>
+</defs>
+<rect width="1080" height="660" fill="#14191f"/>
+<text x="40" y="45" font-size="26" font-weight="600">KeyWi · a quieter kind of slider</text>
+<text x="40" y="76" class="muted">Theme-colored light, recessed tracks and a small glass thumb. No solid color block.</text>
+<rect x="40" y="110" width="480" height="400" rx="22" fill="url(#panel)"/>
+<rect x="560" y="110" width="480" height="400" rx="22" fill="url(#panel)"/>
+<text x="68" y="151" class="label">01 / INSET GLASS RAIL</text>
+<text x="588" y="151" class="label">02 / REFRACTIVE PEBBLE</text>
+<text x="68" y="193" font-size="19" font-weight="600">Backdrop opacity</text><text x="491" y="193" text-anchor="end" class="muted">85%</text>
+<text x="588" y="193" font-size="19" font-weight="600">Backdrop opacity</text><text x="1011" y="193" text-anchor="end" class="muted">85%</text>
+<!-- Rail: the near-black groove has a tiny lit seam, with an optical pill rather than a colored block. -->
+<rect x="66" y="232" width="430" height="21" rx="10" fill="#0d121b"/>
+<path d="M77 255 H485" stroke="#c7d4e5" stroke-opacity=".18" stroke-width="2"/>
+<path d="M78 241 H429" stroke="#9bc9d5" stroke-opacity=".25" stroke-width="4" filter="url(#shadow)"/>
+<path d="M78 242 H429" stroke="url(#rim)" stroke-width="1.5"/>
+<rect x="417" y="224" width="27" height="38" rx="11" fill="#070c13" opacity=".6" filter="url(#shadow)"/>
+<rect x="418" y="221" width="24" height="39" rx="10" fill="url(#glass)" stroke="#d5e7f7" stroke-opacity=".6"/>
+<path d="M424 226 Q431 223 436 226" stroke="#f4fbff" stroke-opacity=".75" fill="none"/>
+<path d="M429 232 V250 M433 232 V250" stroke="#dce9f6" stroke-opacity=".35"/>
+<text x="68" y="299" class="muted">A hairline of theme color sits inside the groove.</text>
+<text x="68" y="322" class="muted">Frosted pill thumb, subtle inset and edge light.</text>
+<text x="68" y="363" class="label">LIGHT MODE VARIANT</text>
+<rect x="68" y="382" width="424" height="82" rx="15" fill="#e0e6ec"/>
+<rect x="86" y="416" width="386" height="10" rx="5" fill="#bac4d1"/>
+<path d="M90 418 H404" stroke="#6a829d" stroke-width="1.5"/>
+<rect x="397" y="404" width="23" height="35" rx="10" fill="#eff6fa" stroke="#99adbf"/>
+<!-- Pebble: a transparent lens shows bent light inside the thumb, not on the numeric label. -->
+<ellipse cx="802" cy="280" rx="200" ry="109" fill="url(#orb)"/>
+<path d="M588 243 H1012" stroke="#0c1119" stroke-width="9" stroke-linecap="round"/>
+<path d="M588 247 H1012" stroke="#dae7f4" stroke-opacity=".12" stroke-width="1.5"/>
+<path d="M590 243 H951" stroke="url(#rim)" stroke-opacity=".6" stroke-width="1.5"/>
+<circle cx="949" cy="248" r="21" fill="#070c13" opacity=".5" filter="url(#shadow)"/>
+<circle cx="950" cy="241" r="22" fill="url(#glass)" stroke="#d7f1ff" stroke-opacity=".55"/>
+<path d="M938 229 Q950 222 963 230" stroke="#f1faff" stroke-opacity=".8" fill="none"/>
+<path d="M932 243 Q946 237 969 245" stroke="#89e5dc" stroke-opacity=".5" fill="none"/>
+<path d="M939 256 Q952 261 963 253" stroke="#d5b3ee" stroke-opacity=".45" fill="none"/>
+<text x="588" y="299" class="muted">A small polished lens carries the highlight.</text>
+<text x="588" y="322" class="muted">Local refraction only; text stays perfectly sharp.</text>
+<text x="588" y="363" class="label">LIGHT MODE VARIANT</text>
+<rect x="588" y="382" width="424" height="82" rx="15" fill="#e0e6ec"/>
+<path d="M606 422 H994" stroke="#bac4d1" stroke-width="5" stroke-linecap="round"/>
+<path d="M606 422 H934" stroke="#748aa3" stroke-width="1.5"/>
+<circle cx="934" cy="422" r="18" fill="#eff6fa" stroke="#99adbf"/>
+<path d="M924 415 Q934 408 944 415" stroke="#fff" stroke-width="2" fill="none"/>
+<rect x="42" y="112" width="476" height="396" rx="22" filter="url(#grain)" opacity=".015"/>
+<rect x="562" y="112" width="476" height="396" rx="22" filter="url(#grain)" opacity=".015"/>
+<text x="40" y="554" font-size="16" font-weight="600">Both keep a generous invisible touch target, precise value text and keyboard accessibility.</text>
+<text x="40" y="585" class="muted">01 is the calmer everyday control. 02 is the more playful optical option.</text>
+<text x="40" y="612" class="muted">Refraction is a concept here; the existing power-mode rules would govern any live optical effects.</text>
+</svg>

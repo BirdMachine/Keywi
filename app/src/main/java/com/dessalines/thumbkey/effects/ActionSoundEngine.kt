@@ -22,9 +22,9 @@ object ActionSoundEngine {
     private var next = 0L
     private var lastScroll = 0L
 
-    fun isEnabled(context: Context) = ActionSoundPreferences.get(context).enabled
+    fun isEnabled(context: Context) = ActionSoundPreferences.get(context).let { it.enabled || it.toneEnabled }
 
-    fun stopAll() { handler.post { active.toList().forEach { release(it) } } }
+    fun stopAll() { ScaleToneEngine.stopAll(); handler.post { active.toList().forEach { release(it) } } }
 
     fun fire(
         context: Context,
@@ -35,6 +35,10 @@ object ActionSoundEngine {
     ) {
         if (!FeedbackPreferences.soundAllowed(context)) return
         val config = ActionSoundPreferences.get(context)
+        if (config.toneEnabled && event == SoundEvent.KEY) {
+            if (phase == config.trigger) ScaleToneEngine.fire(context)
+            return
+        }
         if (!config.enabled && event == SoundEvent.KEY && phase == SoundTrigger.PRESS) {
             (context.getSystemService(Context.AUDIO_SERVICE) as android.media.AudioManager)
                 .playSoundEffect(android.media.AudioManager.FX_KEY_CLICK, .1f)

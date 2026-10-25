@@ -7,6 +7,7 @@ import android.net.Uri
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -32,6 +33,9 @@ import androidx.compose.ui.unit.dp
 import com.dessalines.thumbkey.effects.ActionSoundConfig
 import com.dessalines.thumbkey.effects.ActionSoundEngine
 import com.dessalines.thumbkey.effects.ActionSoundPreferences
+import com.dessalines.thumbkey.effects.NoteScale
+import com.dessalines.thumbkey.effects.ScaleToneEngine
+import com.dessalines.thumbkey.effects.noteRoots
 import com.dessalines.thumbkey.effects.SoundClip
 import com.dessalines.thumbkey.effects.SoundSelection
 import com.dessalines.thumbkey.effects.SoundTrigger
@@ -98,6 +102,45 @@ fun AdvancedSoundScreen(modifier: Modifier = Modifier) {
         AdvancedSettingsSection("Action sounds", "Build a named sound pack, then map its clips to your keys and gestures.") {
             SoundToggle("Enable action sounds", config.enabled) { update(config.copy(enabled = it)) }
             Text("These controls replace the ordinary keyboard click while enabled.", style = MaterialTheme.typography.bodySmall)
+        }
+        AdvancedSettingsCard {
+            Text("Soft scale notes", style = MaterialTheme.typography.titleMedium)
+            SoundToggle("Play notes instead of key clicks", config.toneEnabled) {
+                ActionSoundEngine.stopAll()
+                update(config.copy(toneEnabled = it))
+            }
+            Text(
+                "A quiet 170 ms tone, randomly chosen from your scale. Replaces default key clicks and key sound clips. " +
+                    "Sound / Vibrate / Silent still applies; suggestion sounds keep their own assignments.",
+                style = MaterialTheme.typography.bodySmall,
+            )
+            var rootExpanded by remember { mutableStateOf(false) }
+            var scaleExpanded by remember { mutableStateOf(false) }
+            Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                Box {
+                    TextButton(onClick = { rootExpanded = true }) { Text("Root: ${noteRoots[config.toneRoot]}") }
+                    DropdownMenu(expanded = rootExpanded, onDismissRequest = { rootExpanded = false }) {
+                        noteRoots.forEachIndexed { index, label ->
+                            DropdownMenuItem(text = { Text(label) }, onClick = {
+                                update(config.copy(toneRoot = index)); rootExpanded = false
+                            })
+                        }
+                    }
+                }
+                Box {
+                    TextButton(onClick = { scaleExpanded = true }) { Text(config.toneScale.title) }
+                    DropdownMenu(expanded = scaleExpanded, onDismissRequest = { scaleExpanded = false }) {
+                        NoteScale.entries.forEach { scale ->
+                            DropdownMenuItem(text = { Text(scale.title) }, onClick = {
+                                update(config.copy(toneScale = scale)); scaleExpanded = false
+                            })
+                        }
+                    }
+                }
+            }
+            Text("Tone level · ${(config.toneVolume * 100).toInt()}%", style = MaterialTheme.typography.bodySmall)
+            Slider(config.toneVolume, { update(config.copy(toneVolume = it)) })
+            TextButton(onClick = { ScaleToneEngine.fire(context, preview = true) }) { Text("Preview a note") }
         }
         AdvancedSettingsCard {
             Text("Sound pack · ${config.clips.size} clips", style = MaterialTheme.typography.titleMedium)

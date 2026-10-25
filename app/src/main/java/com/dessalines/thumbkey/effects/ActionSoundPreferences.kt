@@ -29,6 +29,10 @@ data class ActionSoundConfig(
     val overlap: Boolean = true,
     val maxDurationMs: Int = 0,
     val volume: Float = 0.6f,
+    val toneEnabled: Boolean = false,
+    val toneRoot: Int = 0,
+    val toneScale: NoteScale = NoteScale.MAJOR,
+    val toneVolume: Float = .35f,
     val directions: Map<String, String> = emptyMap(),
     val keys: Map<String, String> = emptyMap(),
     val suggestionScrollId: String? = null,
@@ -105,6 +109,10 @@ object ActionSoundPreferences {
                 overlap = j.optBoolean("overlap", true),
                 maxDurationMs = j.optInt("maxDurationMs", 0).coerceIn(0, 120_000),
                 volume = j.optDouble("volume", 0.6).toFloat().coerceIn(0f, 1f),
+                toneEnabled = j.optBoolean("toneEnabled", false),
+                toneRoot = j.optInt("toneRoot", 0).coerceIn(0, 11),
+                toneScale = runCatching { NoteScale.valueOf(j.optString("toneScale", "MAJOR")) }.getOrDefault(NoteScale.MAJOR),
+                toneVolume = j.optDouble("toneVolume", .35).toFloat().coerceIn(0f, 1f),
                 directions = j.optJSONObject("directions")?.stringMap().orEmpty(),
                 keys = j.optJSONObject("keys")?.stringMap().orEmpty(),
                 suggestionScrollId = j.optString("suggestionScrollId").takeIf { it.isNotEmpty() },
@@ -125,6 +133,10 @@ object ActionSoundPreferences {
                 .put("overlap", value.overlap)
                 .put("maxDurationMs", value.maxDurationMs)
                 .put("volume", value.volume.toDouble())
+                .put("toneEnabled", value.toneEnabled)
+                .put("toneRoot", value.toneRoot.coerceIn(0, 11))
+                .put("toneScale", value.toneScale.name)
+                .put("toneVolume", value.toneVolume.coerceIn(0f, 1f).toDouble())
                 .put("directions", JSONObject(value.directions))
                 .put("keys", JSONObject(value.keys))
                 .put("suggestionScrollId", value.suggestionScrollId ?: "")

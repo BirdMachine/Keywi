@@ -45,7 +45,13 @@ fun ThemeManagerScreen(navController: NavController) {
         onDispose { lifecycleOwner.lifecycle.removeObserver(observer) }
     }
 
-    Scaffold(topBar = { SimpleTopAppBar(text = "Theme manager", navController = navController) }) { padding ->
+    Scaffold(
+        containerColor = if (com.dessalines.thumbkey.ui.components.settings.LocalSettingsDrip.current != null) {
+            androidx.compose.ui.graphics.Color.Transparent
+        } else {
+            androidx.compose.material3.MaterialTheme.colorScheme.background
+        },
+        topBar = { SimpleTopAppBar(text = "Theme manager", navController = navController) }) { padding ->
         Column(
             modifier = Modifier.fillMaxSize().padding(padding).verticalScroll(rememberScrollState()),
             verticalArrangement = Arrangement.spacedBy(8.dp),
