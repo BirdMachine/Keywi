@@ -88,7 +88,8 @@ fun ToolPageManagerScreen() {
                 TextButton(onClick = { openKeywiSettings(context, "advancedBoards") }) { Text("Manage character boards & key actions") }
             }
             if (section == "pages") {
-                Text("Hide pages from the swipe cycle, change their order, and choose the double-tap home. Character input always stays available.")
+                Text("Hide pages from the swipe cycle, change their order, and choose the double-tap home. " +
+"Character input always stays available.")
                 val pages = ordered(config.pages, ToolbarPage.entries.map { it.name })
                 pages.forEachIndexed { i, name ->
                     val page = ToolbarPage.valueOf(name)
@@ -167,7 +168,8 @@ fun ToolPageManagerScreen() {
         }
     }
     restore?.let { action ->
-        ConfirmManagerAction("Restore defaults?", "This resets only this section. Custom content in this section will be replaced; favorites, recents and other tool pages are kept.", "Restore", { restore = null }) { action(); restore = null }
+        ConfirmManagerAction("Restore defaults?", "This resets only this section. Custom content in this section will be replaced; " +
+"favorites, recents and other tool pages are kept.", "Restore", { restore = null }) { action(); restore = null }
     }
     delete?.let { action -> ConfirmManagerAction("Delete this content?", "This removes the selected entry or collection. Hide it instead if you want to keep it for later.", "Delete", { delete = null }) { action(); delete = null } }
     editCollection?.let { original ->
