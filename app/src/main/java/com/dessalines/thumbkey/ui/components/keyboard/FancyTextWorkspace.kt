@@ -1,13 +1,12 @@
 package com.dessalines.thumbkey.ui.components.keyboard
 
-import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.heightIn
+import androidx.compose.ui.Alignment
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -41,14 +40,15 @@ fun FancyTextWorkspace(
     val context = LocalContext.current
     val theme = SuggestionLozengeThemePreferences.load(context)
     var category by rememberSaveable { mutableStateOf<FancyTextFormatter.Category?>(null) }
+    var lastApplied by remember(previewText) { mutableStateOf<String?>(null) }
     val sample = previewText.ifEmpty { "Keywi 123" }
     val styles = FancyTextFormatter.styles.filter { category == null || it.category == category }
 
     Surface(
         modifier = modifier.fillMaxSize(),
         shape = RoundedCornerShape(topStart = 18.dp, topEnd = 18.dp),
-        color = MaterialTheme.colorScheme.surface.copy(alpha = 0.83f),
-        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.55f)),
+        color = Color.Transparent,
+        border = null,
         tonalElevation = 0.dp,
     ) {
         Column(
@@ -92,35 +92,27 @@ fun FancyTextWorkspace(
                 modifier = Modifier.fillMaxWidth().verticalScroll(rememberScrollState()),
                 verticalArrangement = Arrangement.spacedBy(7.dp),
             ) {
-                styles.chunked(2).forEach { row ->
-                    Row(
-                        horizontalArrangement = Arrangement.spacedBy(7.dp),
+                styles.forEachIndexed { index, style ->
+                    PaletteKeySurface(
+                        onClick = { lastApplied = style.id; onApply(style.id) },
+                        selected = lastApplied == style.id,
+                        designId = "fancy:${style.id}", sequenceIndex = index,
                         modifier = Modifier.fillMaxWidth(),
                     ) {
-                        row.forEach { style ->
-                            PaletteKeySurface(
-                                onClick = { onApply(style.id) },
-                                designId = "fancy:${style.id}",
-                                sequenceIndex = styles.indexOf(style),
-                                modifier = Modifier.weight(1f).heightIn(min = 68.dp),
-                            ) {
-                                Column(
-                                    modifier = Modifier.padding(horizontal = 9.dp, vertical = 8.dp),
-                                    verticalArrangement = Arrangement.spacedBy(3.dp),
-                                ) {
-                                    Text(style.title, style = MaterialTheme.typography.labelSmall, maxLines = 1)
-                                    Text(
-                                        FancyTextFormatter.transform(sample, style.id),
-                                        style = MaterialTheme.typography.bodyMedium,
-                                        maxLines = 2,
-                                        overflow = TextOverflow.Ellipsis,
-                                    )
-                                }
-                            }
-                        }
-                        if (row.size == 1) {
-                            androidx.compose.foundation.layout
-                                .Spacer(Modifier.weight(1f))
+                        Row(
+                            modifier = Modifier.fillMaxWidth().padding(horizontal = 13.dp, vertical = 8.dp),
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(14.dp),
+                        ) {
+                            Text(style.title, modifier = Modifier.weight(.4f), style = MaterialTheme.typography.labelMedium, maxLines = 1, overflow = TextOverflow.Ellipsis)
+                            Text(
+                                FancyTextFormatter.transform(sample, style.id),
+                                modifier = Modifier.weight(.6f),
+                                style = MaterialTheme.typography.bodyLarge,
+                                fontWeight = if (lastApplied == style.id) FontWeight.SemiBold else FontWeight.Normal,
+                                textAlign = androidx.compose.ui.text.style.TextAlign.End,
+                                maxLines = 1, overflow = TextOverflow.Ellipsis,
+                            )
                         }
                     }
                 }

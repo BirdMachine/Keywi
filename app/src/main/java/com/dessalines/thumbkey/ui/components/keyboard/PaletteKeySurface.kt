@@ -28,8 +28,16 @@ internal fun PaletteKeySurface(
     radius: Int = 12,
     designId: String? = null,
     sequenceIndex: Int? = null,
+    selected: Boolean = false,
     content: @Composable () -> Unit,
 ) {
+    if (LocalToolPageStyle.current != null) {
+        ToolPageSurface(
+            onClick = onClick, modifier = modifier, radius = radius, selected = selected,
+            designId = designId ?: "tool-control", sequenceIndex = sequenceIndex ?: 0, content = content,
+        )
+        return
+    }
     val theme = KeyThemePreferences.current
     val shape = RoundedCornerShape(radius.dp)
     var position by remember { mutableStateOf(Offset.Zero) }

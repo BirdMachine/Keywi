@@ -143,7 +143,7 @@ private fun gradientEndpoints(
     return Pair(center - (direction * halfSpan), center + (direction * halfSpan))
 }
 
-private fun KeyboardBackdrop.brush(
+internal fun KeyboardBackdrop.brush(
     width: Float,
     height: Float,
     offset: Offset = Offset.Zero,

@@ -1,6 +1,5 @@
 package com.dessalines.thumbkey.ui.components.keyboard
 
-import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -18,7 +17,7 @@ internal fun PaletteWorkspaceCategoryChip(
     theme: SuggestionLozengeThemeState,
     onClick: () -> Unit,
 ) {
-    PaletteKeySurface(onClick = onClick, radius = 12) {
+    PaletteKeySurface(onClick = onClick, radius = 10, selected = selected, designId = "category:$text") {
         Text(
             text = if (selected) "◆ $text" else text,
             modifier = Modifier.padding(horizontal = 10.dp, vertical = 7.dp),
