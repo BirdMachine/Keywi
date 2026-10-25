@@ -52,23 +52,28 @@ fun GemGlassSlider(
         valueRange = valueRange,
         steps = steps,
         thumb = {
-            Canvas(Modifier.size(24.dp, 30.dp)) {
-                val rim = CornerRadius(8.dp.toPx())
-                val face = Size(size.width - 4.dp.toPx(), size.height - 4.dp.toPx())
-                val origin = Offset(2.dp.toPx(), 1.dp.toPx())
-                drawRoundRect(Color.Black.copy(alpha = .22f * strength), origin + Offset(0f, 3.dp.toPx()), face, rim)
-                // Subpixel-like split edges imitate refraction without a blur pass.
-                drawRoundRect(Color.Cyan.copy(alpha = .18f * strength), origin + Offset(-.6.dp.toPx(), 0f), face, rim, style = Stroke(1.dp.toPx()))
-                drawRoundRect(Color.Magenta.copy(alpha = .16f * strength), origin + Offset(.6.dp.toPx(), 0f), face, rim, style = Stroke(1.dp.toPx()))
+            Canvas(Modifier.size(26.dp, 32.dp)) {
+                val rim = CornerRadius(9.dp.toPx())
+                val face = Size(size.width - 6.dp.toPx(), size.height - 5.dp.toPx())
+                val origin = Offset(3.dp.toPx(), 2.dp.toPx())
+                // Keep the middle clear: the backdrop and rail remain visible through the lens.
+                drawRoundRect(Color.Black.copy(alpha = .12f * strength), origin + Offset(0f, 2.dp.toPx()), face, rim)
                 drawRoundRect(Brush.verticalGradient(listOf(
-                    (if (dark) Color(0xFF9BA6B3) else Color.White).copy(alpha = strength),
-                    (if (dark) Color(0xFF46515F) else Color(0xFFD9DFE6)).copy(alpha = strength),
-                    (if (dark) Color(0xFF252D38) else Color(0xFFA4AEBC)).copy(alpha = strength),
+                    Color.White.copy(alpha = .26f * strength),
+                    Color.White.copy(alpha = .035f * strength),
+                    Color.White.copy(alpha = .07f * strength),
+                    Color.Black.copy(alpha = .10f * strength),
                 )), origin, face, rim)
-                drawRoundRect(Color.White.copy(alpha = .38f * strength), origin, face, rim, style = Stroke(.7.dp.toPx()))
-                drawLine(Color.White.copy(alpha = .55f * strength), Offset(8.dp.toPx(), 4.dp.toPx()), Offset(size.width - 8.dp.toPx(), 4.dp.toPx()), .8.dp.toPx())
-                drawLine(Color.Black.copy(alpha = .25f * strength), Offset(center.x, 11.dp.toPx()), Offset(center.x, 19.dp.toPx()), 1.dp.toPx())
-                drawLine(Color.White.copy(alpha = .35f * strength), Offset(center.x + 1.dp.toPx(), 11.dp.toPx()), Offset(center.x + 1.dp.toPx(), 19.dp.toPx()), .7.dp.toPx())
+                // A bent, magnified rail fragment supplies a cheap lens/refraction cue.
+                drawRoundRect(Brush.horizontalGradient(edges.map { it.copy(alpha = .48f * strength) }),
+                    Offset(origin.x + 1.dp.toPx(), center.y - .8.dp.toPx()),
+                    Size(face.width - 2.dp.toPx(), 2.dp.toPx()), CornerRadius(1.dp.toPx()))
+                // Draw separated spectral rims last, so the glass face cannot cover them up.
+                drawRoundRect(Color.Cyan.copy(alpha = .65f * strength), origin + Offset(-1.dp.toPx(), -.2.dp.toPx()), face, rim, style = Stroke(1.dp.toPx()))
+                drawRoundRect(Color.Magenta.copy(alpha = .60f * strength), origin + Offset(1.dp.toPx(), .3.dp.toPx()), face, rim, style = Stroke(1.dp.toPx()))
+                drawRoundRect(Color.White.copy(alpha = .50f * strength), origin, face, rim, style = Stroke(.65.dp.toPx()))
+                drawLine(Color.White.copy(alpha = .8f * strength), Offset(9.dp.toPx(), 4.dp.toPx()), Offset(size.width - 9.dp.toPx(), 4.dp.toPx()), 1.dp.toPx())
+                drawLine(Color.White.copy(alpha = .5f * strength), Offset(5.dp.toPx(), 10.dp.toPx()), Offset(5.dp.toPx(), 14.dp.toPx()), .8.dp.toPx())
             }
         },
         track = { state ->

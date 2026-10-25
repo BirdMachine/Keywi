@@ -6,6 +6,16 @@ import android.media.RingtoneManager
 import android.net.Uri
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.expandVertically
+import androidx.compose.animation.shrinkVertically
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.foundation.clickable
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.semantics.stateDescription
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -102,21 +112,21 @@ fun AdvancedSoundScreen(modifier: Modifier = Modifier) {
             }
         }
     Column(modifier, verticalArrangement = Arrangement.spacedBy(12.dp)) {
-        AdvancedSettingsSection("Action sounds", "Build a named sound pack, then map its clips to your keys and gestures.") {
+        AdvancedSettingsSection("Keyboard sound", "Choose your sound source; expand a section to fine-tune it.") {
             Text("Key sound source", style = MaterialTheme.typography.titleMedium)
-            KeySoundSource.entries.forEach { source ->
-                AdvancedSettingsChoice(source.title, config.source == source, {
-                    ActionSoundEngine.stopAll()
-                    update(config.withSource(source))
-                })
+            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                KeySoundSource.entries.forEach { source ->
+                    AdvancedSettingsChoice(source.title, config.source == source, {
+                        ActionSoundEngine.stopAll()
+                        update(config.withSource(source))
+                    }, Modifier.weight(1f))
+                }
             }
             Text("Choose one source. Generated scale is a built-in instrument; your imported pack stays saved when you switch.", style = MaterialTheme.typography.bodySmall)
         }
-        AdvancedSettingsCard {
-            Text("Soft scale notes", style = MaterialTheme.typography.titleMedium)
+        SoundSection("Generated scale", "${noteRoots[config.toneRoot]} · ${config.toneScale.title} · gentle room reverb", config.source == KeySoundSource.GENERATED, config.source) {
             Text(
-                "A quiet 170 ms tone, randomly chosen from your scale. Replaces default key clicks and key sound clips. " +
-                    "Sound / Vibrate / Silent still applies; suggestion sounds keep their own assignments.",
+                "Soft, short notes randomly chosen from your scale, with a subtle room tail. Sound / Vibrate / Silent still applies.",
                 style = MaterialTheme.typography.bodySmall,
             )
             var rootExpanded by remember { mutableStateOf(false) }
@@ -147,8 +157,7 @@ fun AdvancedSoundScreen(modifier: Modifier = Modifier) {
             Slider(config.toneVolume, { update(config.copy(toneVolume = it)) })
             TextButton(onClick = { ScaleToneEngine.fire(context, preview = true) }) { Text("Preview a note") }
         }
-        AdvancedSettingsCard {
-            Text("Sound pack · ${config.clips.size} clips", style = MaterialTheme.typography.titleMedium)
+        SoundSection("Sound library", "${config.clips.size} clips · import, preview & rename", config.source == KeySoundSource.CLIPS, config.source) {
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 TextButton(onClick = { files.launch(arrayOf("audio/*")) }) { Text("Import files") }
                 TextButton(onClick = {
@@ -197,8 +206,7 @@ fun AdvancedSoundScreen(modifier: Modifier = Modifier) {
             }) { Text("Restore subtle starter clips") }
             feedback?.let { Text(it, style = MaterialTheme.typography.bodySmall) }
         }
-        AdvancedSettingsCard {
-            Text("Choose playback", style = MaterialTheme.typography.titleMedium)
+        SoundSection("Pack playback & mapping", config.selection.name.lowercase().replaceFirstChar { it.uppercase() }) {
             SoundSelection.entries.chunked(2).forEach { modes ->
                 Row(Modifier.padding(vertical = 4.dp), horizontalArrangement = Arrangement.spacedBy(6.dp)) {
                     modes.forEach { mode ->
@@ -256,8 +264,7 @@ fun AdvancedSoundScreen(modifier: Modifier = Modifier) {
             }
             Text("Per-key assignments in the matrix override these rules.", style = MaterialTheme.typography.bodySmall)
         }
-        AdvancedSettingsCard {
-            Text("Timing & tails", style = MaterialTheme.typography.titleMedium)
+        SoundSection("Volume, timing & overlap", "${(config.volume * 100).toInt()}% · ${config.trigger.name.lowercase()}") {
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 SoundTrigger.entries.forEach { phase ->
                     AdvancedSettingsChoice(
@@ -271,8 +278,8 @@ fun AdvancedSoundScreen(modifier: Modifier = Modifier) {
                 "Press plays when the gesture resolves; release plays when that action is released. Swipes must resolve before their direction is known.",
                 style = MaterialTheme.typography.bodySmall,
             )
-            SoundToggle("Overlap clips / let tails stack", config.overlap) { update(config.copy(overlap = it)) }
-            SoundToggle("Limit playback duration", config.maxDurationMs > 0) { update(config.copy(maxDurationMs = if (it) 50 else 0)) }
+            SoundToggle("Let sound tails overlap", config.overlap) { update(config.copy(overlap = it)) }
+            SoundToggle("Limit clip playback duration", config.maxDurationMs > 0) { update(config.copy(maxDurationMs = if (it) 50 else 0)) }
             if (config.maxDurationMs > 0) {
                 Text("Cut off after ${config.maxDurationMs} ms (${config.maxDurationMs / 1000f} sec)")
                 Slider(config.maxDurationMs.toFloat(), { update(config.copy(maxDurationMs = it.toInt())) }, valueRange = 10f..2000f)
@@ -282,8 +289,7 @@ fun AdvancedSoundScreen(modifier: Modifier = Modifier) {
             Text("Volume · ${(config.volume * 100).toInt()}%")
             Slider(config.volume, { update(config.copy(volume = it)) })
         }
-        AdvancedSettingsCard {
-            Text("Suggestion strip", style = MaterialTheme.typography.titleMedium)
+        SoundSection("Suggestion sounds", "Separate sounds for scrolling & selecting") {
             ClipPicker("Scroll / slide", config.suggestionScrollId, config.clips) { update(config.copy(suggestionScrollId = it)) }
             ClipPicker("Select a suggestion", config.suggestionSelectedId, config.clips) { update(config.copy(suggestionSelectedId = it)) }
             Text(
@@ -319,6 +325,34 @@ fun AdvancedSoundScreen(modifier: Modifier = Modifier) {
                     null
             }) { Text("Cancel") }
         })
+    }
+}
+
+@Composable
+internal fun SoundSection(
+    title: String,
+    summary: String,
+    initiallyExpanded: Boolean = false,
+    resetKey: Any? = null,
+    content: @Composable () -> Unit,
+) {
+    var expanded by rememberSaveable(resetKey) { mutableStateOf(initiallyExpanded) }
+    AdvancedSettingsCard {
+        Row(
+            Modifier.fillMaxWidth().semantics { stateDescription = if (expanded) "Expanded" else "Collapsed" }
+                .clickable(onClickLabel = if (expanded) "Collapse $title" else "Expand $title") { expanded = !expanded }
+                .padding(vertical = 8.dp),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                Text(title, style = MaterialTheme.typography.titleMedium)
+                Text(summary, style = MaterialTheme.typography.bodySmall)
+            }
+            Text(if (expanded) "⌃" else "⌄", Modifier.padding(start = 12.dp))
+        }
+        AnimatedVisibility(expanded, enter = expandVertically() + fadeIn(), exit = shrinkVertically() + fadeOut()) {
+            Column(verticalArrangement = Arrangement.spacedBy(12.dp)) { content() }
+        }
     }
 }
 

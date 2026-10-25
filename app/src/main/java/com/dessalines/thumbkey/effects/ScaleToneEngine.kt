@@ -67,7 +67,7 @@ object ScaleToneEngine {
         loader.execute {
             val files = runCatching {
                 (60..71).associateWith { midi ->
-                    File(context.cacheDir, "keywi-scale-v1-$midi.wav").also { file ->
+                    File(context.cacheDir, "keywi-scale-v2-$midi.wav").also { file ->
                         if (!file.exists() || file.length() != (44 + ScaleToneSynth.SAMPLE_RATE * ScaleToneSynth.DURATION_MS / 1000 * 2).toLong()) {
                             file.writeBytes(ScaleToneSynth.wave(midi))
                         }

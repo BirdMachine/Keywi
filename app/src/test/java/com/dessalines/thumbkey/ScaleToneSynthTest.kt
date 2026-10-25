@@ -33,6 +33,10 @@ class ScaleToneSynthTest {
             assertEquals(0, bytes.getShort(44).toInt())
             assertEquals(0, bytes.getShort(wave.size - 2).toInt())
             val pcm = (44 until wave.size step 2).map { bytes.getShort(it).toInt() }
+            assertEquals(ScaleToneSynth.SAMPLE_RATE * ScaleToneSynth.DURATION_MS / 1000, pcm.size)
+            val tail = pcm.drop(ScaleToneSynth.SAMPLE_RATE * ScaleToneSynth.DRY_DURATION_MS / 1000)
+            assertTrue("Room tail must survive the dry note", tail.any { abs(it) > 2 })
+            assertTrue("Reverb must stay subtle", tail.maxOf { abs(it) } < 500)
             assertTrue(pcm.any { abs(it) > 100 })
             assertTrue(pcm.all { abs(it) < 6000 })
             assertTrue(abs(pcm.zipWithNext().maxOf { (a, b) -> abs(a - b) }) < 1000)
