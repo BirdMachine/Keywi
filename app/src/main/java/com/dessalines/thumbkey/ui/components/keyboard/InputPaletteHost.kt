@@ -4,14 +4,11 @@ import android.view.HapticFeedbackConstants
 import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.animation.core.tween
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
@@ -82,7 +79,6 @@ fun ExpandedInputPaletteHost(
             animationSpec = tween(durationMillis = 260, easing = FastOutSlowInEasing),
             label = "palette-content-height",
         )
-    val paletteBackdrop = BackdropThemePreferences.load(ime)
 
     Box(
         modifier =
@@ -97,21 +93,8 @@ fun ExpandedInputPaletteHost(
                     .fillMaxWidth()
                     .height(animatedContentHeight),
         ) {
-            if (paletteBackdrop.mode != BackdropMode.NONE) {
-                BackdropVisualLayer(
-                    state = paletteBackdrop,
-                    modifier = Modifier.fillMaxSize(),
-                )
-            } else {
-                Box(
-                    modifier =
-                        Modifier
-                            .fillMaxSize()
-                            .background(MaterialTheme.colorScheme.surface.copy(alpha = 0.94f)),
-                )
-            }
-
-            Column(modifier = Modifier.fillMaxSize()) {
+            ToolPageTheme {
+            Column(modifier = Modifier.fillMaxSize().toolPageBackground()) {
                 when (palette) {
                     InputPalette.QUICK_SETTINGS -> {
                         QuickSettingsWorkspace(onPreferencesChanged = onPreferencesChanged)
@@ -137,6 +120,7 @@ fun ExpandedInputPaletteHost(
                         )
                     }
                 }
+            }
             }
         }
     }
