@@ -39,6 +39,15 @@ data class ActionSoundConfig(
     val suggestionSelectedId: String? = null,
 )
 
+
+enum class KeySoundSource(val title: String) { DEFAULT("Default click"), CLIPS("Sound pack"), GENERATED("Generated scale") }
+
+val ActionSoundConfig.source: KeySoundSource
+    get() = when { toneEnabled -> KeySoundSource.GENERATED; enabled -> KeySoundSource.CLIPS; else -> KeySoundSource.DEFAULT }
+
+fun ActionSoundConfig.withSource(source: KeySoundSource): ActionSoundConfig =
+    copy(enabled = source == KeySoundSource.CLIPS, toneEnabled = source == KeySoundSource.GENERATED)
+
 /** Removing a selected clip keeps single playback usable and clears every stale assignment. */
 fun ActionSoundConfig.withoutClip(id: String): ActionSoundConfig {
     val remaining = clips.filterNot { it.id == id }
@@ -98,7 +107,7 @@ object ActionSoundPreferences {
             val j = JSONObject(raw ?: return ActionSoundConfig())
             val array = j.optJSONArray("clips") ?: JSONArray()
             ActionSoundConfig(
-                enabled = j.optBoolean("enabled"),
+                enabled = j.optBoolean("enabled") && !j.optBoolean("toneEnabled", false),
                 clips =
                     (0 until array.length()).map { i ->
                         array.getJSONObject(i).let { SoundClip(it.getString("id"), it.getString("name"), it.getString("uri")) }
@@ -122,8 +131,10 @@ object ActionSoundPreferences {
 
     fun save(
         context: Context,
-        value: ActionSoundConfig,
+        requested: ActionSoundConfig,
     ) {
+        val value = requested.withSource(requested.source)
+        if (get(context).source != value.source) ActionSoundEngine.stopAll()
         val j =
             JSONObject()
                 .put("enabled", value.enabled)

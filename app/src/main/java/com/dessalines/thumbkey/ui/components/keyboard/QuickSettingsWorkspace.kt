@@ -30,6 +30,8 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
+import com.dessalines.thumbkey.effects.KeySoundSource
+import com.dessalines.thumbkey.effects.withSource
 import com.dessalines.thumbkey.effects.ActionSoundPreferences
 
 /** Local controls only: this page never reads or writes editor text, including in private fields. */
@@ -86,7 +88,7 @@ fun QuickSettingsWorkspace(
                     com.dessalines.thumbkey.effects.FeedbackModeControl(onChanged = onPreferencesChanged)
                     QuickSettingToggle("Use custom sound pack", sounds) {
                         sounds = it
-                        ActionSoundPreferences.save(context, ActionSoundPreferences.get(context).copy(enabled = it))
+                        ActionSoundPreferences.save(context, ActionSoundPreferences.get(context).withSource(if (it) KeySoundSource.CLIPS else KeySoundSource.DEFAULT))
                         onPreferencesChanged()
                     }
                     QuickSettingToggle("Keypress images & GIFs", gif.enabled) {

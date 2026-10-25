@@ -13,6 +13,25 @@ import org.robolectric.annotation.Config
 @RunWith(RobolectricTestRunner::class)
 @Config(sdk = [34], application = Application::class)
 class ScaleTonePreferencesTest {
+    @Test fun keySoundSourcesAreMutuallyExclusiveAndKeepTheirSavedOptions() {
+        val original = ActionSoundConfig(enabled = true, toneRoot = 6, toneScale = NoteScale.MINOR)
+        val generated = original.withSource(KeySoundSource.GENERATED)
+        assertFalse(generated.enabled)
+        assertTrue(generated.toneEnabled)
+        val clips = generated.withSource(KeySoundSource.CLIPS)
+        assertTrue(clips.enabled)
+        assertFalse(clips.toneEnabled)
+        assertEquals(6, clips.toneRoot)
+        assertEquals(original.clips, clips.clips)
+        val context = RuntimeEnvironment.getApplication()
+        ActionSoundPreferences.save(context, original.copy(toneEnabled = true))
+        assertFalse(ActionSoundPreferences.get(context).enabled)
+        assertEquals(KeySoundSource.GENERATED, ActionSoundPreferences.get(context).source)
+        val normal = clips.withSource(KeySoundSource.DEFAULT)
+        assertFalse(normal.enabled)
+        assertFalse(normal.toneEnabled)
+    }
+
     @Test fun scaleChoiceRoundTripsWithoutEnablingOrChangingTheClipPack() {
         val context = RuntimeEnvironment.getApplication()
         val config = ActionSoundConfig(

@@ -33,6 +33,9 @@ import androidx.compose.ui.unit.dp
 import com.dessalines.thumbkey.effects.ActionSoundConfig
 import com.dessalines.thumbkey.effects.ActionSoundEngine
 import com.dessalines.thumbkey.effects.ActionSoundPreferences
+import com.dessalines.thumbkey.effects.KeySoundSource
+import com.dessalines.thumbkey.effects.source
+import com.dessalines.thumbkey.effects.withSource
 import com.dessalines.thumbkey.effects.NoteScale
 import com.dessalines.thumbkey.effects.ScaleToneEngine
 import com.dessalines.thumbkey.effects.noteRoots
@@ -58,8 +61,8 @@ fun AdvancedSoundScreen(modifier: Modifier = Modifier) {
     var rename by remember { mutableStateOf("") }
 
     fun update(value: ActionSoundConfig) {
-        config = value
         ActionSoundPreferences.save(context, value)
+        config = ActionSoundPreferences.get(context)
     }
     val files =
         rememberLauncherForActivityResult(ActivityResultContracts.OpenMultipleDocuments()) { uris ->
@@ -100,15 +103,17 @@ fun AdvancedSoundScreen(modifier: Modifier = Modifier) {
         }
     Column(modifier, verticalArrangement = Arrangement.spacedBy(12.dp)) {
         AdvancedSettingsSection("Action sounds", "Build a named sound pack, then map its clips to your keys and gestures.") {
-            SoundToggle("Enable action sounds", config.enabled) { update(config.copy(enabled = it)) }
-            Text("These controls replace the ordinary keyboard click while enabled.", style = MaterialTheme.typography.bodySmall)
+            Text("Key sound source", style = MaterialTheme.typography.titleMedium)
+            KeySoundSource.entries.forEach { source ->
+                AdvancedSettingsChoice(source.title, config.source == source, {
+                    ActionSoundEngine.stopAll()
+                    update(config.withSource(source))
+                })
+            }
+            Text("Choose one source. Generated scale is a built-in instrument; your imported pack stays saved when you switch.", style = MaterialTheme.typography.bodySmall)
         }
         AdvancedSettingsCard {
             Text("Soft scale notes", style = MaterialTheme.typography.titleMedium)
-            SoundToggle("Play notes instead of key clicks", config.toneEnabled) {
-                ActionSoundEngine.stopAll()
-                update(config.copy(toneEnabled = it))
-            }
             Text(
                 "A quiet 170 ms tone, randomly chosen from your scale. Replaces default key clicks and key sound clips. " +
                     "Sound / Vibrate / Silent still applies; suggestion sounds keep their own assignments.",

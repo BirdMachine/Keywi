@@ -26,6 +26,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.MutableState
@@ -1073,6 +1074,7 @@ fun KeyboardKey(
             radiusPercent,
         )
 
+    CompositionLocalProvider(LocalKeyGlyphColor provides if (appearanceEnabled) keyTheme.glyphColor else null) {
     Box(
         modifier = keyboardKeyModifier,
     ) {
@@ -1259,11 +1261,12 @@ fun KeyboardKey(
                         fontWeight = FontWeight.Bold,
                         fontSize = spSize,
                         lineHeight = spSize,
-                        color = MaterialTheme.colorScheme.tertiary,
+                        color = LocalKeyGlyphColor.current ?: MaterialTheme.colorScheme.tertiary,
                     )
                 }
             }
         }
+    }
     }
 }
 
@@ -1275,7 +1278,7 @@ fun KeyText(
     hideSymbols: Boolean,
     capsLock: Boolean,
 ) {
-    val color = colorVariantToColor(colorVariant = key.color)
+    val color = LocalKeyGlyphColor.current ?: colorVariantToColor(colorVariant = key.color)
     if (key.action == KeyAction.CycleFeedbackMode) {
         com.dessalines.thumbkey.effects.FeedbackModeLegend(Modifier.size(keySize / 5f), color)
         return
