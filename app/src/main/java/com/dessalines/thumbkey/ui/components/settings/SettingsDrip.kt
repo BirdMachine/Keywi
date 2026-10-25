@@ -60,11 +60,12 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import kotlin.math.max
 
-/** Deliberately excludes the theme editor, Chroma Desk and all legacy controls. */
+/** Shared artwork for modern settings, including the advanced theme editor. Legacy controls stay isolated. */
 fun usesSettingsDrip(route: String?): Boolean =
     route in
         setOf(
             "settings",
+            "advancedLookAndFeelEditor",
             "advancedPowerOptions",
             "clipboardSettings",
             "backupAndRestore",

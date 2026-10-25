@@ -163,7 +163,7 @@ val TOGGLE_HIDE_LETTERS_KEYC =
 val EMOJI_KEY_ITEM =
     specialActionKeyItem(
         center = TOGGLE_EMOJI_MODE_TRUE_KEYC,
-    )
+    ).copy(topRight = KeyC(display = KeyDisplay.IconDisplay(Icons.AutoMirrored.Outlined.VolumeUp), action = CycleFeedbackMode, color = MUTED))
 
 val TOGGLE_EMOJI_MODE_FALSE_KEYC =
     KeyC(

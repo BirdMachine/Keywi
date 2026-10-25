@@ -350,6 +350,7 @@ fun performKeyAction(
     onKeyEvent: (action: KeyAction) -> Unit,
 ) {
     when (action) {
+        KeyAction.CycleFeedbackMode -> com.dessalines.thumbkey.effects.FeedbackPreferences.cycle(ime)
         KeyAction.CycleBoard, KeyAction.BoardHome -> {
             onKeyEvent(action)
         }

@@ -24,6 +24,8 @@ class FeedbackModeTest {
             assertEquals(sound, FeedbackPreferences.soundAllowed(context))
             assertEquals(haptic, FeedbackPreferences.hapticsAllowed(context))
             assertEquals(pack, ActionSoundPreferences.get(context))
+            FeedbackPreferences.cycle(context)
+            assertEquals(mode.next(), FeedbackPreferences.get(context))
             mode = mode.next()
         }
         assertEquals(FeedbackMode.SOUND, mode)

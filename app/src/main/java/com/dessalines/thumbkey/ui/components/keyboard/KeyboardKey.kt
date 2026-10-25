@@ -1226,12 +1226,6 @@ fun KeyboardKey(
             }
         }
 
-        if (key.center.action is KeyAction.ToggleEmojiMode) {
-            com.dessalines.thumbkey.effects.FeedbackModeControl(
-                modifier = Modifier.align(Alignment.BottomEnd).size(40.dp), compact = true,
-            )
-        }
-
         KeyAccentOverlay(
             pressed = isPressed || isDragged.value,
             modifier = Modifier.matchParentSize(),
@@ -1282,6 +1276,10 @@ fun KeyText(
     capsLock: Boolean,
 ) {
     val color = colorVariantToColor(colorVariant = key.color)
+    if (key.action == KeyAction.CycleFeedbackMode) {
+        com.dessalines.thumbkey.effects.FeedbackModeLegend(Modifier.size(keySize / 5f), color)
+        return
+    }
     val isUpperCase =
         when (key.display) {
             is KeyDisplay.TextDisplay -> {

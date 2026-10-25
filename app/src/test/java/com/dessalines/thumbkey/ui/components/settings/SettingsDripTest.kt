@@ -39,7 +39,6 @@ class SettingsDripTest {
 
     @Test fun limitsOpticsAndStylingToAuthorizedScope() {
         listOf(
-            "advancedLookAndFeelEditor",
             "advancedLookAndFeel",
             "lookAndFeel",
             "behavior",
@@ -51,6 +50,7 @@ class SettingsDripTest {
             assertFalse(usesSettingsDrip(it))
         }
         assertTrue(usesSettingsDrip("settings"))
+        assertTrue(usesSettingsDrip("advancedLookAndFeelEditor"))
         for (mode in KeywiPowerMode.entries) {
             for (api in listOf(24, 30, 31, 33, 34)) {
                 assertEquals(mode == KeywiPowerMode.UNBRIDLED && api >= 31, settingsOpticsEnabled(mode, api))

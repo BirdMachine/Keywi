@@ -1,5 +1,10 @@
 Keywi is your colorful keyboard playground, built on Thumb-Key's open-source foundation.
 
+## Tool controls follow-up
+- Feedback mode is a normal ↗ swipe preset on the emoji/tools key. The corner legend follows the mode; taps and other swipes keep their existing actions, and explicit Tasker assignments take priority.
+- The toolbar cycler uses a diamond in a disk again. Swipe down advances and up goes back; **Toolbar controls → Invert tool scroll** reverses this, including while the keyboard is open.
+- The advanced theme editor now shows active-theme settings artwork around its existing controls. Save/Revert, Chroma, gradients, fonts and key/group tools remain available; the stale planned-effects note now links to the working effects page.
+
 ## What's changed — October 24, 2026
 
 ### Sound, vibrate, or silence
