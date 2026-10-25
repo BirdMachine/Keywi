@@ -81,14 +81,17 @@ fun ToolPageManagerScreen() {
             }
             if (section == "home") {
                 Text("Make room for your tools", style = MaterialTheme.typography.titleLarge)
-                Text("Choose what appears on each page. Changes save automatically; restore defaults is available in each section.")
+                Text("Choose what appears on each page. Changes save " +
+"automatically; restore defaults is available in " +
+"each section.")
                 listOf("pages" to "Page order & visibility", "kaomoji" to "Kaomoji", "formatting" to "Formatting", "snippets" to "String palettes", "quick" to "Quick Settings").forEach { (id, title) ->
                     ManagerLink(title) { section = id; collectionId = null }
                 }
                 TextButton(onClick = { openKeywiSettings(context, "advancedBoards") }) { Text("Manage character boards & key actions") }
             }
             if (section == "pages") {
-                Text("Hide pages from the swipe cycle, change their order, and choose the double-tap home. " +
+                Text("Hide pages from the swipe cycle, change their " +
+"order, and choose the double-tap home. " +
 "Character input always stays available.")
                 val pages = ordered(config.pages, ToolbarPage.entries.map { it.name })
                 pages.forEachIndexed { i, name ->
@@ -106,18 +109,24 @@ fun ToolPageManagerScreen() {
             }
             if (section == "kaomoji" || section == "snippets") {
                 if (group == null) {
-                    Text(if (section == "snippets") "Collections insert plain text, symbols, snippets or multiline ASCII art. They do not execute commands." else "Edit built-in categories or add your own. Favorites, recents and search sources stay separate.")
+                    Text(if (section == "snippets") "Collections insert plain text, symbols, snippets " +
+"or multiline ASCII art. They do not execute " +
+"commands." else "Edit built-in categories or add your own. " +
+"Favorites, recents and search sources stay " +
+"separate.")
                     groups.forEachIndexed { i, c ->
                         ManagedRow("${c.glyph} ${c.title}", c.enabled, i, groups.size, { saveGroups(groups.moved(i, it)) }, { saveGroup(c.copy(enabled = it)) }) {
                             TextButton(onClick = { collectionId = c.id }) { Text("${c.entries.size} entries · Edit") }
                         }
                     }
                     TextButton(onClick = { editCollection = ManagedCollection(UUID.randomUUID().toString(), "") }) { Text("Add collection") }
-                    if (section == "snippets") Text("Enable String palettes in Page order & visibility to put it in the toolbar cycle.", style = MaterialTheme.typography.bodySmall)
+                    if (section == "snippets") Text("Enable String palettes in Page order & visibility " +
+"to put it in the toolbar cycle.", style = MaterialTheme.typography.bodySmall)
                     TextButton(onClick = { restore = { saveGroups(if (section == "kaomoji") defaultKaomoji() else emptyList()) } }) { Text("Restore ${if (section == "kaomoji") "kaomoji" else "palette"} defaults") }
                 } else {
                     Text("${group.glyph} ${group.title}", style = MaterialTheme.typography.titleLarge)
-                    Text("Preview · tap an entry below to edit its text, label and alternates.", style = MaterialTheme.typography.bodySmall)
+                    Text("Preview · tap an entry below to edit its text, " +
+"label and alternates.", style = MaterialTheme.typography.bodySmall)
                     Row {
                         TextButton(onClick = { editCollection = group }) { Text("Rename / symbol") }
                         TextButton(onClick = { delete = { saveGroups(groups.filterNot { it.id == group.id }); collectionId = null } }) { Text("Delete collection") }
@@ -134,11 +143,14 @@ fun ToolPageManagerScreen() {
                         }
                     }
                     TextButton(onClick = { editEntry = -1 to ManagedEntry("") }) { Text("Add entry") }
-                    Text("Hidden entries stay saved. Deleted built-ins can be recovered with Restore kaomoji defaults.", style = MaterialTheme.typography.bodySmall)
+                    Text("Hidden entries stay saved. Deleted built-ins can " +
+"be recovered with Restore kaomoji defaults.", style = MaterialTheme.typography.bodySmall)
                 }
             }
             if (section == "formatting") {
-                Text("Choose and arrange category tabs and transformations. Their Unicode conversion rules stay built in.")
+                Text("Choose and arrange category tabs and " +
+"transformations. Their Unicode conversion rules " +
+"stay built in.")
                 val categories = ordered(config.formatCategories, FancyTextFormatter.Category.entries.map { it.name })
                 categories.forEachIndexed { i, name ->
                     ManagedRow("${FancyTextFormatter.Category.valueOf(name).title} category", name !in config.hiddenFormatCategories, i, categories.size,
@@ -156,7 +168,9 @@ fun ToolPageManagerScreen() {
                 TextButton(onClick = { restore = { val d = ToolPageConfig(); save(config.copy(formats = d.formats, hiddenFormats = emptySet(), formatCategories = d.formatCategories, hiddenFormatCategories = emptySet())) } }) { Text("Restore formatting defaults") }
             }
             if (section == "quick") {
-                Text("Choose the controls and shortcuts shown in Quick Settings. All Keywi settings remains available at the bottom.")
+                Text("Choose the controls and shortcuts shown in Quick " +
+"Settings. All Keywi settings remains available at " +
+"the bottom.")
                 val tools = ordered(config.quickTools, QuickTool.entries.map { it.name })
                 tools.forEachIndexed { i, name ->
                     ManagedRow(QuickTool.valueOf(name).title, name !in config.hiddenQuickTools, i, tools.size,
@@ -168,10 +182,12 @@ fun ToolPageManagerScreen() {
         }
     }
     restore?.let { action ->
-        ConfirmManagerAction("Restore defaults?", "This resets only this section. Custom content in this section will be replaced; " +
+        ConfirmManagerAction("Restore defaults?", "This resets only this section. Custom content in " +
+"this section will be replaced; " +
 "favorites, recents and other tool pages are kept.", "Restore", { restore = null }) { action(); restore = null }
     }
-    delete?.let { action -> ConfirmManagerAction("Delete this content?", "This removes the selected entry or collection. Hide it instead if you want to keep it for later.", "Delete", { delete = null }) { action(); delete = null } }
+    delete?.let { action -> ConfirmManagerAction("Delete this content?", "This removes the selected entry or collection. " +
+"Hide it instead if you want to keep it for later.", "Delete", { delete = null }) { action(); delete = null } }
     editCollection?.let { original ->
         var title by remember(original) { mutableStateOf(original.title) }
         var glyph by remember(original) { mutableStateOf(original.glyph) }
