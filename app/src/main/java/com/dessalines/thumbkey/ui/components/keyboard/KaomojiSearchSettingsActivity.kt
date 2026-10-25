@@ -18,6 +18,7 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.Switch
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -27,6 +28,9 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import java.util.UUID
@@ -66,7 +70,16 @@ class KaomojiSearchSettingsActivity : ComponentActivity() {
                         }) { Text("+ Add search source") }
                         OutlinedTextField(name, { name = it }, label = { Text("Name") }, singleLine = true, modifier = Modifier.fillMaxWidth())
                         OutlinedTextField(url, { url = it }, label = { Text("Search URL") }, modifier = Modifier.fillMaxWidth())
-                        Text("Replace the search term with %s. Example: https://emojicombos.com/%s")
+                        Text("Replace the search term with %s. Example: https://emojicombos.com/%s?showSensitive=1")
+                        if (editing.copy(url = url).isEmojiCombos()) {
+                            Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+                                Text("Uncensored search", Modifier.weight(1f))
+                                Switch(editing.copy(url = url).uncensoredSearch(), { enabled ->
+                                    url = editing.copy(url = url).withUncensoredSearch(enabled).url
+                                }, modifier = Modifier.semantics { contentDescription = "Uncensored search" })
+                            }
+                            Text("Applies to Emoji Combos after Save & use.", style = MaterialTheme.typography.bodySmall)
+                        }
                         OutlinedTextField(selector, { selector = it }, label = { Text("Result selector (optional)") }, modifier = Modifier.fillMaxWidth())
                         Text("For results inside Keywi, select the HTML elements containing each kaomoji. " +
                             "Emoji Combos: #comboListEl .emojis. Leave blank to open searches in your browser. " +
