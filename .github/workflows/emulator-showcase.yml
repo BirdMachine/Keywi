@@ -20,10 +20,10 @@ permissions:
   contents: read
 
 jobs:
-  capture:
-    name: Capture actual Keywi keyboard
+  build:
+    name: Build signed emulator APK
     runs-on: ubuntu-latest
-    timeout-minutes: 30
+    timeout-minutes: 25
     env:
       KEYWI_DEBUG_STORE_FILE: ${{ github.workspace }}/.github/keywi-debug.keystore
       KEYWI_DEBUG_STORE_PASSWORD: keywi-debug
@@ -40,23 +40,49 @@ jobs:
           distribution: temurin
           java-version: '21'
       - uses: gradle/actions/setup-gradle@v6
+      - name: Build Keywi
+        run: ./gradlew assembleDebug
+      - name: Transfer APK to clean emulator runner
+        uses: actions/upload-artifact@v6
+        with:
+          name: keywi-emulator-apk
+          path: app/build/outputs/apk/debug/app-debug.apk
+          if-no-files-found: error
+          retention-days: 3
+
+  capture:
+    name: Capture actual Keywi keyboard
+    needs: build
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v6
+      - name: Retrieve prebuilt APK
+        uses: actions/download-artifact@v6
+        with:
+          name: keywi-emulator-apk
+          path: app/build/outputs/apk/debug/
+      - uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: '21'
+      - name: Inspect clean-runner memory
+        run: |
+          free -h
+          test -s app/build/outputs/apk/debug/app-debug.apk
       - name: Enable KVM
         run: |
           echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
           sudo udevadm control --reload-rules
           sudo udevadm trigger --name-match=kvm
-      - name: Build Keywi
-        run: ./gradlew assembleDebug
       - name: Capture real keyboard
         uses: reactivecircus/android-emulator-runner@v2
         with:
           api-level: 34
-          # AOSP avoids the Pixel Launcher ANRs seen in the Google APIs image.
           target: default
           arch: x86_64
           profile: pixel_2
           disable-animations: true
-          # software is the supported modern GPU mode; swiftshader_indirect is deprecated.
           emulator-options: -no-window -gpu software -memory 2048 -no-snapshot -noaudio -no-boot-anim
           script: python3 scripts/capture-keywi-showcase.py
       - name: Upload captures and verification
