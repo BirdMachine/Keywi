@@ -16,6 +16,32 @@ OUT = pathlib.Path("showcase")
 OUT.mkdir(exist_ok=True)
 PKG = "com.birdmachine.keywi.debug"
 ACTIVITY = f"{PKG}/com.dessalines.thumbkey.MainActivity"
+# ADB's one-shot logcat queries have been failing *after* the AVD process
+# disappears. Stream logs to the host BEFORE selecting the IME so a crash
+# leaves useful evidence, even if all subsequent adb commands fail.
+_logcat_stream = None
+_logcat_file = None
+
+
+def start_logcat_stream():
+    global _logcat_stream, _logcat_file
+    _logcat_file = (OUT / "device-logcat-stream.txt").open("w")
+    _logcat_stream = subprocess.Popen(
+        ["adb", "logcat", "-v", "threadtime", "-b", "main", "-b", "system", "-b", "crash"],
+        stdout=_logcat_file,
+        stderr=subprocess.STDOUT,
+    )
+
+
+def stop_logcat_stream():
+    if _logcat_stream is not None:
+        _logcat_stream.terminate()
+        try:
+            _logcat_stream.wait(timeout=3)
+        except subprocess.TimeoutExpired:
+            _logcat_stream.kill()
+    if _logcat_file is not None:
+        _logcat_file.close()
 
 
 def adb(*args, **kwargs):
@@ -176,6 +202,7 @@ def main():
         time.sleep(2)
     if not ime:
         raise RuntimeError("Installed Keywi IME not registered")
+    start_logcat_stream()
     # Baseline OFF first isolates AVD/IME instability from shader crashes.
     # Then collect shader link evidence before attempting fragile screenshots.
     states = [
@@ -218,3 +245,5 @@ except Exception:
         except (subprocess.CalledProcessError, subprocess.TimeoutExpired, OSError) as exc:
             (OUT / name).write_text(f"ADB unavailable: {exc}\\n")
     raise
+finally:
+    stop_logcat_stream()
