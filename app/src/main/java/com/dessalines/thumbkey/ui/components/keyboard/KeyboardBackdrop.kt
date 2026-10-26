@@ -177,7 +177,7 @@ fun Modifier.keyboardGradientBackground(backdrop: KeyboardBackdrop): Modifier {
     return drawWithCache {
         val brush = backdrop.brush(size.width, size.height)
         onDrawBehind {
-            brush?.let { drawRect(brush = it, alpha = alpha.coerceIn(0f, 1f)) }
+            brush?.let { drawRect(brush = it) }
         }
     }
 }
@@ -252,6 +252,6 @@ fun Modifier.keyboardGradientSlice(
                 offset = Offset(offsetX, offsetY),
             )
         onDrawBehind {
-            brush?.let { drawRect(brush = it) }
+            brush?.let { drawRect(brush = it, alpha = alpha.coerceIn(0f, 1f)) }
         }
     }
