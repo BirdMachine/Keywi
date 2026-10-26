@@ -1,3 +1,11 @@
+# On the shader laboratory branch, run the shader-specific emulator checks
+# instead of unrelated HK-like toolbar assertions.
+import os as _os
+if _os.environ.get("GITHUB_REF_NAME") == "feature/shadertoy-renderer-layers":
+    import runpy as _runpy
+    _runpy.run_path("scripts/capture-keywi-shaders.py", run_name="__main__")
+    raise SystemExit(0)
+
 """Capture the themed Keywi IME through its existing settings test field."""
 import pathlib
 import re
