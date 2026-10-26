@@ -54,6 +54,11 @@ def find_test_field():
         bounds = list(map(int, re.findall(r"\d+", close.attrib["bounds"])))
         shell("input", "tap", str((bounds[0] + bounds[2]) // 2), str((bounds[1] + bounds[3]) // 2))
         time.sleep(2)
+    # Recover if Android left us in the Boards subpage rather than Settings.
+    nodes, xml = hierarchy()
+    if any(n.get("text") == "Boards" for n in nodes):
+        shell("input", "keyevent", "4")
+        time.sleep(2)
     # Avoid repeated UIAutomator dumps on the software-GPU emulator: they can
     # stall the launcher and cause an ANR. Scroll to the bottom first.
     for _ in range(12):
@@ -95,8 +100,9 @@ def write_shader_prefs(material, overlay):
 
 def show_keyboard(ime):
     shell("ime", "enable", ime)
-    shell("am", "start", "-n", ACTIVITY, "--es", "startRoute", "settings")
-    ## Do not force-stop Pixel Launcher: it can destabilize the software-GPU emulator.
+    shell("am", "start", "-S", "-n", ACTIVITY, "--es", "startRoute", "settings")
+    # Pixel Launcher ANRs cover the test field on software-rendered CI emulators.
+    shell("am", "force-stop", "com.google.android.apps.nexuslauncher")
     time.sleep(5)
     nodes, raw = hierarchy()
     (OUT / "settings-entry.xml").write_text(raw)
