@@ -65,6 +65,8 @@ import com.dessalines.thumbkey.ui.components.keyboard.ToolbarBorderPreferences
 import com.dessalines.thumbkey.ui.components.keyboard.ToolbarLayoutPreferences
 import com.dessalines.thumbkey.ui.components.keyboard.ToolbarPage
 import com.dessalines.thumbkey.ui.components.keyboard.ToolbarThemePreferences
+import com.dessalines.thumbkey.ui.components.keyboard.shader.ShaderExperimentPreferences
+import com.dessalines.thumbkey.ui.components.keyboard.shader.ShaderExperimentLayer
 import com.dessalines.thumbkey.ui.theme.ThumbkeyTheme
 import com.dessalines.thumbkey.utils.KeyboardPosition
 import com.dessalines.thumbkey.utils.keyboardLayoutsSetFromDbIndexString
@@ -203,6 +205,12 @@ class ComposeKeyboardView(
                                     Modifier.align(Alignment.BottomCenter).fillMaxWidth().height(with(density) { keyboardHeightPx.toDp() }),
                                 )
                             }
+                            if (keywiEnabled && keyboardHeightPx > 0 && ShaderExperimentPreferences.material(ctx)) {
+                                ShaderExperimentLayer(
+                                    overlay = false,
+                                    modifier = Modifier.align(Alignment.BottomCenter).fillMaxWidth().height(with(density) { keyboardHeightPx.toDp() }),
+                                )
+                            }
                             val keyboardSettings =
                                 if (!keywiEnabled) {
                                     settings
@@ -296,6 +304,9 @@ class ComposeKeyboardView(
                                         )
                                     }
                                 }
+                            }
+                            if (keywiEnabled && ShaderExperimentPreferences.overlay(ctx)) {
+                                ShaderExperimentLayer(overlay = true, modifier = Modifier.matchParentSize().zIndex(3f))
                             }
                             ActionGifOverlayLayer(aboveKeys = true, modifier = Modifier.matchParentSize().zIndex(4f))
                             activePalette?.let { palette ->
