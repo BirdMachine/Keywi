@@ -45,6 +45,7 @@ import com.dessalines.thumbkey.effects.ActionSoundPreferences
 import com.dessalines.thumbkey.effects.SoundSelection
 import com.dessalines.thumbkey.effects.SoundTrigger
 import com.dessalines.thumbkey.effects.TaskerKeyBindings
+import com.dessalines.thumbkey.ui.components.keyboard.shader.ShaderExperimentPreferences
 
 /**
  * HK-Like: compact touch keyboard with an optional desktop-control layer.
@@ -309,6 +310,10 @@ private fun RowScope.HkKey(
     val interactions = remember { MutableInteractionSource() }
     val pressed by interactions.collectIsPressedAsState()
     val context = LocalContext.current
+    // The shader sits behind key surfaces; only make those surfaces translucent
+    // when the user explicitly enables the experimental material. Glyphs and
+    // borders stay fully opaque and touch targets are unchanged.
+    val surfaceOpacity = if (ShaderExperimentPreferences.material(context)) 0.62f else 1f
     val feedbackMode = com.dessalines.thumbkey.effects.rememberFeedbackMode()
     val view = androidx.compose.ui.platform.LocalView.current
     val password =
@@ -380,11 +385,12 @@ private fun RowScope.HkKey(
                         groupSurface?.height ?: canvasHeight,
                         offsetX - (groupSurface?.left ?: 0f),
                         offsetY - (groupSurface?.top ?: 0f),
+                        alpha = surfaceOpacity,
                     )
                 }
 
                 KeySurfaceStyle.SOLID -> {
-                    visual.background(theme.surfaceColor)
+                    visual.background(theme.surfaceColor.copy(alpha = theme.surfaceColor.alpha * surfaceOpacity))
                 }
 
                 KeySurfaceStyle.NONE -> {
@@ -392,7 +398,7 @@ private fun RowScope.HkKey(
                 }
             }
         } else {
-            visual.background(MaterialTheme.colorScheme.surface)
+            visual.background(MaterialTheme.colorScheme.surface.copy(alpha = MaterialTheme.colorScheme.surface.alpha * surfaceOpacity))
         }
     if (borderWidth > 0.dp) {
         visual =
