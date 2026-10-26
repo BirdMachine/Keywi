@@ -89,23 +89,23 @@ def find_test_field():
     if any(n.get("text") == "Boards" for n in nodes):
         shell("input", "keyevent", "4")
         time.sleep(2)
-    # Avoid repeated UIAutomator dumps on the software-GPU emulator: they can
-    # stall the launcher and cause an ANR. Scroll to the bottom first.
-    for _ in range(12):
-        shell("input", "swipe", "240", "780", "240", "220", "180")
-    time.sleep(2)
-    # Avoid screenshots before collecting GLES logs: the AVD may disconnect.
-    for attempt in range(3):
+    # Use the Theme Manager's dedicated test bench, rather than the very
+    # long main Settings screen. It hosts the same installed Keywi IME.
+    # Re-query after each swipe: the bench may be only a few screens below.
+    for attempt in range(20):
         nodes, xml = hierarchy()
         fields = [node for node in nodes if node.get("class") == "android.widget.EditText"]
         if fields:
             field = fields[0]
-            coords = list(map(int, re.findall(r"\d+", field.attrib["bounds"])))
+            coords = list(map(int, re.findall(r"\\d+", field.attrib["bounds"])))
             shell("input", "tap", str((coords[0] + coords[2]) // 2), str((coords[1] + coords[3]) // 2))
             time.sleep(3)
             return
-        shell("input", "swipe", "240", "780", "240", "220", "180")
-    raise RuntimeError("Cannot locate the Settings test field after scrolling; see bottom screenshot")
+        if attempt in (0, 5, 11, 19):
+            (OUT / f"theme-manager-scroll-{attempt}.xml").write_text(xml)
+        shell("input", "touchscreen", "swipe", "240", "760", "240", "240", "360")
+        time.sleep(0.4)
+    raise RuntimeError("Cannot locate Theme Manager's test field; see scroll XML snapshots")
 
 
 def write_shader_prefs(material, overlay):
@@ -130,7 +130,7 @@ def write_shader_prefs(material, overlay):
 
 def show_keyboard(ime):
     shell("ime", "enable", ime)
-    shell("am", "start", "-S", "-n", ACTIVITY, "--es", "startRoute", "settings")
+    shell("am", "start", "-S", "-n", ACTIVITY, "--es", "startRoute", "advancedLookAndFeel")
     # The AOSP system image avoids the Google Pixel Launcher ANRs seen in earlier runs.
     time.sleep(3)
     nodes, raw = hierarchy()
