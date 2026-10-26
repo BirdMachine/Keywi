@@ -58,6 +58,7 @@ import com.dessalines.thumbkey.effects.ActionSoundPreferences
 import com.dessalines.thumbkey.effects.SoundSelection
 import com.dessalines.thumbkey.effects.SoundTrigger
 import com.dessalines.thumbkey.effects.TaskerKeyBindings
+import com.dessalines.thumbkey.ui.components.keyboard.shader.ShaderExperimentPreferences
 import com.dessalines.thumbkey.utils.CircularDirection
 import com.dessalines.thumbkey.utils.CircularDragAction
 import com.dessalines.thumbkey.utils.FontSizeVariant
@@ -245,6 +246,9 @@ fun KeyboardKey(
     var slideHoldRepeatJob by remember { mutableStateOf<kotlinx.coroutines.Job?>(null) }
 
     val appearanceEnabled = KeywiAppearancePreferences.currentEnabled
+    // Preserve key legends/borders while revealing the animated shader behind
+    // idle key surfaces. The effect is opt-in and pressed keys stay opaque.
+    val surfaceOpacity = if (ShaderExperimentPreferences.material(ctx)) 0.62f else 1f
     val baseKeyTheme = KeyThemePreferences.current
     val keyTheme = baseKeyTheme.forKey(keyDesignId)
     val density = LocalDensity.current
@@ -304,11 +308,11 @@ fun KeyboardKey(
         if (!(isDragged.value || isPressed)) {
             if (appearanceEnabled) {
                 when (keyTheme.surfaceStyle) {
-                    KeySurfaceStyle.SOLID -> keyTheme.surfaceColor
+                    KeySurfaceStyle.SOLID -> keyTheme.surfaceColor.copy(alpha = keyTheme.surfaceColor.alpha * surfaceOpacity)
                     KeySurfaceStyle.GRADIENT, KeySurfaceStyle.NONE -> Color.Transparent
                 }
             } else {
-                colorVariantToColor(colorVariant = key.backgroundColor)
+                colorVariantToColor(colorVariant = key.backgroundColor).let { it.copy(alpha = it.alpha * surfaceOpacity) }
             }
         } else {
             MaterialTheme.colorScheme.inversePrimary
@@ -534,6 +538,7 @@ fun KeyboardKey(
                         canvasHeight = groupSurface?.height ?: gradientHeightPx,
                         offsetX = gradientOffsetXPx - (groupSurface?.left ?: 0f),
                         offsetY = gradientOffsetYPx - (groupSurface?.top ?: 0f),
+                        alpha = surfaceOpacity,
                     )
                 } else {
                     Modifier.background(color = backgroundColor)

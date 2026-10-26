@@ -14,6 +14,7 @@ on:
       - app/src/main/java/com/dessalines/thumbkey/ui/components/keyboard/shader/**
       - app/src/main/java/com/dessalines/thumbkey/ui/components/keyboard/KeyboardBackdrop.kt
       - app/src/main/java/com/dessalines/thumbkey/ui/components/keyboard/MachineCutSkeleton.kt
+      - app/src/main/java/com/dessalines/thumbkey/ui/components/keyboard/KeyboardKey.kt
 
 concurrency:
   group: keywi-emulator-${{ github.ref }}
