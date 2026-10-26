@@ -84,25 +84,7 @@ jobs:
           profile: pixel_2
           disable-animations: true
           emulator-options: -no-window -gpu swangle -memory 2048 -no-snapshot -noaudio -no-boot-anim -camera-back none -camera-front none
-          script: |
-            mkdir -p showcase
-            # Keep host-side evidence even if the emulator process exits and
-            # adb becomes unusable. No sudo access is required for ps/free.
-            (
-              while true; do
-                date -u '+%Y-%m-%dT%H:%M:%SZ'
-                free -m
-                ps -eo pid,ppid,rss,stat,etime,comm,args | grep -E '[q]emu-system|[e]mulator -avd' || true
-                sleep 2
-              done
-            ) > showcase/emulator-host-watch.txt 2>&1 &
-            monitor_pid=$!
-            python3 scripts/capture-keywi-showcase.py
-            status=$?
-            kill "$monitor_pid" 2>/dev/null || true
-            (dmesg -T | tail -120 || true) > showcase/host-kernel-tail.txt 2>&1
-            (journalctl -k -n 120 --no-pager || true) > showcase/host-journal-tail.txt 2>&1
-            exit "$status"
+          script: bash scripts/run-keywi-emulator.sh
       - name: Upload captures and verification
         if: always()
         uses: actions/upload-artifact@v6
