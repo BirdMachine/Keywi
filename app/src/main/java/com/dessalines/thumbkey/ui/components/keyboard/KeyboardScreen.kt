@@ -2,6 +2,11 @@ package com.dessalines.thumbkey.ui.components.keyboard
 
 import android.content.Context
 import android.util.Log
+import android.text.InputType
+import com.dessalines.thumbkey.emoji.EmojiShortcodeSearch
+import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
+import androidx.compose.foundation.layout.Arrangement
 import android.view.HapticFeedbackConstants
 import android.view.inputmethod.InputConnection.CURSOR_UPDATE_MONITOR
 import android.widget.Toast
@@ -109,6 +114,32 @@ fun KeyboardScreen(
     onTyped: () -> Unit = {},
 ) {
     val ctx = LocalContext.current as IMEService
+    var emojiSuggestions by remember { mutableStateOf<EmojiShortcodeSearch.Suggestions?>(null) }
+    fun refreshEmojiSuggestions() {
+        val type = ctx.currentInputEditorInfo?.inputType ?: 0
+        val variation = type and InputType.TYPE_MASK_VARIATION
+        val secret = (type and InputType.TYPE_MASK_CLASS) == InputType.TYPE_CLASS_TEXT &&
+            variation in setOf(InputType.TYPE_TEXT_VARIATION_PASSWORD,
+                InputType.TYPE_TEXT_VARIATION_VISIBLE_PASSWORD, InputType.TYPE_TEXT_VARIATION_WEB_PASSWORD)
+        emojiSuggestions = if (secret) null else
+            EmojiShortcodeSearch.suggest(ctx.activeInputConnectionOrNull()?.getTextBeforeCursor(48, 0))
+    }
+    fun chooseEmoji(emoji: String) {
+        val ic = ctx.activeInputConnectionOrNull() ?: return
+        val current = EmojiShortcodeSearch.suggest(ic.getTextBeforeCursor(48, 0))
+        val old = emojiSuggestions
+        if (old != null && current?.trigger == old.trigger && current.matches.any { it.emoji == emoji }) {
+            ic.beginBatchEdit()
+            try {
+                ic.deleteSurroundingText(old.trigger.length, 0)
+                ic.commitText(emoji, 1)
+            } finally {
+                ic.endBatchEdit()
+            }
+            emojiSuggestions = null
+            onTyped()
+        } else refreshEmojiSuggestions()
+    }
 
     val layout =
         KeyboardLayout.entries.sortedBy { it.ordinal }[
@@ -231,6 +262,7 @@ fun KeyboardScreen(
 
             is KeyAction.CommitText -> {
                 if (action.text.isNotEmpty()) onTyped()
+                refreshEmojiSuggestions()
                 if (activeBoard?.returnAfterInput == true) {
                     boardId = null
                     mode = KeyboardMode.MAIN
@@ -239,7 +271,7 @@ fun KeyboardScreen(
             }
 
             else -> {
-                Unit
+                if (action is KeyAction.DeleteKeyAction || action is KeyAction.DeleteViaTextManipulation) refreshEmojiSuggestions()
             }
         }
     }
@@ -788,6 +820,13 @@ fun KeyboardScreen(
                     )
                 }
                 Column(modifier = modifierPositionPadding) {
+                    if (emojiSuggestions != null) {
+                        Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(2.dp)) {
+                            emojiSuggestions?.matches?.take(5)?.forEach { match ->
+                                TextButton(onClick = { chooseEmoji(match.emoji) }) { Text(match.emoji) }
+                            }
+                        }
+                    }
                     keyboard.arr.forEachIndexed { i, row ->
                         Row {
                             row.forEachIndexed { j, key ->
