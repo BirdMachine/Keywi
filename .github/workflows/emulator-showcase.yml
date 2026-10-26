@@ -10,7 +10,10 @@ on:
       - .github/workflows/emulator-showcase.yml
       - scripts/capture-keywi-showcase.py
       - scripts/capture-keywi-shaders.py
+      - scripts/run-keywi-emulator.sh
       - app/src/main/java/com/dessalines/thumbkey/ui/components/keyboard/shader/**
+      - app/src/main/java/com/dessalines/thumbkey/ui/components/keyboard/KeyboardBackdrop.kt
+      - app/src/main/java/com/dessalines/thumbkey/ui/components/keyboard/MachineCutSkeleton.kt
 
 concurrency:
   group: keywi-emulator-${{ github.ref }}
