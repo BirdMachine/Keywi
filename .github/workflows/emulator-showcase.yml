@@ -9,6 +9,7 @@ on:
     paths:
       - .github/workflows/emulator-showcase.yml
       - scripts/capture-keywi-showcase.py
+      - scripts/capture-keywi-shaders.py
       - app/src/main/java/com/dessalines/thumbkey/ui/components/keyboard/shader/**
 
 concurrency:
