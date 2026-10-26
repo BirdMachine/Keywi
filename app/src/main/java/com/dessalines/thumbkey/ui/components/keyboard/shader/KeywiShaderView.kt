@@ -135,11 +135,16 @@ internal class ShaderRenderer(private val source: String) : GLSurfaceView.Render
     override fun onDrawFrame(gl: GL10?) {
         GLES20.glClear(GLES20.GL_COLOR_BUFFER_BIT)
         if (program == 0) return
-        // Single-pass rendering writes straight into a transparent EGL surface.
-        // Blending here would multiply the fragment alpha by itself (e.g. the
-        // shimmer overlay 0.20 -> 0.04), making translucent effects too faint.
-        // TextureView/Android composites the finished RGBA buffer afterward.
-        GLES20.glDisable(GLES20.GL_BLEND)
+        // Android's TextureView compositor expects premultiplied RGBA.
+        // Blend the fragment onto the transparent surface with independent
+        // alpha factors: SRC_ALPHA for RGB, ONE for alpha. The old shared
+        // SRC_ALPHA factor squared overlay alpha (0.20 -> 0.04); disabling
+        // blending would instead leave RGB non-premultiplied.
+        GLES20.glEnable(GLES20.GL_BLEND)
+        GLES20.glBlendFuncSeparate(
+            GLES20.GL_SRC_ALPHA, GLES20.GL_ONE_MINUS_SRC_ALPHA,
+            GLES20.GL_ONE, GLES20.GL_ONE_MINUS_SRC_ALPHA,
+        )
         GLES20.glUseProgram(program)
         GLES20.glUniform3f(GLES20.glGetUniformLocation(program, "iResolution"), width.toFloat(), height.toFloat(), 1f)
         GLES20.glUniform1f(GLES20.glGetUniformLocation(program, "iTime"), (SystemClock.elapsedRealtime() - start) / 1000f)
