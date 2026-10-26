@@ -40,6 +40,8 @@ class KeywiShaderTextureView(
     private var display: EGLDisplay = EGL14.EGL_NO_DISPLAY
     private var eglContext: EGLContext = EGL14.EGL_NO_CONTEXT
     private var eglSurface: EGLSurface = EGL14.EGL_NO_SURFACE
+    // Written only by the GL worker; reset before a new worker is started.
+    private var firstFramePresented = false
 
     init {
         isOpaque = false
@@ -52,13 +54,32 @@ class KeywiShaderTextureView(
 
     override fun onTouchEvent(event: MotionEvent?): Boolean = false
 
+    private fun refreshVisibility() {
+        // isShown accounts for ancestor visibility, but is only reliable after
+        // attachment. A TextureView can attach already visible without receiving
+        // another onVisibilityChanged callback.
+        visible = isAttachedToWindow && isShown && windowVisibility == VISIBLE
+    }
+
+    override fun onAttachedToWindow() {
+        super.onAttachedToWindow()
+        refreshVisibility()
+    }
+
+    override fun onWindowVisibilityChanged(visibility: Int) {
+        super.onWindowVisibilityChanged(visibility)
+        refreshVisibility()
+    }
+
     override fun onVisibilityChanged(changedView: View, visibility: Int) {
         super.onVisibilityChanged(changedView, visibility)
-        visible = visibility == VISIBLE && isShown
+        refreshVisibility()
     }
 
     override fun onSurfaceTextureAvailable(surface: SurfaceTexture, width: Int, height: Int) {
         stopWorker()
+        refreshVisibility()
+        firstFramePresented = false
         val thread = HandlerThread("KeywiShaderGL").apply { start() }
         worker = thread
         val glHandler = Handler(thread.looper)
@@ -87,6 +108,12 @@ class KeywiShaderTextureView(
                     shaderRenderer.onDrawFrame(null)
                     if (!EGL14.eglSwapBuffers(display, eglSurface)) {
                         error("eglSwapBuffers failed: " + EGL14.eglGetError())
+                    }
+                    if (!firstFramePresented) {
+                        firstFramePresented = true
+                        // A successful swap proves GLES rendered a frame, but
+                        // NOT that Compose z-order, alpha, or touch are correct.
+                        Log.i("KeywiShader", "Shader first frame presented")
                     }
                 } catch (error: Exception) {
                     Log.e("KeywiShader", "Stopping failed TextureView renderer", error)
