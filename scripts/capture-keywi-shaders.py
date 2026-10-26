@@ -140,13 +140,15 @@ def capture_state(ime, label, material, overlay):
     (OUT / f"{label}-input-method.txt").write_text(shell("dumpsys", "input_method"))
     expected = int(material) + int(overlay)
     linked = shader_logs.count("Shader program linked")
+    presented = shader_logs.count("Shader first frame presented")
     if expected:
         assert linked >= expected, f"Expected {expected} GLES links in {label}, found {linked}"
+        assert presented >= expected, f"Expected {expected} successful GLES swaps in {label}, found {presented}"
         assert "Shader disabled after compile failure" not in shader_logs, f"GLSL compilation failed in {label}"
     (OUT / f"{label}-shader-proof.txt").write_text(
         f"state={label} material={material} overlay={overlay} selected_ime={selected} "
-        f"linked_programs={linked} expected_programs={expected}\\n"
-        "Link logs prove shader compilation, NOT pixels, z-order or touch.\\n"
+        f"linked_programs={linked} presented_first_frames={presented} expected_programs={expected}\\n"
+        "Link logs prove compilation; successful swaps prove frame submission, NOT visible pixels, z-order or touch.\\n"
     )
     # UIAutomator can stall software-emulated graphics. Shader link evidence
     # is more important; collect the hierarchy on a best-effort basis.
@@ -185,8 +187,8 @@ def main():
     for label, material, overlay in states:
         capture_state(ime, label, material, overlay)
     (OUT / "shader-verification.txt").write_text(
-        "API 34: selected actual Keywi IME; collected four UI dumps and GLES logs.\\n"
-        "Shader link logs prove compilation, NOT visual correctness.\\n"
+        "API 34: selected actual Keywi IME; collected four GLES log states; UI dumps are best-effort.\\n"
+        "Shader link and frame-swap logs do NOT prove visual correctness.\\n"
         "Screenshots attempted after collecting proof.\\n"
     )
     for label, material, overlay in states:
