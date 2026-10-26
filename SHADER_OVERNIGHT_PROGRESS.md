@@ -19,9 +19,9 @@ Target: **A downloadable, CI-built debug APK** containing a Shadertoy-compatible
 - [x] Established overnight checkpoint workflow in this document.
 - [x] Add initial GLES 2.0 Shadertoy-style single-pass renderer with mainImage, iResolution/iTime/iFrame/iMouse, frame cap and visibility lifecycle. NOT compiled or integration-tested yet.
 - [x] Add two built-in source presets (MOLTEN material and transparent SHIMMER effect), not yet exposed in settings.
-- [ ] Wire shader material into existing backdrop preferences and rendering (with compatibility fallback).
-- [ ] Wire separate effect overlay into keyboard compositor, with enable/disable setting; avoid intercepting touch.
-- [ ] Add minimal settings UI for shader selection and effect toggle. Manager/editor can follow if APK prototype validated.
+- [x] Wire experimental shader material over existing backdrop, behind keys, controlled independently in Theme Manager. NOTE: not yet a native BackdropMode/ThemeDocument material option; still to implement.
+- [x] Wire transparent shimmer GLSurfaceView overlay into keyboard Box with independent setting. NEED device validation: GLSurfaceView SurfaceView composition may not honor Compose z ordering; consider TextureView if overlay is misplaced.
+- [x] Add two opt-in toggle switches in ThemeManagerSection for material and overlay. Shader picker and editor still pending.
 - [ ] Add tests and run unit checks/build; fix compilation errors.
 - [ ] Obtain CI debug APK and link the *verified* build artifact.
 - [ ] Review actual UX/performance and document known limitations.
@@ -41,3 +41,5 @@ Target: **A downloadable, CI-built debug APK** containing a Shadertoy-compatible
 - 2026-10-25: Branch created; initial code architecture inspected. No shader renderer or APK built yet. Next: prototype GLES shader view composited in keyboard Box with opt-in flags.
 
 - 2026-10-25 first manually initiated shift: committed shader presets `b25a1a5` and renderer `1d9cb2b`. No UI wiring, test run, CI build or APK yet. Next: add Compose AndroidView integration and opt-in control; verify GLES transparency/compositing behavior and compile with CI. The shader renderer source might need lifecycle revisions after device/build testing. Do not mark working until verified.
+
+- 2026-10-25 continuous follow-up: created ShaderExperimentLayer/Preferences `0de294d`, integrated keyboard Box `32ea282`, exposed two switches `6bbd332`. Latest CI run was pending (`40263135344`) at last check; no successful build or APK verified. Need inspect next CI run because updating this document triggers new push and cancels superseded queued runs. Critical: GLSurfaceView transparency/z-order needs real device verification. Next: resolve CI failures, verify artifact; improve composition with TextureView if needed.
