@@ -44,6 +44,16 @@ def hierarchy():
 
 
 def find_test_field():
+    # Android's software-rendered Pixel Launcher can display an ANR dialog
+    # over Keywi. Dismiss it before attempting to scroll the settings page.
+    for _ in range(3):
+        nodes, xml = hierarchy()
+        close = next((n for n in nodes if n.get("text") == "Close app"), None)
+        if close is None:
+            break
+        bounds = list(map(int, re.findall(r"\d+", close.attrib["bounds"])))
+        shell("input", "tap", str((bounds[0] + bounds[2]) // 2), str((bounds[1] + bounds[3]) // 2))
+        time.sleep(2)
     # Avoid repeated UIAutomator dumps on the software-GPU emulator: they can
     # stall the launcher and cause an ANR. Scroll to the bottom first.
     for _ in range(12):
@@ -87,6 +97,7 @@ def show_keyboard(ime):
     shell("ime", "enable", ime)
     shell("ime", "set", ime)
     shell("am", "start", "-n", ACTIVITY, "--es", "startRoute", "settings")
+    shell("am", "force-stop", "com.google.android.apps.nexuslauncher")
     time.sleep(5)
     find_test_field()
 
