@@ -95,11 +95,21 @@ def write_shader_prefs(material, overlay):
 
 def show_keyboard(ime):
     shell("ime", "enable", ime)
-    shell("ime", "set", ime)
     shell("am", "start", "-n", ACTIVITY, "--es", "startRoute", "settings")
     shell("am", "force-stop", "com.google.android.apps.nexuslauncher")
     time.sleep(5)
     find_test_field()
+    # Starting Settings or force-stopping the active IME can reset Android to
+    # Gboard. Re-select Keywi AFTER the editor has focus, and verify selection.
+    for attempt in range(4):
+        result = shell("ime", "set", ime)
+        selected = shell("settings", "get", "secure", "default_input_method").strip()
+        print(f"IME selection attempt {attempt}: {result.strip()} / {selected}", flush=True)
+        if selected == ime:
+            time.sleep(3)
+            return
+        time.sleep(2)
+    raise RuntimeError(f"Keywi IME did not remain selected; expected {ime}")
 
 
 def capture_state(ime, label, material, overlay):
