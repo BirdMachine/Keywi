@@ -18,6 +18,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.material3.Switch
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -29,6 +30,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
+import com.dessalines.thumbkey.ui.components.keyboard.shader.ShaderExperimentPreferences
 import com.dessalines.thumbkey.ui.components.keyboard.BackdropVisualLayer
 import com.dessalines.thumbkey.ui.components.keyboard.CUSTOM_THEME_ID
 import com.dessalines.thumbkey.ui.components.keyboard.ThemeAssetStore
@@ -61,6 +63,8 @@ fun ThemeManagerSection(
     var message by remember { mutableStateOf<String?>(null) }
     val scope = rememberCoroutineScope()
     var busy by remember { mutableStateOf(false) }
+    var shaderMaterial by remember { mutableStateOf(ShaderExperimentPreferences.material(context)) }
+    var shaderOverlay by remember { mutableStateOf(ShaderExperimentPreferences.overlay(context)) }
 
     fun active(): ThemeDocument = ThemeEngine.loadActive(context)
 
@@ -148,7 +152,26 @@ fun ThemeManagerSection(
         modifier = gemSectionModifier(),
         verticalArrangement = Arrangement.spacedBy(8.dp),
     ) {
-        Text("✦ Saved themes", style = MaterialTheme.typography.titleMedium)
+        Text("✦ Shader laboratory (experimental)", style = MaterialTheme.typography.titleMedium)
+        Text("Built-in Shadertoy-style GLSL examples. Turn on separately to test rendering; disable if the GPU behaves poorly.", style = MaterialTheme.typography.bodySmall)
+        Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+            Text("Molten keyboard material", style = MaterialTheme.typography.bodyMedium)
+            Switch(checked = shaderMaterial, onCheckedChange = {
+                shaderMaterial = it
+                ShaderExperimentPreferences.setMaterial(context, it)
+                onThemeApplied()
+            })
+        }
+        Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+            Text("Shimmer composited overlay", style = MaterialTheme.typography.bodyMedium)
+            Switch(checked = shaderOverlay, onCheckedChange = {
+                shaderOverlay = it
+                ShaderExperimentPreferences.setOverlay(context, it)
+                onThemeApplied()
+            })
+        }
+        Text("Prototype: source editing/import and complete Shadertoy channels are not yet enabled.", style = MaterialTheme.typography.bodySmall)
+                Text("✦ Saved themes", style = MaterialTheme.typography.titleMedium)
         Text(
             "Images, GIFs and fonts live in Keywi's theme folders. Exports include these assets.",
             style = MaterialTheme.typography.bodySmall,
