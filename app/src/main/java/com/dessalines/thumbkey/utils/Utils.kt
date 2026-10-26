@@ -355,6 +355,10 @@ fun performKeyAction(
             onKeyEvent(action)
         }
 
+        KeyAction.StartComposeCombo -> {
+            keyboardSettings.textProcessor?.handleComposeStart(ime)
+        }
+
         is KeyAction.CommitText -> {
             val text = action.text
             Log.d(TAG, "committing key text: $text")
