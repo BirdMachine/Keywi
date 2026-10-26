@@ -1,5 +1,6 @@
 # On the shader laboratory branch, run the shader-specific emulator checks
-# instead of unrelated HK-like toolbar assertions. This dispatch is also the\n# existing emulator workflow's push trigger for shader test revisions.
+# instead of unrelated HK-like toolbar assertions. This dispatch is also the
+# existing emulator workflow's push trigger for shader test revisions.
 import os as _os
 if _os.environ.get("GITHUB_REF_NAME") == "feature/shadertoy-renderer-layers":
     import runpy as _runpy
