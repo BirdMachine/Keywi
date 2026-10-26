@@ -60,7 +60,7 @@ class KeywiShaderView(
     override fun onTouchEvent(event: android.view.MotionEvent?): Boolean = false
 }
 
-private class ShaderRenderer(private val source: String) : GLSurfaceView.Renderer {
+internal class ShaderRenderer(private val source: String) : GLSurfaceView.Renderer {
     private var program = 0
     private var start = SystemClock.elapsedRealtime()
     private var frame = 0
