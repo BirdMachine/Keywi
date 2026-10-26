@@ -11,6 +11,7 @@ import com.charleskorn.kaml.Yaml
 import com.charleskorn.kaml.YamlConfiguration
 import com.dessalines.thumbkey.keyboards.BACKSPACE_KEYC
 import com.dessalines.thumbkey.keyboards.BACKSPACE_TEXT_MANIPULATION_KEYC
+import com.dessalines.thumbkey.keyboards.COMPOSE_COMBO_KEYC
 import com.dessalines.thumbkey.keyboards.COPY_KEYC
 import com.dessalines.thumbkey.keyboards.CUT_KEYC
 import com.dessalines.thumbkey.keyboards.DELETE_CHARACTER_AFTER_CURSOR_KEYC
