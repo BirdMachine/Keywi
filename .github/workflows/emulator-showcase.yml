@@ -51,11 +51,13 @@ jobs:
         uses: reactivecircus/android-emulator-runner@v2
         with:
           api-level: 34
-          target: google_apis
+          # AOSP avoids the Pixel Launcher ANRs seen in the Google APIs image.
+          target: default
           arch: x86_64
-          profile: pixel_6
+          profile: pixel_2
           disable-animations: true
-          emulator-options: -no-window -gpu swiftshader_indirect -no-snapshot -noaudio -no-boot-anim
+          # software is the supported modern GPU mode; swiftshader_indirect is deprecated.
+          emulator-options: -no-window -gpu software -memory 2048 -no-snapshot -noaudio -no-boot-anim
           script: python3 scripts/capture-keywi-showcase.py
       - name: Upload captures and verification
         if: always()
