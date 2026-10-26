@@ -2,6 +2,7 @@ name: Keywi Emulator Showcase
 
 on:
   workflow_dispatch:
+
 permissions:
   contents: read
 
