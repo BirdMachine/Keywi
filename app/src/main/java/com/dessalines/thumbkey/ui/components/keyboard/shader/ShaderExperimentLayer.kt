@@ -26,6 +26,6 @@ fun ShaderExperimentLayer(overlay: Boolean, modifier: Modifier = Modifier) {
     val source = if (overlay) KeywiShaderPresets.SHIMMER else KeywiShaderPresets.MOLTEN
     AndroidView(
         modifier = modifier,
-        factory = { context -> KeywiShaderView(context, source) },
+        factory = { context -> KeywiShaderTextureView(context, source) },
     )
 }
