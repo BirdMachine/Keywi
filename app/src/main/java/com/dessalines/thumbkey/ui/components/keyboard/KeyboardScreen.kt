@@ -115,6 +115,7 @@ fun KeyboardScreen(
 ) {
     val ctx = LocalContext.current as IMEService
     var emojiSuggestions by remember { mutableStateOf<EmojiShortcodeSearch.Suggestions?>(null) }
+    var sketchOpen by remember { mutableStateOf(false) }
     fun refreshEmojiSuggestions() {
         val type = ctx.currentInputEditorInfo?.inputType ?: 0
         val variation = type and InputType.TYPE_MASK_VARIATION
@@ -820,6 +821,21 @@ fun KeyboardScreen(
                     )
                 }
                 Column(modifier = modifierPositionPadding) {
+                    if (sketchOpen) {
+                        SketchPad(
+                            onCommit = { text ->
+                                ctx.activeInputConnectionOrNull()?.commitText(text, 1)
+                                onTyped()
+                                refreshEmojiSuggestions()
+                            },
+                            onClose = { sketchOpen = false },
+                        )
+                    }
+                    if (!sketchOpen && emojiSuggestions == null) {
+                        Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.End) {
+                            TextButton(onClick = { sketchOpen = true }) { Text("✍ Sketch") }
+                        }
+                    }
                     if (emojiSuggestions != null) {
                         Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(2.dp)) {
                             emojiSuggestions?.matches?.take(5)?.forEach { match ->
