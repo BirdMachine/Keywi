@@ -1,8 +1,17 @@
 # Keywi settings guide ✦
 
-[![Keywi crystal-glass instruction atlas](keywi-atlas.svg)](keywi-atlas.svg)
+[![Keywi crystal-glass instruction atlas](keywi-atlas.svg)](#atlas-chapters)
 
-**[Explore the illustrated SVG atlas](keywi-atlas.svg)** · Each chapter has a corresponding canonical guide page below. SVG links may be disabled in GitHub's image proxy, so the Markdown links remain the accessible navigation.
+### Atlas chapters
+
+| | |
+| :--- | :--- |
+| **[01 ✦ START HERE](#start-here)** — Installation & setup | **[02 💎 GEM CUTS](cuts-and-layouts.md)** — Physical layouts |
+| **[03 🎨 THEME LAB](themes-and-appearance.md)** — Glass, color & motion | **[04 🛠️ BOARD FORGE](boards-and-keys.md)** — Custom keys & swipes |
+| **[05 ⌨️ TYPING TOOLS](typing-and-clipboard.md)** — Unicode & clipboard | **[06 ⚡ SYSTEM CORE](power-backup-diagnostics.md)** — Power, backup & diagnostics |
+| **[07 🩹 TROUBLESHOOT](troubleshooting.md)** — Issues & fixes | **[08 📸 SCREENSHOTS](screenshots.md)** — Actual app imagery |
+
+<small id="atlas-chapters">GitHub intentionally disables interactivity inside embedded SVGs. Use these chapter links to navigate; the atlas illustration is decorative.</small>
 
 Welcome to your keyboard's control room. This guide follows the English settings in the build 516 source checkpoint (`c2f002d4`, 17 October 2026). Android's keyboard setup screens vary by device.
 
