@@ -1,5 +1,9 @@
 # Keywi settings guide ✦
 
+[![Keywi crystal-glass instruction atlas](keywi-atlas.svg)](keywi-atlas.svg)
+
+**[Explore the illustrated SVG atlas](keywi-atlas.svg)** · Each chapter has a corresponding canonical guide page below. SVG links may be disabled in GitHub's image proxy, so the Markdown links remain the accessible navigation.
+
 Welcome to your keyboard's control room. This guide follows the English settings in the build 516 source checkpoint (`c2f002d4`, 17 October 2026). Android's keyboard setup screens vary by device.
 
 ## Start here
