@@ -132,7 +132,7 @@ fun <T> SearchableMultiSelectListPreference(
                                     IconButton(onClick = { query = "" }) {
                                         Icon(
                                             imageVector = Icons.Outlined.Clear,
-                                            contentDescription = stringResource(R.string.clear_search),
+                                            contentDescription = "Clear search",
                                         )
                                     }
                                 }
