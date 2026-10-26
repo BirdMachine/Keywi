@@ -22,9 +22,9 @@ Target: **A downloadable, CI-built debug APK** containing a Shadertoy-compatible
 - [x] Wire experimental shader material over existing backdrop, behind keys, controlled independently in Theme Manager. NOTE: not yet a native BackdropMode/ThemeDocument material option; still to implement.
 - [x] Wire transparent shimmer GLSurfaceView overlay into keyboard Box with independent setting. NEED device validation: GLSurfaceView SurfaceView composition may not honor Compose z ordering; consider TextureView if overlay is misplaced.
 - [x] Add two opt-in toggle switches in ThemeManagerSection for material and overlay. Shader picker and editor still pending.
-- [ ] Add tests and run unit checks/build; fix compilation errors.
-- [ ] Obtain CI debug APK and link the *verified* build artifact.
-- [ ] Review actual UX/performance and document known limitations.
+- [x] CI checks passed: Kotlin formatting, 153 unit tests, Android lint and debug assembly on GitHub Actions run 40263720047.
+- [x] GitHub Actions artifact `keywi-debug` created in successful run 40263720047; run page https://github.com/BirdMachine/Keywi/actions/runs/40263720047 (contains APK in ZIP).
+- [ ] Device-verify Android SurfaceView transparency, draw ordering, touch pass-through, FPS, appearance. APK build passed but shader effects themselves are not device-tested.
 - [ ] If suitable, open a draft PR. Do **not** merge without user request.
 
 ## Overnight rhythm / safety
@@ -43,3 +43,5 @@ Target: **A downloadable, CI-built debug APK** containing a Shadertoy-compatible
 - 2026-10-25 first manually initiated shift: committed shader presets `b25a1a5` and renderer `1d9cb2b`. No UI wiring, test run, CI build or APK yet. Next: add Compose AndroidView integration and opt-in control; verify GLES transparency/compositing behavior and compile with CI. The shader renderer source might need lifecycle revisions after device/build testing. Do not mark working until verified.
 
 - 2026-10-25 continuous follow-up: created ShaderExperimentLayer/Preferences `0de294d`, integrated keyboard Box `32ea282`, exposed two switches `6bbd332`. Latest CI run was pending (`40263135344`) at last check; no successful build or APK verified. Need inspect next CI run because updating this document triggers new push and cancels superseded queued runs. Critical: GLSurfaceView transparency/z-order needs real device verification. Next: resolve CI failures, verify artifact; improve composition with TextureView if needed.
+
+- 2026-10-25/26: CI run 40263242741 failed 1/153 unit tests (saved theme tile hidden after extra controls inserted at top). Moved shader switches after saved theme content in commit `e80d8f1`. Rerun `40263720047` completed **success**, uploaded artifact `keywi-debug` (artifact ID 12625442539, expires 2026-11-09). Target proof-of-build APK is available. NOT yet device-validated. Future steps: real-device verification, optional native theme integration, user source editing/library/import/export, iMouse events and Shadertoy channels. Do not claim these are implemented. Note: any progress-file commit creates a new CI run; original successful run remains the verified source for APK.
