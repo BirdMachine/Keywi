@@ -14,6 +14,9 @@ interface TextProcessor {
     // no-op for processors that don't implement one.
     fun handleComposeStart(ime: IMEService) {}
 
+    /** Arms an explicit Compose sequence; other processors may ignore it. */
+    fun handleComposeStart(ime: IMEService) {}
+
     // intercepts non-text key events (e.g. ENTER, DEL, DPAD)
     fun handleKeyEvent(
         ime: IMEService,
