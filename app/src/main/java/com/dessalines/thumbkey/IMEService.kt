@@ -224,9 +224,14 @@ class IMEService :
         ignoreCursorMove = true
     }
 
+    override fun onFinishInputView(finishingInput: Boolean) {
+        // Flush Compose sequences before the framework commits its composing region.
+        currentKeyboardDefinition?.settings?.textProcessor?.handleFinishInput(this)
+        super.onFinishInputView(finishingInput)
+    }
+
     override fun onWindowHidden() {
         PaletteSearchCapture.release(clear = true)
-        currentKeyboardDefinition?.settings?.textProcessor?.handleFinishInput(this)
         super.onWindowHidden()
     }
 
