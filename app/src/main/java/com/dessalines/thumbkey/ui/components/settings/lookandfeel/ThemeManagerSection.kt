@@ -152,26 +152,7 @@ fun ThemeManagerSection(
         modifier = gemSectionModifier(),
         verticalArrangement = Arrangement.spacedBy(8.dp),
     ) {
-        Text("✦ Shader laboratory (experimental)", style = MaterialTheme.typography.titleMedium)
-        Text("Built-in Shadertoy-style GLSL examples. Turn on separately to test rendering; disable if the GPU behaves poorly.", style = MaterialTheme.typography.bodySmall)
-        Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-            Text("Molten keyboard material", style = MaterialTheme.typography.bodyMedium)
-            Switch(checked = shaderMaterial, onCheckedChange = {
-                shaderMaterial = it
-                ShaderExperimentPreferences.setMaterial(context, it)
-                onThemeApplied()
-            })
-        }
-        Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-            Text("Shimmer composited overlay", style = MaterialTheme.typography.bodyMedium)
-            Switch(checked = shaderOverlay, onCheckedChange = {
-                shaderOverlay = it
-                ShaderExperimentPreferences.setOverlay(context, it)
-                onThemeApplied()
-            })
-        }
-        Text("Prototype: source editing/import and complete Shadertoy channels are not yet enabled.", style = MaterialTheme.typography.bodySmall)
-                Text("✦ Saved themes", style = MaterialTheme.typography.titleMedium)
+        Text("✦ Saved themes", style = MaterialTheme.typography.titleMedium)
         Text(
             "Images, GIFs and fonts live in Keywi's theme folders. Exports include these assets.",
             style = MaterialTheme.typography.bodySmall,
@@ -276,6 +257,27 @@ fun ThemeManagerSection(
             }
         }
         message?.let { Text(it, style = MaterialTheme.typography.bodySmall) }
+
+        Text("✦ Shader laboratory (experimental)", style = MaterialTheme.typography.titleMedium)
+        Text("Built-in Shadertoy-style GLSL examples. Turn on separately to test rendering; disable if the GPU behaves poorly.", style = MaterialTheme.typography.bodySmall)
+        Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+            Text("Molten keyboard material", style = MaterialTheme.typography.bodyMedium)
+            Switch(checked = shaderMaterial, onCheckedChange = {
+                shaderMaterial = it
+                ShaderExperimentPreferences.setMaterial(context, it)
+                onThemeApplied()
+            })
+        }
+        Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+            Text("Shimmer composited overlay", style = MaterialTheme.typography.bodyMedium)
+            Switch(checked = shaderOverlay, onCheckedChange = {
+                shaderOverlay = it
+                ShaderExperimentPreferences.setOverlay(context, it)
+                onThemeApplied()
+            })
+        }
+        Text("Prototype: source editing/import and complete Shadertoy channels are not yet enabled.", style = MaterialTheme.typography.bodySmall)
+        
     }
 
     if (naming) {
