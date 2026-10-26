@@ -55,7 +55,7 @@ def find_test_field():
         fields = [node for node in nodes if node.get("class") == "android.widget.EditText"]
         if fields:
             field = fields[0]
-            coords = list(map(int, re.findall(r"\\d+", field.attrib["bounds"])))
+            coords = list(map(int, re.findall(r"\d+", field.attrib["bounds"])))
             shell("input", "tap", str((coords[0] + coords[2]) // 2), str((coords[1] + coords[3]) // 2))
             time.sleep(3)
             return
