@@ -197,5 +197,6 @@ val KB_EN_MESSAGEASE: KeyboardDefinition =
         settings =
             KeyboardDefinitionSettings(
                 autoCapitalizers = arrayOf(::autoCapitalizeI, ::autoCapitalizeIApostrophe),
+                textProcessor = com.dessalines.thumbkey.textprocessors.ComposeComboProcessor(),
             ),
     )
