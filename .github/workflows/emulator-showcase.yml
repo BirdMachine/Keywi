@@ -1,6 +1,13 @@
 name: Keywi Emulator Showcase
 
 on:
+  push:
+    branches: [main]
+    paths:
+      - app/src/main/java/com/dessalines/thumbkey/ui/components/keyboard/**
+      - scripts/capture-keywi-showcase.py
+      - .github/workflows/emulator-showcase.yml
+      - .github/actions/setup-android-emulator/**
   workflow_dispatch:
 
 permissions:
