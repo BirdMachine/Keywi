@@ -17,8 +17,8 @@ Target: **A downloadable, CI-built debug APK** containing a Shadertoy-compatible
 - [x] Read ComposeKeyboardView.kt, BackdropVisualLayer.kt, BackdropThemePreferences.kt, ThemeEngine.kt, ThemeAssetStore.kt, GemCutArchitecture.kt and app/build.gradle.kts on main.
 - [x] Identified keyboard Box ordering and existing backdrop and GIF overlay regions.
 - [x] Established overnight checkpoint workflow in this document.
-- [ ] Implement GLES / Shadertoy single-pass renderer and frame lifecycle.
-- [ ] Add shader source assets and two default presets (material and compositing effect).
+- [x] Add initial GLES 2.0 Shadertoy-style single-pass renderer with mainImage, iResolution/iTime/iFrame/iMouse, frame cap and visibility lifecycle. NOT compiled or integration-tested yet.
+- [x] Add two built-in source presets (MOLTEN material and transparent SHIMMER effect), not yet exposed in settings.
 - [ ] Wire shader material into existing backdrop preferences and rendering (with compatibility fallback).
 - [ ] Wire separate effect overlay into keyboard compositor, with enable/disable setting; avoid intercepting touch.
 - [ ] Add minimal settings UI for shader selection and effect toggle. Manager/editor can follow if APK prototype validated.
@@ -39,3 +39,5 @@ Target: **A downloadable, CI-built debug APK** containing a Shadertoy-compatible
 
 ## Run log
 - 2026-10-25: Branch created; initial code architecture inspected. No shader renderer or APK built yet. Next: prototype GLES shader view composited in keyboard Box with opt-in flags.
+
+- 2026-10-25 first manually initiated shift: committed shader presets `b25a1a5` and renderer `1d9cb2b`. No UI wiring, test run, CI build or APK yet. Next: add Compose AndroidView integration and opt-in control; verify GLES transparency/compositing behavior and compile with CI. The shader renderer source might need lifecycle revisions after device/build testing. Do not mark working until verified.
