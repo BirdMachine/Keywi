@@ -57,7 +57,7 @@ def find_test_field():
     # Avoid repeated UIAutomator dumps on the software-GPU emulator: they can
     # stall the launcher and cause an ANR. Scroll to the bottom first.
     for _ in range(12):
-        shell("input", "swipe", "500", "1800", "500", "500", "180")
+        shell("input", "swipe", "360", "1200", "360", "400", "180")
     time.sleep(2)
     save_screen("settings-bottom-before-focus")
     for attempt in range(3):
@@ -69,7 +69,7 @@ def find_test_field():
             shell("input", "tap", str((coords[0] + coords[2]) // 2), str((coords[1] + coords[3]) // 2))
             time.sleep(3)
             return
-        shell("input", "swipe", "500", "1800", "500", "500", "180")
+        shell("input", "swipe", "360", "1200", "360", "400", "180")
     raise RuntimeError("Cannot locate the Settings test field after scrolling; see bottom screenshot")
 
 
@@ -96,8 +96,10 @@ def write_shader_prefs(material, overlay):
 def show_keyboard(ime):
     shell("ime", "enable", ime)
     shell("am", "start", "-n", ACTIVITY, "--es", "startRoute", "settings")
-    shell("am", "force-stop", "com.google.android.apps.nexuslauncher")
+    ## Do not force-stop Pixel Launcher: it can destabilize the software-GPU emulator.
     time.sleep(5)
+    nodes, raw = hierarchy()
+    (OUT / "settings-entry.xml").write_text(raw)
     find_test_field()
     # Starting Settings or force-stopping the active IME can reset Android to
     # Gboard. Re-select Keywi AFTER the editor has focus, and verify selection.
@@ -131,8 +133,8 @@ def capture_state(ime, label, material, overlay):
 
 def main():
     adb("wait-for-device")
-    shell("wm", "size", "1080x2400")
-    shell("wm", "density", "420")
+    shell("wm", "size", "720x1600")
+    shell("wm", "density", "320")
     adb("install", "-r", "app/build/outputs/apk/debug/app-debug.apk")
     shell("am", "start", "-n", ACTIVITY)
     ime = None
