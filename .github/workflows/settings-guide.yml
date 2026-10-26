@@ -1,6 +1,13 @@
 name: Settings guide screenshots
 
 on:
+  push:
+    branches: [main]
+    paths:
+      - app/src/main/java/com/dessalines/thumbkey/ui/components/settings/**
+      - scripts/capture-settings-guide.py
+      - .github/workflows/settings-guide.yml
+      - .github/actions/setup-android-emulator/**
   workflow_dispatch:
     inputs:
       include_theme_previews:
