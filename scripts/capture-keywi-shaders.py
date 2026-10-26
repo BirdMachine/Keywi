@@ -9,6 +9,7 @@ import pathlib
 import re
 import subprocess
 import time
+import traceback
 import xml.etree.ElementTree as ET
 
 OUT = pathlib.Path("showcase")
@@ -18,7 +19,7 @@ ACTIVITY = f"{PKG}/com.dessalines.thumbkey.MainActivity"
 
 
 def adb(*args, **kwargs):
-    return subprocess.run(["adb", *args], check=True, **kwargs)
+    return subprocess.run(["adb", *args], check=True, timeout=45, **kwargs)
 
 
 def shell(*args):
@@ -26,8 +27,11 @@ def shell(*args):
 
 
 def save_screen(label):
-    with (OUT / f"{label}.png").open("wb") as stream:
-        adb("exec-out", "screencap", "-p", stdout=stream)
+    # Avoid exec-out screencap, which repeatedly disconnected this CI AVD.
+    remote = f"/sdcard/keywi-{label}.png"
+    shell("screencap", "-p", remote)
+    adb("pull", remote, str(OUT / f"{label}.png"), capture_output=True, text=True)
+    shell("rm", "-f", remote)
 
 
 def hierarchy():
@@ -64,7 +68,7 @@ def find_test_field():
     for _ in range(12):
         shell("input", "swipe", "360", "1200", "360", "400", "180")
     time.sleep(2)
-    save_screen("settings-bottom-before-focus")
+    # Avoid screenshots before collecting GLES logs: the AVD may disconnect.
     for attempt in range(3):
         nodes, xml = hierarchy()
         fields = [node for node in nodes if node.get("class") == "android.widget.EditText"]
@@ -125,16 +129,25 @@ def capture_state(ime, label, material, overlay):
     shell("logcat", "-c")
     show_keyboard(ime)
     time.sleep(3)
-    save_screen(label)
-    nodes, xml = hierarchy()
-    (OUT / f"{label}.xml").write_text(xml)
-    (OUT / f"{label}-input-method.txt").write_text(shell("dumpsys", "input_method"))
+    # Capture shader compilation evidence BEFORE risking the emulator screenshot.
+    selected = shell("settings", "get", "secure", "default_input_method").strip()
+    assert selected == ime, f"Wrong selected IME in {label}: {selected}"
     logs = shell("logcat", "-d", "-t", "2500")
     (OUT / f"{label}-logcat.txt").write_text(logs)
-    if material or overlay:
-        assert "Shader program linked" in logs, f"No GLES shader linked in {label}; inspect logcat"
+    (OUT / f"{label}-input-method.txt").write_text(shell("dumpsys", "input_method"))
+    expected = int(material) + int(overlay)
+    linked = logs.count("Shader program linked")
+    if expected:
+        assert linked >= expected, f"Expected {expected} GLES links in {label}, found {linked}"
         assert "Shader disabled after compile failure" not in logs, f"GLSL compilation failed in {label}"
-    print(f"Captured {label}: material={material}, overlay={overlay}, UI nodes={len(nodes)}")
+    (OUT / f"{label}-shader-proof.txt").write_text(
+        f"state={label} material={material} overlay={overlay} selected_ime={selected} "
+        f"linked_programs={linked} expected_programs={expected}\\n"
+        "Link logs prove shader compilation, NOT pixels, z-order or touch.\\n"
+    )
+    nodes, xml = hierarchy()
+    (OUT / f"{label}.xml").write_text(xml)
+    print(f"Verified {label}: linked={linked}, UI nodes={len(nodes)}", flush=True)
 
 
 def main():
@@ -152,25 +165,44 @@ def main():
         time.sleep(2)
     if not ime:
         raise RuntimeError("Installed Keywi IME not registered")
-    for label, material, overlay in [
-        ("shader-off", False, False),
+    # First collect shader link evidence, then attempt fragile screenshots.
+    states = [
+        ("shader-both", True, True),
         ("shader-molten", True, False),
         ("shader-shimmer", False, True),
-        ("shader-both", True, True),
-    ]:
+        ("shader-off", False, False),
+    ]
+    for label, material, overlay in states:
         capture_state(ime, label, material, overlay)
     (OUT / "shader-verification.txt").write_text(
-        "Android emulator API 34: installed and enabled actual Keywi IME.\n"
-        "Captured off / molten / shimmer / both screenshots, UI hierarchies and logs.\n"
-        "Verified GLES program link log for enabled states and no logged compile failures.\n"
-        "Visual z-order, transparency, readability and touch must still be reviewed in captures.\n"
+        "API 34: selected actual Keywi IME; collected four UI dumps and GLES logs.\\n"
+        "Shader link logs prove compilation, NOT visual correctness.\\n"
+        "Screenshots attempted after collecting proof.\\n"
     )
+    for label, material, overlay in reversed(states):
+        try:
+            write_shader_prefs(material, overlay)
+            show_keyboard(ime)
+            save_screen(label)
+            print(f"Screenshot saved: {label}", flush=True)
+        except (subprocess.CalledProcessError, subprocess.TimeoutExpired, OSError) as exc:
+            (OUT / f"{label}-screenshot-error.txt").write_text(str(exc))
+            print(f"Screenshot unavailable for {label}: {exc}", flush=True)
+            break
+
 
 
 try:
     main()
 except Exception:
-    save_screen("shader-failure")
-    (OUT / "shader-failure-logcat.txt").write_text(shell("logcat", "-d", "-t", "2500"))
-    (OUT / "shader-failure-ime.txt").write_text(shell("dumpsys", "input_method"))
+    (OUT / "shader-failure-traceback.txt").write_text(traceback.format_exc())
+    # Preserve original failure even when ADB is offline.
+    for name, command in (
+        ("shader-failure-logcat.txt", ("logcat", "-d", "-t", "2500")),
+        ("shader-failure-ime.txt", ("dumpsys", "input_method")),
+    ):
+        try:
+            (OUT / name).write_text(shell(*command))
+        except (subprocess.CalledProcessError, subprocess.TimeoutExpired, OSError) as exc:
+            (OUT / name).write_text(f"ADB unavailable: {exc}\\n")
     raise
