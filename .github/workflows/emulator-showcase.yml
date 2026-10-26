@@ -5,9 +5,11 @@ on:
   push:
     branches:
       - feature/emulator-showcase-capture
+      - feature/shadertoy-renderer-layers
     paths:
       - .github/workflows/emulator-showcase.yml
       - scripts/capture-keywi-showcase.py
+      - app/src/main/java/com/dessalines/thumbkey/ui/components/keyboard/shader/**
 
 permissions:
   contents: read
