@@ -4,13 +4,13 @@ on:
   push:
     branches:
       - "main"
-      - "feature/**"
+  workflow_dispatch:
   pull_request:
     branches:
       - "main"
 
 concurrency:
-  group: keywi-ci-${{ github.ref }}
+  group: keywi-ci-${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
   cancel-in-progress: true
 
 jobs:
@@ -18,7 +18,7 @@ jobs:
     name: Validate & build Keywi APK
     runs-on: ubuntu-latest
     permissions:
-      contents: write
+      contents: read
     env:
       KEYWI_DEBUG_STORE_FILE: ${{ github.workspace }}/.github/keywi-debug.keystore
       KEYWI_DEBUG_STORE_PASSWORD: keywi-debug
@@ -44,19 +44,28 @@ jobs:
         with:
           distribution: temurin
           java-version: "21"
-          cache: gradle
 
       - name: Set up Gradle
         uses: gradle/actions/setup-gradle@v6
 
-      - name: Normalize Kotlin formatting
-        run: ./gradlew formatKotlin
-
       - name: Check Kotlin formatting
         run: ./gradlew lintKotlin
 
-      - name: Test custom board behavior
+      - name: Run unit tests
         run: ./gradlew testDebugUnitTest
+
+      - name: Upload test and lint diagnostics
+        if: failure()
+        uses: actions/upload-artifact@v6
+        with:
+          name: keywi-diagnostics-${{ github.run_id }}
+          path: |
+            app/build/test-results/
+            app/build/reports/tests/
+            app/build/reports/lint-results*
+            build/reports/problems/
+          if-no-files-found: ignore
+          retention-days: 14
 
       - name: Upload HK render review
         if: always()
@@ -96,6 +105,32 @@ jobs:
           mkdir -p release
           cp app/build/outputs/apk/debug/app-debug.apk release/Keywi-latest.apk
 
+      - name: Upload workflow artifact
+        uses: actions/upload-artifact@v6
+        with:
+          name: keywi-debug
+          path: release/Keywi-latest.apk
+          retention-days: 14
+
+
+  publish:
+    name: Publish verified main APK
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    needs: validate-build
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+      - name: Restore validated APK
+        uses: actions/download-artifact@v6
+        with:
+          name: keywi-debug
+          path: release/
+      - name: Restore build version metadata
+        run: echo "KEYWI_VERSION_CODE=$((300010 + GITHUB_RUN_NUMBER))" >> "$GITHUB_ENV"
       - name: Build release notes
         if: github.event_name == 'push' && github.ref == 'refs/heads/main'
         env:
@@ -156,13 +191,6 @@ jobs:
           } > "$NOTES_FILE"
 
           cat "$NOTES_FILE"
-
-      - name: Upload workflow artifact
-        uses: actions/upload-artifact@v6
-        with:
-          name: keywi-debug
-          path: release/Keywi-latest.apk
-          retention-days: 14
 
       - name: Publish GitHub Release
         if: github.event_name == 'push' && github.ref == 'refs/heads/main'
