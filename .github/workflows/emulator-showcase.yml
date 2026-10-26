@@ -2,13 +2,6 @@ name: Keywi Emulator Showcase
 
 on:
   workflow_dispatch:
-  push:
-    branches:
-      - feature/emulator-showcase-capture
-    paths:
-      - .github/workflows/emulator-showcase.yml
-      - scripts/capture-keywi-showcase.py
-
 permissions:
   contents: read
 
