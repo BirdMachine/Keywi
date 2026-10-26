@@ -60,7 +60,8 @@ import com.dessalines.thumbkey.utils.getVersionCode
 import com.dessalines.thumbkey.utils.keyboardLayoutsSetFromDbIndexString
 import com.dessalines.thumbkey.utils.openLink
 import com.dessalines.thumbkey.utils.updateLayouts
-import me.zhanghai.compose.preference.MultiSelectListPreference
+import com.dessalines.thumbkey.ui.components.common.SearchableMultiSelectListPreference
+import java.text.Normalizer
 import me.zhanghai.compose.preference.ProvidePreferenceTheme
 import com.dessalines.thumbkey.ui.components.settings.GemNavigationPreference as Preference
 
@@ -186,11 +187,18 @@ fun SettingsScreen(
                     SettingsDivider()
 
                     GemSettingsGroupLabel("✦ SETTINGS", "Character layouts, clipboard and saved data")
-                    MultiSelectListPreference(
+                    SearchableMultiSelectListPreference(
                         modifier = gemPreferenceModifier(),
                         value = layoutsState,
                         values = KeyboardLayout.entries.sortedBy { it.keyboardDefinition.title },
                         valueToText = { AnnotatedString(it.keyboardDefinition.title) },
+                        searchPlaceholder = "Search character layouts",
+                        emptySearchText = "No matching layouts",
+                        searchFilter = { _, label, query ->
+                            fun fold(text: String) = Normalizer.normalize(text, Normalizer.Form.NFD)
+                                .replace(Regex("\\p{M}+"), "").lowercase()
+                            fold(label).contains(fold(query))
+                        },
                         onValueChange = {
                             val update = it.ifEmpty { keyboardLayoutsSetFromDbIndexString(DEFAULT_KEYBOARD_LAYOUT.toString()) }
                             updateLayouts(appSettingsViewModel, update)

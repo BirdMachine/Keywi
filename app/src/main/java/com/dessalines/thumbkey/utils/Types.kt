@@ -228,6 +228,9 @@ sealed class KeyAction {
         val enable: Boolean,
     ) : KeyAction()
 
+    /** Explicit desktop-style Unicode sequence, never an implicit dead key. */
+    data object StartComposeCombo : KeyAction()
+
     class ComposeLastKey(
         val text: String,
     ) : KeyAction()
