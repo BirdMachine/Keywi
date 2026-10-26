@@ -7,12 +7,6 @@ on:
         description: 'Also attempt theme preview pages (known emulator disconnect)'
         type: boolean
         default: false
-  push:
-    branches: [docs/settings-guide]
-    paths:
-      - .github/workflows/settings-guide.yml
-      - scripts/capture-settings-guide.py
-
 permissions:
   contents: read
 
