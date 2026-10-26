@@ -44,18 +44,23 @@ def hierarchy():
 
 
 def find_test_field():
-    for attempt in range(15):
+    # Avoid repeated UIAutomator dumps on the software-GPU emulator: they can
+    # stall the launcher and cause an ANR. Scroll to the bottom first.
+    for _ in range(12):
+        shell("input", "swipe", "500", "1800", "500", "500", "180")
+    time.sleep(2)
+    save_screen("settings-bottom-before-focus")
+    for attempt in range(3):
         nodes, xml = hierarchy()
         fields = [node for node in nodes if node.get("class") == "android.widget.EditText"]
         if fields:
             field = fields[0]
-            coords = list(map(int, re.findall(r"\d+", field.attrib["bounds"])))
+            coords = list(map(int, re.findall(r"\\d+", field.attrib["bounds"])))
             shell("input", "tap", str((coords[0] + coords[2]) // 2), str((coords[1] + coords[3]) // 2))
             time.sleep(3)
             return
-        shell("input", "swipe", "500", "1900", "500", "650", "400")
-        time.sleep(1)
-    raise RuntimeError("Cannot locate the Settings test field; see diagnostics")
+        shell("input", "swipe", "500", "1800", "500", "500", "180")
+    raise RuntimeError("Cannot locate the Settings test field after scrolling; see bottom screenshot")
 
 
 def write_shader_prefs(material, overlay):
