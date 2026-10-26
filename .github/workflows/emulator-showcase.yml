@@ -11,6 +11,10 @@ on:
       - scripts/capture-keywi-showcase.py
       - app/src/main/java/com/dessalines/thumbkey/ui/components/keyboard/shader/**
 
+concurrency:
+  group: keywi-emulator-${{ github.ref }}
+  cancel-in-progress: true
+
 permissions:
   contents: read
 
