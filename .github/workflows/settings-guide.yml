@@ -22,6 +22,10 @@ jobs:
     timeout-minutes: 25
     steps:
       - uses: actions/checkout@v6
+      - name: Restore stable Keywi debug signing key
+        run: |
+          base64 --decode .github/keywi-debug.keystore.b64 > .github/keywi-debug.keystore
+          chmod 600 .github/keywi-debug.keystore
       - name: Prepare Android emulator build
         uses: ./.github/actions/setup-android-emulator
       - name: Build disposable documentation APK
