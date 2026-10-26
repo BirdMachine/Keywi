@@ -108,6 +108,7 @@ private class ShaderRenderer(private val source: String) : GLSurfaceView.Rendere
             }
             p
         }.onFailure { Log.e("KeywiShader", "Shader disabled after compile failure", it) }.getOrDefault(0)
+        if (program != 0) Log.i("KeywiShader", "Shader program linked")
         GLES20.glClearColor(0f, 0f, 0f, 0f)
     }
 
