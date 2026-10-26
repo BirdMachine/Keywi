@@ -54,19 +54,6 @@ jobs:
       - name: Run unit tests
         run: ./gradlew testDebugUnitTest
 
-      - name: Upload test and lint diagnostics
-        if: failure()
-        uses: actions/upload-artifact@v6
-        with:
-          name: keywi-diagnostics-${{ github.run_id }}
-          path: |
-            app/build/test-results/
-            app/build/reports/tests/
-            app/build/reports/lint-results*
-            build/reports/problems/
-          if-no-files-found: ignore
-          retention-days: 14
-
       - name: Upload HK render review
         if: always()
         uses: actions/upload-artifact@v6
@@ -104,6 +91,19 @@ jobs:
         run: |
           mkdir -p release
           cp app/build/outputs/apk/debug/app-debug.apk release/Keywi-latest.apk
+
+      - name: Upload test and lint diagnostics
+        if: failure()
+        uses: actions/upload-artifact@v6
+        with:
+          name: keywi-diagnostics-${{ github.run_id }}
+          path: |
+            app/build/test-results/
+            app/build/reports/tests/
+            app/build/reports/lint-results*
+            build/reports/problems/
+          if-no-files-found: ignore
+          retention-days: 14
 
       - name: Upload workflow artifact
         uses: actions/upload-artifact@v6
