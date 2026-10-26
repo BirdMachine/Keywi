@@ -35,7 +35,7 @@ Target: **A downloadable, CI-built debug APK** containing a Shadertoy-compatible
 - At the end of EACH run, mark done/remaining items; record exactly what changed, tested, build status, blockers, next action, and commit SHA.
 - If a previous run left incomplete edits, inspect before continuing. Never overwrite unrelated concurrent changes.
 - Avoid claiming an APK exists until a build has succeeded and the artifact is available.
-- Stop the recurring automation once target APK is verified (or once explicitly instructed by user); report final state.
+- The user explicitly extended exploratory development until 10 AM Eastern on October 26. Continue polishing and testing under the five scheduled overnight runs (1, 3, 5, 7, 9 AM). The already verified APK is the fallback, not a reason to stop. The automation ends after five runs.
 
 ## Run log
 - 2026-10-25: Branch created; initial code architecture inspected. No shader renderer or APK built yet. Next: prototype GLES shader view composited in keyboard Box with opt-in flags.
@@ -45,3 +45,5 @@ Target: **A downloadable, CI-built debug APK** containing a Shadertoy-compatible
 - 2026-10-25 continuous follow-up: created ShaderExperimentLayer/Preferences `0de294d`, integrated keyboard Box `32ea282`, exposed two switches `6bbd332`. Latest CI run was pending (`40263135344`) at last check; no successful build or APK verified. Need inspect next CI run because updating this document triggers new push and cancels superseded queued runs. Critical: GLSurfaceView transparency/z-order needs real device verification. Next: resolve CI failures, verify artifact; improve composition with TextureView if needed.
 
 - 2026-10-25/26: CI run 40263242741 failed 1/153 unit tests (saved theme tile hidden after extra controls inserted at top). Moved shader switches after saved theme content in commit `e80d8f1`. Rerun `40263720047` completed **success**, uploaded artifact `keywi-debug` (artifact ID 12625442539, expires 2026-11-09). Target proof-of-build APK is available. NOT yet device-validated. Future steps: real-device verification, optional native theme integration, user source editing/library/import/export, iMouse events and Shadertoy channels. Do not claim these are implemented. Note: any progress-file commit creates a new CI run; original successful run remains the verified source for APK.
+
+- 2026-10-26 00:43 EDT: User approved a celebratory overnight exploration through 10 AM; task re-enabled for five two-hour runs. Existing Android emulator showcase workflow can run on GitHub Actions at no new paid service. Next experiment: enable workflow on this branch and inspect emulator captures, then specifically test molten + shimmer visual integration. Keep successful build 40263720047 as fallback.
