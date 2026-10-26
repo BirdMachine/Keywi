@@ -1,0 +1,41 @@
+# Shader feature — overnight handoff and progress
+
+Repository: BirdMachine/Keywi
+Working branch: `feature/shadertoy-renderer-layers`
+Target: **A downloadable, CI-built debug APK** containing a Shadertoy-compatible GLSL renderer, one usable shader *material* (keyboard background), and one separately enabled/composited shader *effect layer*, with bundled defaults to test. Keep main untouched. This is a night-session handoff, **not instructions for repository agents**.
+
+## User-approved design
+- One shader library shared by theme materials and effect layers.
+- Theme backdrop can select Shader alongside gradient/solid/GIF/image, with a shader picker and manager shortcut.
+- Independent effect layer(s) drawn above/below parts of the keyboard. Initial goal: one independently toggleable effect layer, distinct from the material source.
+- Target Shadertoy GLSL `mainImage`, `iTime`, `iResolution`, and touch mapping; report actual implemented subset honestly. Prefer GLES renderer for GLSL, not AGSL-only.
+- Ultimately expose KeyWi-specific touch/feedback variables to shaders; include basic touch interaction in prototype only if feasible.
+- Defaults OFF unless verified safe; preserve typed input, keyboard lifecycle, and graceful fallback if a shader fails.
+
+## Checked 2026-10-25
+- [x] Feature branch created from main.
+- [x] Read ComposeKeyboardView.kt, BackdropVisualLayer.kt, BackdropThemePreferences.kt, ThemeEngine.kt, ThemeAssetStore.kt, GemCutArchitecture.kt and app/build.gradle.kts on main.
+- [x] Identified keyboard Box ordering and existing backdrop and GIF overlay regions.
+- [x] Established overnight checkpoint workflow in this document.
+- [ ] Implement GLES / Shadertoy single-pass renderer and frame lifecycle.
+- [ ] Add shader source assets and two default presets (material and compositing effect).
+- [ ] Wire shader material into existing backdrop preferences and rendering (with compatibility fallback).
+- [ ] Wire separate effect overlay into keyboard compositor, with enable/disable setting; avoid intercepting touch.
+- [ ] Add minimal settings UI for shader selection and effect toggle. Manager/editor can follow if APK prototype validated.
+- [ ] Add tests and run unit checks/build; fix compilation errors.
+- [ ] Obtain CI debug APK and link the *verified* build artifact.
+- [ ] Review actual UX/performance and document known limitations.
+- [ ] If suitable, open a draft PR. Do **not** merge without user request.
+
+## Overnight rhythm / safety
+- A scheduled task may run every 2 hours but cannot be assumed to run for 1h50, or to be continuously active between runs. Perform a *bounded useful chunk in each invocation*, then commit and update this file before ending.
+- Before any modification, reread this document and current branch status, inspect recent commits/CI results, and avoid duplicating already-completed changes.
+- If usage telemetry is *actually accessible*, compare remaining 5-hour and weekly quotas: at 25% remaining prioritize finishing current work; at 10% remaining checkpoint/stop expanding. If telemetry is unavailable, do not guess percentages and remain conservative.
+- Keep work incremental and resist starting unrelated tasks. Do not automatically purchase usage resets.
+- At the end of EACH run, mark done/remaining items; record exactly what changed, tested, build status, blockers, next action, and commit SHA.
+- If a previous run left incomplete edits, inspect before continuing. Never overwrite unrelated concurrent changes.
+- Avoid claiming an APK exists until a build has succeeded and the artifact is available.
+- Stop the recurring automation once target APK is verified (or once explicitly instructed by user); report final state.
+
+## Run log
+- 2026-10-25: Branch created; initial code architecture inspected. No shader renderer or APK built yet. Next: prototype GLES shader view composited in keyboard Box with opt-in flags.
