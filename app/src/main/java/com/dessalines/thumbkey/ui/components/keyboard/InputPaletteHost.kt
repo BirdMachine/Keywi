@@ -26,6 +26,7 @@ enum class InputPalette {
     KAOMOJI,
     FANCY_TEXT,
     QUICK_SETTINGS,
+    SNIPPETS,
 }
 
 @Composable
@@ -104,6 +105,12 @@ fun ExpandedInputPaletteHost(
                         FancyTextWorkspace(onApply = onFancyApply, modifier = Modifier.fillMaxSize())
                     }
 
+                    InputPalette.SNIPPETS -> {
+                        StringPalettesWorkspace(onCommit = { text ->
+                            com.dessalines.thumbkey.effects.ActionSoundEngine.fire(ime)
+                            PaletteSearchCapture.bypass { ime.currentInputConnection?.commitText(text, 1) }
+                        })
+                    }
                     InputPalette.KAOMOJI -> {
                         KaomojiRoom(
                             onCommit = { text ->

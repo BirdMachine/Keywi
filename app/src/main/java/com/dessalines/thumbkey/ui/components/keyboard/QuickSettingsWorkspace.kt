@@ -61,6 +61,7 @@ fun QuickSettingsWorkspace(
         onDispose { preferences.forEach { it.unregisterOnSharedPreferenceChangeListener(listener) } }
     }
 
+    val toolConfig = rememberToolPageConfig()
     val gif = ActionGifPreferences.current
 
     fun open(route: String) {
@@ -80,22 +81,33 @@ fun QuickSettingsWorkspace(
                     verticalArrangement = Arrangement.spacedBy(6.dp),
                 ) {
                     Text("Quick Settings", style = MaterialTheme.typography.titleMedium)
+                    toolConfig.visibleQuickTools().forEach { tool ->
+                        when (tool) {
+                            QuickTool.SUGGESTIONS -> {
                     QuickSettingToggle("Suggestions", suggestions) {
                         suggestions = it
                         SuggestionPreferences.setEnabled(context, it)
                         onPreferencesChanged()
                     }
+                            }
+                            QuickTool.FEEDBACK -> {
                     com.dessalines.thumbkey.effects.FeedbackModeControl(onChanged = onPreferencesChanged)
+                            }
+                            QuickTool.SOUNDS -> {
                     QuickSettingToggle("Use custom sound pack", sounds) {
                         sounds = it
                         ActionSoundPreferences.save(context, ActionSoundPreferences.get(context).withSource(if (it) KeySoundSource.CLIPS else KeySoundSource.DEFAULT))
                         onPreferencesChanged()
                     }
+                            }
+                            QuickTool.GIFS -> {
                     QuickSettingToggle("Keypress images & GIFs", gif.enabled) {
                         ActionGifPreferences.save(context, ActionGifPreferences.current.copy(enabled = it))
                         if (!it) ActionGifRuntime.clear()
                         onPreferencesChanged()
                     }
+                            }
+                            QuickTool.POWER -> {
                     HorizontalDivider()
                     Text("Power mode", style = MaterialTheme.typography.titleSmall)
                     KeywiPowerMode.entries.forEach { mode ->
@@ -127,12 +139,25 @@ fun QuickSettingsWorkspace(
                         },
                         style = MaterialTheme.typography.bodySmall,
                     )
-                    HorizontalDivider()
+                            }
+                            QuickTool.TOOLBAR -> {
                     ToolPageSurface(modifier = Modifier.fillMaxWidth(), onClick = { showControls = true }) { Text("Toolbar controls", modifier = Modifier.padding(horizontal = 12.dp, vertical = 12.dp)) }
+                            }
+                            QuickTool.THEMES -> {
                     ToolPageSurface(modifier = Modifier.fillMaxWidth(), onClick = { open("advancedLookAndFeel") }) { Text("Themes & appearance", modifier = Modifier.padding(horizontal = 12.dp, vertical = 12.dp)) }
+                            }
+                            QuickTool.TASKER -> {
                     ToolPageSurface(modifier = Modifier.fillMaxWidth(), onClick = { open("taskerThemeUpdates") }) { Text("Tasker theme updates", modifier = Modifier.padding(horizontal = 12.dp, vertical = 12.dp)) }
+                            }
+                            QuickTool.AUDIO -> {
                     ToolPageSurface(modifier = Modifier.fillMaxWidth(), onClick = { open("keypressSounds") }) { Text("Manage key sounds", modifier = Modifier.padding(horizontal = 12.dp, vertical = 12.dp)) }
+                            }
+                            QuickTool.EFFECTS -> {
                     ToolPageSurface(modifier = Modifier.fillMaxWidth(), onClick = { open("keypressEffects") }) { Text("Manage keypress images & GIFs", modifier = Modifier.padding(horizontal = 12.dp, vertical = 12.dp)) }
+                            }
+                        }
+                    }
+                    ToolPageSurface(modifier = Modifier.fillMaxWidth(), onClick = { open("advancedCharacters") }) { Text("Manage tool pages", modifier = Modifier.padding(12.dp)) }
                     ToolPageSurface(modifier = Modifier.fillMaxWidth(), onClick = { open("settings") }) { Text("All Keywi settings", modifier = Modifier.padding(horizontal = 12.dp, vertical = 12.dp)) }
                 }
             }

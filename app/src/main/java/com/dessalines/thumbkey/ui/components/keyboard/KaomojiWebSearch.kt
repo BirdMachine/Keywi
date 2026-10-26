@@ -22,6 +22,22 @@ data class KaomojiSearchSource(
         return url.replace("%s", encoded)
     }
 
+    fun isEmojiCombos(): Boolean = runCatching {
+        validateSearchUri(searchUrl("test")).host.lowercase() in setOf("emojicombos.com", "www.emojicombos.com")
+    }.getOrDefault(false)
+
+    /** The provider flag follows the user-selected Keywi search mode. */
+    fun withUncensoredSearch(enabled: Boolean): KaomojiSearchSource {
+        if (!isEmojiCombos()) return this
+        val base = url.substringBefore('#')
+        val fragment = if ('#' in url) "#${url.substringAfter('#')}" else ""
+        val query = base.substringAfter('?', "").split('&').filter { it.isNotBlank() && it.substringBefore('=') != "showSensitive" }
+        val flag = "showSensitive=${if (enabled) 0 else 1}"
+        return copy(url = base.substringBefore('?') + "?" + (query + flag).joinToString("&") + fragment)
+    }
+
+    fun uncensoredSearch(): Boolean = url.substringBefore('#').substringAfter('?', "").split('&').any { it == "showSensitive=0" }
+
     fun validate() {
         require(name.isNotBlank() && name.length <= 80) { "Enter a name (up to 80 characters)." }
         require(url.length <= 2048 && url.contains("%s")) { "Add %s where the search term belongs." }
@@ -38,7 +54,7 @@ internal fun validateSearchUri(url: String): URI {
 }
 
 object KaomojiSearchPreferences {
-    val emojiCombos = KaomojiSearchSource("emoji-combos", "Emoji Combos", "https://emojicombos.com/%s", "#comboListEl .emojis")
+    val emojiCombos = KaomojiSearchSource("emoji-combos", "Emoji Combos", "https://emojicombos.com/%s?showSensitive=1", "#comboListEl .emojis")
 
     private fun prefs(context: Context) = context.getSharedPreferences("kaomoji_search_sources", Context.MODE_PRIVATE)
 
@@ -47,9 +63,12 @@ object KaomojiSearchPreferences {
             val array = JSONArray(prefs(context).getString("sources", "[]"))
             (0 until array.length()).map { index ->
                 val item = array.getJSONObject(index)
-                KaomojiSearchSource(item.getString("id"), item.getString("name"), item.getString("url"), item.optString("selector"))
+                upgradeLegacySource(KaomojiSearchSource(item.getString("id"), item.getString("name"), item.getString("url"), item.optString("selector")))
             }.ifEmpty { listOf(emojiCombos) }
         }.getOrDefault(listOf(emojiCombos))
+
+    internal fun upgradeLegacySource(source: KaomojiSearchSource): KaomojiSearchSource =
+        if (source.id == emojiCombos.id && source.url == "https://emojicombos.com/%s") source.copy(url = emojiCombos.url) else source
 
     fun active(context: Context): KaomojiSearchSource {
         val sources = sources(context)
