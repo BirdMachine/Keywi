@@ -66,7 +66,7 @@ def find_test_field():
     # Avoid repeated UIAutomator dumps on the software-GPU emulator: they can
     # stall the launcher and cause an ANR. Scroll to the bottom first.
     for _ in range(12):
-        shell("input", "swipe", "360", "1200", "360", "400", "180")
+        shell("input", "swipe", "240", "780", "240", "220", "180")
     time.sleep(2)
     # Avoid screenshots before collecting GLES logs: the AVD may disconnect.
     for attempt in range(3):
@@ -78,7 +78,7 @@ def find_test_field():
             shell("input", "tap", str((coords[0] + coords[2]) // 2), str((coords[1] + coords[3]) // 2))
             time.sleep(3)
             return
-        shell("input", "swipe", "360", "1200", "360", "400", "180")
+        shell("input", "swipe", "240", "780", "240", "220", "180")
     raise RuntimeError("Cannot locate the Settings test field after scrolling; see bottom screenshot")
 
 
@@ -105,9 +105,8 @@ def write_shader_prefs(material, overlay):
 def show_keyboard(ime):
     shell("ime", "enable", ime)
     shell("am", "start", "-S", "-n", ACTIVITY, "--es", "startRoute", "settings")
-    # Pixel Launcher ANRs cover the test field on software-rendered CI emulators.
-    shell("am", "force-stop", "com.google.android.apps.nexuslauncher")
-    time.sleep(5)
+    # The AOSP system image avoids the Google Pixel Launcher ANRs seen in earlier runs.
+    time.sleep(3)
     nodes, raw = hierarchy()
     (OUT / "settings-entry.xml").write_text(raw)
     find_test_field()
@@ -128,32 +127,42 @@ def capture_state(ime, label, material, overlay):
     write_shader_prefs(material, overlay)
     shell("logcat", "-c")
     show_keyboard(ime)
-    time.sleep(3)
-    # Capture shader compilation evidence BEFORE risking the emulator screenshot.
+    # Collect the cheap, targeted GLES log first. In prior runs the emulator
+    # disconnected while querying Settings after the IME was selected, before
+    # ANY useful shader evidence had been written to disk.
+    print(f"IME selected for {label}; collecting GLES evidence", flush=True)
+    shader_logs = shell("logcat", "-d", "-s", "KeywiShader:V", "*:S")
+    (OUT / f"{label}-gles.txt").write_text(shader_logs)
+    logs = shell("logcat", "-d", "-t", "3000")
+    (OUT / f"{label}-logcat.txt").write_text(logs)
     selected = shell("settings", "get", "secure", "default_input_method").strip()
     assert selected == ime, f"Wrong selected IME in {label}: {selected}"
-    logs = shell("logcat", "-d", "-t", "2500")
-    (OUT / f"{label}-logcat.txt").write_text(logs)
     (OUT / f"{label}-input-method.txt").write_text(shell("dumpsys", "input_method"))
     expected = int(material) + int(overlay)
-    linked = logs.count("Shader program linked")
+    linked = shader_logs.count("Shader program linked")
     if expected:
         assert linked >= expected, f"Expected {expected} GLES links in {label}, found {linked}"
-        assert "Shader disabled after compile failure" not in logs, f"GLSL compilation failed in {label}"
+        assert "Shader disabled after compile failure" not in shader_logs, f"GLSL compilation failed in {label}"
     (OUT / f"{label}-shader-proof.txt").write_text(
         f"state={label} material={material} overlay={overlay} selected_ime={selected} "
         f"linked_programs={linked} expected_programs={expected}\\n"
         "Link logs prove shader compilation, NOT pixels, z-order or touch.\\n"
     )
-    nodes, xml = hierarchy()
-    (OUT / f"{label}.xml").write_text(xml)
-    print(f"Verified {label}: linked={linked}, UI nodes={len(nodes)}", flush=True)
+    # UIAutomator can stall software-emulated graphics. Shader link evidence
+    # is more important; collect the hierarchy on a best-effort basis.
+    try:
+        nodes, xml = hierarchy()
+        (OUT / f"{label}.xml").write_text(xml)
+        print(f"Verified {label}: linked={linked}, UI nodes={len(nodes)}", flush=True)
+    except Exception as exc:
+        (OUT / f"{label}-hierarchy-error.txt").write_text(str(exc))
+        print(f"Shader state {label}: linked={linked}; UI dump unavailable: {exc}", flush=True)
 
 
 def main():
     adb("wait-for-device")
-    shell("wm", "size", "720x1600")
-    shell("wm", "density", "320")
+    shell("wm", "size", "480x960")
+    shell("wm", "density", "240")
     adb("install", "-r", "app/build/outputs/apk/debug/app-debug.apk")
     shell("am", "start", "-n", ACTIVITY)
     ime = None
@@ -165,12 +174,13 @@ def main():
         time.sleep(2)
     if not ime:
         raise RuntimeError("Installed Keywi IME not registered")
-    # First collect shader link evidence, then attempt fragile screenshots.
+    # Baseline OFF first isolates AVD/IME instability from shader crashes.
+    # Then collect shader link evidence before attempting fragile screenshots.
     states = [
-        ("shader-both", True, True),
+        ("shader-off", False, False),
         ("shader-molten", True, False),
         ("shader-shimmer", False, True),
-        ("shader-off", False, False),
+        ("shader-both", True, True),
     ]
     for label, material, overlay in states:
         capture_state(ime, label, material, overlay)
@@ -179,7 +189,7 @@ def main():
         "Shader link logs prove compilation, NOT visual correctness.\\n"
         "Screenshots attempted after collecting proof.\\n"
     )
-    for label, material, overlay in reversed(states):
+    for label, material, overlay in states:
         try:
             write_shader_prefs(material, overlay)
             show_keyboard(ime)
