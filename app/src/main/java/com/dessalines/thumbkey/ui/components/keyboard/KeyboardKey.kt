@@ -1241,7 +1241,7 @@ fun KeyboardKey(
                 Modifier
                     .fillMaxSize()
                     .background(color = Color(0, 0, 0, 0)),
-            visible = releasedKey.value != null && !isPasswordField,
+            visible = releasedKey.value != null && !isPasswordField && KeywiPowerPreferences.advancedThemingEnabled,
             enter = slideInVertically(tween(animationSpeed)),
             exit = fadeOut(tween(animationSpeed)),
         ) {

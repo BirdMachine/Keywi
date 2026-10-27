@@ -1,6 +1,7 @@
 package com.dessalines.thumbkey.ui.components.keyboard
 
 import android.app.Application
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.height
 import androidx.compose.material3.MaterialTheme
@@ -15,6 +16,7 @@ import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.longClick
 import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithText
+import androidx.compose.ui.test.performScrollTo
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performTouchInput
 import androidx.compose.ui.test.swipeDown
@@ -43,9 +45,11 @@ class ToolbarCyclerTest {
             .edit()
             .clear()
             .commit()
+        ToolbarControlsState.expanded = false
         compose.setContent {
             var page by remember { mutableStateOf(ToolbarPage.CHARACTERS) }
             MaterialTheme {
+                Column {
                 Box(Modifier.height(80.dp)) {
                     ToolbarCycler(
                         page,
@@ -57,6 +61,8 @@ class ToolbarCyclerTest {
                         },
                         onOpenSettings = { settingsOpened++ },
                     )
+                }
+                if (page == ToolbarPage.QUICK_SETTINGS) QuickSettingsWorkspace()
                 }
             }
         }
@@ -93,7 +99,9 @@ class ToolbarCyclerTest {
         cycler().performTouchInput { longClick() }
         compose.onNodeWithContentDescription("Invert tool scroll").performClick()
         compose.runOnIdle { org.junit.Assert.assertTrue(ToolbarViewPreferences.invertScroll(RuntimeEnvironment.getApplication())) }
-        compose.onNodeWithText("Done").performClick()
+        compose.onNodeWithText("Done").performScrollTo().performClick()
+        cycler().performTouchInput { doubleClick() }
+        settleTaps()
         cycler().performTouchInput { swipeUp() }
         compose.runOnIdle { assertEquals(ToolbarPage.FORMATTING, current) }
         cycler().performTouchInput { swipeDown() }
@@ -123,8 +131,9 @@ class ToolbarCyclerTest {
         show()
         cycler().performTouchInput { longClick() }
         compose.onNodeWithText("Home view: Character input").performClick()
-        compose.onNodeWithText("Kaomoji").performClick()
-        compose.onNodeWithText("Done").performClick()
+        compose.onNodeWithText("Kaomoji").performScrollTo().performClick()
+        compose.runOnIdle { assertEquals(ToolbarPage.KAOMOJI, ToolbarViewPreferences.home(RuntimeEnvironment.getApplication())) }
+        compose.onNodeWithText("Done").performScrollTo().performClick()
         cycler().performTouchInput { doubleClick() }
         settleTaps()
         compose.runOnIdle {

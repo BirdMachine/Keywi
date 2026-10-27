@@ -6,22 +6,22 @@ object KeywiAppearancePreferences {
     private const val PREFS = "keywi_appearance_preferences"
     private const val KEY_ENABLED = "custom_keyboard_backgrounds_enabled"
 
-    var currentEnabled: Boolean = true
-        private set
+    private var storedEnabled: Boolean = true
+    val currentEnabled: Boolean get() = storedEnabled && KeywiPowerPreferences.advancedThemingEnabled
 
     fun load(context: Context): Boolean {
-        currentEnabled =
+        storedEnabled =
             context
                 .getSharedPreferences(PREFS, Context.MODE_PRIVATE)
                 .getBoolean(KEY_ENABLED, true)
-        return currentEnabled
+        return storedEnabled
     }
 
     fun save(
         context: Context,
         enabled: Boolean,
     ) {
-        currentEnabled = enabled
+        storedEnabled = enabled
         context
             .getSharedPreferences(PREFS, Context.MODE_PRIVATE)
             .edit()

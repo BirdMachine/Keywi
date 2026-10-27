@@ -218,7 +218,7 @@ fun TypingOverlayLayer(
 ) {
     val context = LocalContext.current
     val power = KeywiPowerPreferences.load(context)
-    if (!state.enabled || state.uri == null || power == KeywiPowerMode.RESTRICTED) return
+    if (!state.enabled || state.uri == null || power == KeywiPowerMode.RESTRICTED || power == KeywiPowerMode.DESPERATE) return
     val media by produceState<TypingOverlayMedia?>(null, state.uri) {
         value = null
         value =

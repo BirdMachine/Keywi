@@ -263,7 +263,7 @@ fun KeyboardScreen(
     val soundOnTap = (settings?.soundOnTap ?: DEFAULT_SOUND_ON_TAP).toBool()
     val hideLetters = (settings?.hideLetters ?: DEFAULT_HIDE_LETTERS).toBool()
     val hideSymbols = (settings?.hideSymbols ?: DEFAULT_HIDE_SYMBOLS).toBool()
-    val keywiEnabled = KeywiAppearancePreferences.load(ctx)
+    val keywiEnabled = KeywiAppearancePreferences.load(ctx) && KeywiPowerPreferences.advancedThemingEnabled
     val backdropEnabled =
         keywiEnabled && (settings?.backdropEnabled ?: DEFAULT_BACKDROP_ENABLED).toBool()
     val backdropGradient = BackdropThemePreferences.load(ctx).toBackdrop()

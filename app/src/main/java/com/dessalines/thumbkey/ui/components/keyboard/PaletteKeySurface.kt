@@ -31,7 +31,7 @@ internal fun PaletteKeySurface(
     selected: Boolean = false,
     content: @Composable () -> Unit,
 ) {
-    if (LocalToolPageStyle.current != null) {
+    if (LocalToolPageStyle.current != null || !KeywiPowerPreferences.advancedThemingEnabled) {
         ToolPageSurface(
             onClick = onClick, modifier = modifier, radius = radius, selected = selected,
             designId = designId ?: "tool-control", sequenceIndex = sequenceIndex ?: 0, content = content,

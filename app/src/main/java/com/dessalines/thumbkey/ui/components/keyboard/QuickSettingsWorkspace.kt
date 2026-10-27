@@ -8,6 +8,8 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.selection.selectable
+import androidx.compose.ui.semantics.Role
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.HorizontalDivider
@@ -20,6 +22,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -45,7 +48,9 @@ fun QuickSettingsWorkspace(
     var suggestions by remember { mutableStateOf(SuggestionPreferences.enabled(context)) }
     var power by remember { mutableStateOf(KeywiPowerPreferences.load(context)) }
     var sounds by remember { mutableStateOf(ActionSoundPreferences.get(context).enabled) }
-    var showControls by remember { mutableStateOf(false) }
+    val showControls = ToolbarControlsState.expanded
+    val scrollState = rememberScrollState()
+    LaunchedEffect(showControls) { if (showControls) scrollState.scrollTo(0) }
     DisposableEffect(context) {
         // The stationary cycler and other settings surfaces can change these while this page stays open.
         val preferences =
@@ -77,10 +82,11 @@ fun QuickSettingsWorkspace(
                 modifier = modifier.fillMaxSize().toolPageBackground(),
             ) {
                 Column(
-                    Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(12.dp),
+                    Modifier.fillMaxSize().verticalScroll(scrollState).padding(12.dp),
                     verticalArrangement = Arrangement.spacedBy(6.dp),
                 ) {
                     Text("Quick Settings", style = MaterialTheme.typography.titleMedium)
+                    if (showControls) ToolbarControlsPanel(onDismiss = { ToolbarControlsState.expanded = false })
                     toolConfig.visibleQuickTools().forEach { tool ->
                         when (tool) {
                             QuickTool.SUGGESTIONS -> {
@@ -91,7 +97,7 @@ fun QuickSettingsWorkspace(
                     }
                             }
                             QuickTool.FEEDBACK -> {
-                    com.dessalines.thumbkey.effects.FeedbackModeControl(onChanged = onPreferencesChanged)
+                    FeedbackModeWell(onChanged = onPreferencesChanged)
                             }
                             QuickTool.SOUNDS -> {
                     QuickSettingToggle("Use custom sound pack", sounds) {
@@ -116,19 +122,20 @@ fun QuickSettingsWorkspace(
                                 KeywiPowerMode.UNBRIDLED -> "Unbridled"
                                 KeywiPowerMode.CONSERVED -> "Conserved"
                                 KeywiPowerMode.RESTRICTED -> "Restricted"
+                                KeywiPowerMode.DESPERATE -> "Desperate"
                             }
-                        Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
-                            RadioButton(
-                                modifier = Modifier.semantics { contentDescription = "Power mode $title" },
-                                selected = power == mode,
-                                onClick = {
+                        Row(
+                            Modifier.fillMaxWidth()
+                                .semantics { contentDescription = "Power mode $title" }
+                                .selectable(selected = power == mode, role = Role.RadioButton, onClick = {
                                     power = mode
                                     KeywiPowerPreferences.save(context, mode)
-                                    if (mode == KeywiPowerMode.RESTRICTED) ActionGifRuntime.clear()
                                     onPreferencesChanged()
-                                },
-                            )
-                            Text(title)
+                                }),
+                            verticalAlignment = Alignment.CenterVertically,
+                        ) {
+                            RadioButton(selected = power == mode, onClick = null)
+                            Text(title, Modifier.padding(vertical = 12.dp))
                         }
                     }
                     Text(
@@ -136,12 +143,14 @@ fun QuickSettingsWorkspace(
                             KeywiPowerMode.UNBRIDLED -> "Full motion and fastest suggestions."
                             KeywiPowerMode.CONSERVED -> "Animated keyboard, with less background work."
                             KeywiPowerMode.RESTRICTED -> "Still backgrounds, fewer updates, and no keypress GIF playback."
+                            KeywiPowerMode.DESPERATE -> "Plain keyboard and settings. " +
+"Advanced theme rendering and visual effects are off."
                         },
                         style = MaterialTheme.typography.bodySmall,
                     )
                             }
                             QuickTool.TOOLBAR -> {
-                    ToolPageSurface(modifier = Modifier.fillMaxWidth(), onClick = { showControls = true }) { Text("Toolbar controls", modifier = Modifier.padding(horizontal = 12.dp, vertical = 12.dp)) }
+                    ToolPageSurface(modifier = Modifier.fillMaxWidth(), onClick = { ToolbarControlsState.expanded = !ToolbarControlsState.expanded }) { Text("Toolbar controls", modifier = Modifier.padding(horizontal = 12.dp, vertical = 12.dp)) }
                             }
                             QuickTool.THEMES -> {
                     ToolPageSurface(modifier = Modifier.fillMaxWidth(), onClick = { open("advancedLookAndFeel") }) { Text("Themes & appearance", modifier = Modifier.padding(horizontal = 12.dp, vertical = 12.dp)) }
@@ -161,7 +170,6 @@ fun QuickSettingsWorkspace(
                     ToolPageSurface(modifier = Modifier.fillMaxWidth(), onClick = { open("settings") }) { Text("All Keywi settings", modifier = Modifier.padding(horizontal = 12.dp, vertical = 12.dp)) }
                 }
             }
-            if (showControls) ToolbarControlsDialog(onDismiss = { showControls = false })
         }
     }
 }

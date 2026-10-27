@@ -15,22 +15,18 @@ import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Diamond
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Switch
-import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.DropdownMenu
-import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
@@ -226,6 +222,22 @@ fun ToolbarCycler(
     onOpenSettings: (() -> Unit)? = null,
 ) {
     val context = LocalContext.current
+    var interactionRevision by remember { mutableIntStateOf(0) }
+    var interacting by remember { mutableStateOf(false) }
+    LaunchedEffect(interactionRevision) {
+        if (interactionRevision > 0) {
+            interacting = true
+            delay(180)
+            interacting = false
+        }
+    }
+    var previousPage by remember { mutableStateOf(page) }
+    LaunchedEffect(page) {
+        if (page != previousPage) {
+            previousPage = page
+            interactionRevision++
+        }
+    }
     var iconRevision by remember { mutableIntStateOf(0) }
     DisposableEffect(context) {
         val prefs = context.getSharedPreferences("toolbar_views", Context.MODE_PRIVATE)
@@ -234,7 +246,7 @@ fun ToolbarCycler(
         onDispose { prefs.unregisterOnSharedPreferenceChangeListener(listener) }
     }
     val iconStyle = remember(iconRevision) { ToolbarViewPreferences.iconStyle(context) }
-    val toolbar = remember(TaskerThemeAutomation.revision) { ToolbarThemePreferences.load(context) }
+    val toolbar = remember(TaskerThemeAutomation.revision) { ToolbarThemePreferences.load(context) }.let { if (KeywiPowerPreferences.advancedThemingEnabled) it else it.copy(mode = BackdropMode.NONE) }
     val iconBackground =
         if (toolbar.mode == BackdropMode.COLORFUL && toolbar.stops.isNotEmpty()) {
             val colors = toolbar.stops.map { it.color }
@@ -246,7 +258,6 @@ fun ToolbarCycler(
         } else {
             MaterialTheme.colorScheme.surface
         }
-    var showSettings by remember { mutableStateOf(false) }
     val toolConfig = rememberToolPageConfig()
     val visiblePages = toolConfig.visiblePages()
     val currentPage by rememberUpdatedState(page)
@@ -261,7 +272,10 @@ fun ToolbarCycler(
             ToolbarGestureAction.HOME -> changePage(ToolbarViewPreferences.home(context).takeIf { it in visiblePages } ?: ToolbarPage.CHARACTERS)
             ToolbarGestureAction.QUICK_SETTINGS -> changePage(ToolbarPage.QUICK_SETTINGS)
             ToolbarGestureAction.OPEN_SETTINGS -> openSettings?.invoke() ?: openKeywiSettings(context)
-            ToolbarGestureAction.CONFIGURE -> showSettings = true
+            ToolbarGestureAction.CONFIGURE -> {
+                ToolbarControlsState.expanded = true
+                changePage(ToolbarPage.QUICK_SETTINGS)
+            }
         }
     }
     val action by rememberUpdatedState(performAction)
@@ -291,10 +305,12 @@ fun ToolbarCycler(
                 .semantics {
                     contentDescription = "${page.title}, page ${(visiblePages.indexOf(page) + 1).coerceAtLeast(1)} of ${visiblePages.size}"
                     onClick("Toggle suggestions") {
+                        interactionRevision++
                         toggle()
                         true
                     }
                     onLongClick("Hold action") {
+                        interactionRevision++
                         action(ToolbarViewPreferences.action(context, ToolbarGesture.HOLD))
                         true
                     }
@@ -325,13 +341,15 @@ fun ToolbarCycler(
                                 true
                             },
                             CustomAccessibilityAction("Configure toolbar controls") {
-                                showSettings = true
+                                ToolbarControlsState.expanded = true
+                                changePage(ToolbarPage.QUICK_SETTINGS)
                                 true
                             },
                         )
                 }.pointerInput(taps, toolConfig) {
                     detectTapGestures(
                         onPress = {
+                            interactionRevision++
                             taps.pause()
                             if (!tryAwaitRelease()) taps.cancel()
                         },
@@ -345,6 +363,7 @@ fun ToolbarCycler(
                     var distance = 0f
                     detectVerticalDragGestures(
                         onDragStart = {
+                            interactionRevision++
                             taps.cancel()
                             distance = 0f
                         },
@@ -363,10 +382,18 @@ fun ToolbarCycler(
         Box(contentAlignment = Alignment.Center) {
             val light = toolbarIconIsLight(iconStyle, iconBackground)
             val tint = (if (light) Color.White else Color.Black).copy(alpha = if (enabled || page != ToolbarPage.CHARACTERS) 1f else .65f)
+            val keys = KeyThemePreferences.current
+            val flashColor = if (!KeywiPowerPreferences.advancedThemingEnabled) MaterialTheme.colorScheme.primary else
+                when (keys.borderStyle) {
+                    KeyBorderStyle.GRADIENT -> keys.borderGradient.stops.firstOrNull()?.color ?: MaterialTheme.colorScheme.primary
+                    KeyBorderStyle.SOLID -> keys.borderColor
+                    else -> MaterialTheme.colorScheme.primary
+                }
             Box(
                 Modifier.size(30.dp).clip(CircleShape)
-                    .background((if (light) Color.Black else Color.White).copy(alpha = .35f))
-                    .border(1.dp, tint.copy(alpha = .55f), CircleShape),
+                    .background(if (interacting) flashColor.copy(alpha = .32f) else
+                        (if (light) Color.Black else Color.White).copy(alpha = .35f))
+                    .border(1.dp, if (interacting) flashColor else tint.copy(alpha = .55f), CircleShape),
                 contentAlignment = Alignment.Center,
             ) { Icon(Icons.Outlined.Diamond, null, Modifier.size(21.dp), tint = tint) }
             Column(
@@ -385,22 +412,23 @@ fun ToolbarCycler(
             }
         }
     }
-    if (showSettings) ToolbarControlsDialog(onDismiss = { showSettings = false })
+}
+
+/** Transient navigation request; never creates a second window over the IME. */
+internal object ToolbarControlsState {
+    var expanded by mutableStateOf(false)
 }
 
 @Composable
-fun ToolbarControlsDialog(onDismiss: () -> Unit) {
+internal fun ToolbarControlsPanel(onDismiss: () -> Unit) {
     val context = LocalContext.current
     val visiblePages = rememberToolPageConfig().visiblePages()
     var home by remember { mutableStateOf(ToolbarViewPreferences.home(context)) }
     var iconStyle by remember { mutableStateOf(ToolbarViewPreferences.iconStyle(context)) }
     var inverted by remember { mutableStateOf(ToolbarViewPreferences.invertScroll(context)) }
     var actions by remember { mutableStateOf(ToolbarGesture.entries.associateWith { ToolbarViewPreferences.action(context, it) }) }
-    AlertDialog(
-        onDismissRequest = onDismiss,
-        title = { Text("Toolbar controls") },
-        text = {
-            Column(Modifier.verticalScroll(rememberScrollState()), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+    Column(Modifier.padding(vertical = 8.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                Text("Toolbar controls", style = MaterialTheme.typography.titleMedium)
                 Text("Tap to toggle suggestions. Swipe up or down to change views. Scroll suggestions left or right.")
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Text("Invert tool scroll", Modifier.weight(1f))
@@ -444,10 +472,8 @@ fun ToolbarControlsDialog(onDismiss: () -> Unit) {
                     "These controls are always available from Quick Settings, even if you change the hold action.",
                     style = MaterialTheme.typography.bodySmall,
                 )
-            }
-        },
-        confirmButton = { TextButton(onClick = onDismiss) { Text("Done") } },
-    )
+        TextButton(onClick = onDismiss) { Text("Done") }
+    }
 }
 
 @Composable
@@ -458,14 +484,14 @@ private fun ToolbarChoice(
     onSelect: (Int) -> Unit,
 ) {
     var expanded by remember { mutableStateOf(false) }
-    Box {
-        TextButton(onClick = { expanded = true }) { Text("$title: $selected") }
-        DropdownMenu(expanded = expanded, onDismissRequest = { expanded = false }) {
+    Column {
+        TextButton(onClick = { expanded = !expanded }) { Text("$title: $selected") }
+        if (expanded) Column {
             choices.forEachIndexed { index, choice ->
-                DropdownMenuItem(text = { Text(choice) }, onClick = {
+                ToolPageSurface(selected = choice == selected, onClick = {
                     expanded = false
                     onSelect(index)
-                })
+                }) { Text(choice, Modifier.padding(12.dp)) }
             }
         }
     }
