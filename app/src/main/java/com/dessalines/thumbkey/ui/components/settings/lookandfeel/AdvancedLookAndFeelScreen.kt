@@ -50,6 +50,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
@@ -498,15 +499,18 @@ private fun KeyAppearanceSection(onOpenKeyDesign: () -> Unit) {
     val context = LocalContext.current
     var state by remember { mutableStateOf(KeyThemePreferences.load(context)) }
     var recipeUndo by remember { mutableStateOf<KeyThemeState?>(null) }
+    var activeRecipe by remember { mutableStateOf<KeyMaterialRecipe?>(null) }
 
     fun persist(next: KeyThemeState) {
         recipeUndo = null
+        activeRecipe = null
         state = next
         KeyThemePreferences.save(context, next)
     }
 
     fun applyRecipe(recipe: KeyMaterialRecipe) {
         recipeUndo = state
+        activeRecipe = recipe
         state = recipe.applyTo(state)
         KeyThemePreferences.save(context, state)
     }
@@ -526,8 +530,25 @@ private fun KeyAppearanceSection(onOpenKeyDesign: () -> Unit) {
                 OutlinedButton(
                     onClick = { applyRecipe(recipe) },
                     modifier = Modifier.testTag("material-recipe:${recipe.name}"),
-                ) { Text(recipe.label) }
+                ) {
+                    val preview = recipe.applyTo(KeyThemeState())
+                    Row(
+                        horizontalArrangement = Arrangement.spacedBy(7.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                    ) {
+                        Box(
+                            Modifier.size(18.dp)
+                                .clip(RoundedCornerShape(5.dp))
+                                .background(Brush.linearGradient(preview.surfaceGradient.stops.map { it.color }))
+                                .border(1.dp, preview.borderGradient.stops.first().color, RoundedCornerShape(5.dp)),
+                        )
+                        Text(recipe.label)
+                    }
+                }
             }
+        }
+        activeRecipe?.let { recipe ->
+            Text(recipe.description, style = MaterialTheme.typography.bodySmall)
         }
         recipeUndo?.let { previous ->
             OutlinedButton(onClick = { persist(previous) }, modifier = Modifier.testTag("material-recipe:undo")) {
