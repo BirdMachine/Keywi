@@ -40,6 +40,7 @@ internal fun ThemeEditorExpandableSection(
     expanded: Boolean,
     onExpandedChange: (Boolean) -> Unit,
     modifier: Modifier = Modifier,
+    headerModifier: Modifier = Modifier,
     subtitle: String? = null,
     trailingLabel: String? = null,
     summary: (@Composable () -> Unit)? = null,
@@ -56,6 +57,7 @@ internal fun ThemeEditorExpandableSection(
             Row(
                 Modifier
                     .fillMaxWidth()
+                    .then(headerModifier)
                     .background(MaterialTheme.colorScheme.primary.copy(alpha = if (expanded) .08f else .035f))
                     .testTag("theme-section-header:$title")
                     .semantics { stateDescription = if (expanded) "Expanded" else "Collapsed" }
