@@ -808,7 +808,8 @@ internal fun ThemeEditorFold(
         subtitle = subtitle,
         expanded = expanded,
         onExpandedChange = { expanded = it },
-        modifier = Modifier.padding(horizontal = 12.dp, vertical = 4.dp).bringIntoViewRequester(bringIntoView),
+        modifier = Modifier.padding(horizontal = 12.dp, vertical = 4.dp),
+        headerModifier = Modifier.bringIntoViewRequester(bringIntoView),
         content = content,
     )
 }
