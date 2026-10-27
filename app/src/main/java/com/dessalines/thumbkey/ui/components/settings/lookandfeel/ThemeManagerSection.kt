@@ -94,7 +94,7 @@ fun ThemeManagerSection(
                                     val second = it.read()
                                     it.reset()
                                     if (first == 'P'.code && second == 'K'.code) {
-                                        ThemeEngine.importPackage(context, it).getOrThrow()
+                                        ThemeEngine.importPackageIntoLibrary(context, it).getOrThrow()
                                     } else {
                                         val output = ByteArrayOutputStream()
                                         val buffer = ByteArray(8192)
@@ -104,14 +104,19 @@ fun ThemeManagerSection(
                                             require(output.size() + count <= 1024 * 1024) { "Theme document is too large" }
                                             output.write(buffer, 0, count)
                                         }
-                                        ThemeEngine.importIntoCustom(context, output.toString("UTF-8")).getOrThrow()
+                                        ThemeEngine.importIntoLibrary(context, output.toString("UTF-8")).getOrThrow()
                                     }
                                 }
                             }
                         }
                     busy = false
                     result.fold(
-                        onSuccess = { changed("Imported into Custom, including assets") },
+                        onSuccess = { imported ->
+                            // The newly imported theme is only selected; active keyboard and Custom remain untouched.
+                            refresh++
+                            pendingThemeId = imported.id
+                            message = "Imported ${imported.name} to your library. Review its tile, then Apply selected theme if you want to use it."
+                        },
                         onFailure = { message = "Import failed: ${it.message ?: "invalid theme"}" },
                     )
                 }
@@ -153,6 +158,10 @@ fun ThemeManagerSection(
         Text("✦ Saved themes", style = MaterialTheme.typography.titleMedium)
         Text(
             "Images, GIFs and fonts live in Keywi's theme folders. Exports include these assets.",
+            style = MaterialTheme.typography.bodySmall,
+        )
+        Text(
+            "Import adds a new saved theme without applying it or replacing Custom. Choose Apply selected theme when ready.",
             style = MaterialTheme.typography.bodySmall,
         )
         if (busy) Text("Copying theme files…", style = MaterialTheme.typography.bodySmall)
