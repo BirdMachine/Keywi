@@ -84,7 +84,17 @@ fun GemSettingsTheme(
     content: @Composable () -> Unit,
 ) {
     val power = com.dessalines.thumbkey.ui.components.keyboard.rememberKeywiPowerMode()
-    if (!enabled || power == com.dessalines.thumbkey.ui.components.keyboard.KeywiPowerMode.DESPERATE) {
+    if (power == com.dessalines.thumbkey.ui.components.keyboard.KeywiPowerMode.DESPERATE) {
+        val basic = MaterialTheme.colorScheme
+        val plain = AdvancedSettingsColors(
+            background = basic.background, surface = basic.surface, surfaceRaised = basic.surfaceVariant,
+            outline = basic.outline, text = basic.onSurface, textMuted = basic.onSurfaceVariant,
+            accent = basic.primary, onAccent = basic.onPrimary,
+        )
+        CompositionLocalProvider(LocalAdvancedSettingsColors provides plain, LocalSettingsDrip provides null) { content() }
+        return
+    }
+    if (!enabled) {
         content()
         return
     }
