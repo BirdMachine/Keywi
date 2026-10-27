@@ -50,10 +50,10 @@ class ToolbarViewPreferencesTest {
         assertEquals(ToolbarPage.FORMATTING, ToolbarViewPreferences.home(context))
     }
 
-    @Test fun fourPagesCycleAndMapWithoutAmbiguity() {
-        val ordered = listOf(ToolbarPage.CHARACTERS, ToolbarPage.FORMATTING, ToolbarPage.KAOMOJI, ToolbarPage.QUICK_SETTINGS)
+    @Test fun allDefaultPagesCycleAndMapWithoutAmbiguity() {
+        val ordered = listOf(ToolbarPage.CHARACTERS, ToolbarPage.FORMATTING, ToolbarPage.KAOMOJI, ToolbarPage.UNICODE, ToolbarPage.QUICK_SETTINGS)
         ordered.forEachIndexed { index, page ->
-            assertEquals(ordered[(index + 1) % 4], page.step(1))
+            assertEquals(ordered[(index + 1) % ordered.size], page.step(1))
             assertEquals(page, page.step(1).step(-1))
             assertEquals(page, ToolbarPage.from(page.palette))
         }

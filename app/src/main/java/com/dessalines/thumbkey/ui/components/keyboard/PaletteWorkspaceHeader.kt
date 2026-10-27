@@ -31,11 +31,12 @@ fun PaletteWorkspaceHeader(
         listOf(
             InputPalette.FANCY_TEXT to "𝕱",
             InputPalette.KAOMOJI to "(｡•̀ᴗ-)✧",
+            InputPalette.UNICODE to "U+",
         ).forEach { (palette, title) ->
             val active = selected == palette
             PaletteKeySurface(
                 onClick = { onSelect(palette) },
-                modifier = Modifier.defaultMinSize(minWidth = if (palette == InputPalette.FANCY_TEXT) 48.dp else 110.dp, minHeight = 44.dp),
+                modifier = Modifier.defaultMinSize(minWidth = if (palette == InputPalette.KAOMOJI) 110.dp else 48.dp, minHeight = 44.dp),
                 radius = 0,
             ) {
                 Text(

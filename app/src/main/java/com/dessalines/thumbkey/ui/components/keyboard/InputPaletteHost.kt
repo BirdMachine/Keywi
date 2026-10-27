@@ -24,6 +24,7 @@ import com.dessalines.thumbkey.inputcontext.ContextEnginePreferences
 /** Tool pages hosted above the character keyboard and selected by the toolbar cycler. */
 enum class InputPalette {
     KAOMOJI,
+    UNICODE,
     FANCY_TEXT,
     QUICK_SETTINGS,
     SNIPPETS,
@@ -52,7 +53,7 @@ fun ExpandedInputPaletteHost(
     val configuration = LocalConfiguration.current
     val view = LocalView.current
 
-    val searchActive = palette == InputPalette.KAOMOJI && PaletteSearchCapture.active
+    val searchActive = (palette == InputPalette.KAOMOJI || palette == InputPalette.UNICODE) && PaletteSearchCapture.active
     val browseHeight =
         (configuration.screenHeightDp * 0.62f)
             .coerceIn(380f, 680f)
@@ -110,6 +111,17 @@ fun ExpandedInputPaletteHost(
                             com.dessalines.thumbkey.effects.ActionSoundEngine.fire(ime)
                             PaletteSearchCapture.bypass { ime.currentInputConnection?.commitText(text, 1) }
                         })
+                    }
+                    InputPalette.UNICODE -> {
+                        UnicodeLibraryTool(
+                            onInsert = { text ->
+                                if (vibrateOnTap && com.dessalines.thumbkey.effects.FeedbackPreferences.hapticsAllowed(ime)) view.performHapticFeedback(HapticFeedbackConstants.KEYBOARD_TAP)
+                                com.dessalines.thumbkey.effects.ActionSoundEngine.fire(ime)
+                                PaletteSearchCapture.bypass { ime.currentInputConnection?.commitText(text, 1) }
+                            },
+                            onBack = onDismiss,
+                            modifier = Modifier.fillMaxSize(),
+                        )
                     }
                     InputPalette.KAOMOJI -> {
                         KaomojiRoom(

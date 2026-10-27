@@ -63,6 +63,7 @@ enum class ToolbarPage(
     CHARACTERS("Character input", "◈"),
     FORMATTING("Formatting", "𝕱"),
     KAOMOJI("Kaomoji", "☺"),
+    UNICODE("Unicode library", "U+"),
     QUICK_SETTINGS("Quick Settings", "⚙"),
     SNIPPETS("String palettes", "▤"),
     ;
@@ -78,6 +79,7 @@ enum class ToolbarPage(
                 CHARACTERS -> null
                 FORMATTING -> InputPalette.FANCY_TEXT
                 KAOMOJI -> InputPalette.KAOMOJI
+                UNICODE -> InputPalette.UNICODE
                 QUICK_SETTINGS -> InputPalette.QUICK_SETTINGS
                 SNIPPETS -> InputPalette.SNIPPETS
             }
