@@ -760,7 +760,13 @@ internal fun ThemeEditorJumpBar(
     selectedTitle: String?,
     onJump: (String) -> Unit,
 ) {
-    val sections = listOf("Keyboard background", "Suggestion bar", "Keys", "Typography")
+    // Short aliases avoid duplicating the fold headings in accessibility/text searches.
+    val sections = listOf(
+        "Keyboard background" to "Backdrop",
+        "Suggestion bar" to "Suggestions",
+        "Keys" to "Key faces",
+        "Typography" to "Fonts",
+    )
     Column(Modifier.fillMaxWidth().padding(top = 8.dp)) {
         Text(
             "Jump to a section · swipe for more",
@@ -771,11 +777,11 @@ internal fun ThemeEditorJumpBar(
             Modifier.fillMaxWidth().horizontalScroll(rememberScrollState()).padding(horizontal = 12.dp),
             horizontalArrangement = Arrangement.spacedBy(8.dp),
         ) {
-            sections.forEach { title ->
+            sections.forEach { (title, label) ->
                 FilterChip(
                     selected = selectedTitle == title,
                     onClick = { onJump(title) },
-                    label = { Text(title) },
+                    label = { Text(label) },
                     modifier = Modifier.testTag("theme-jump:$title"),
                 )
             }
