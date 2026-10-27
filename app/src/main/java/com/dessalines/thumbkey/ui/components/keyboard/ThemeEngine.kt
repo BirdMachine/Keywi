@@ -228,6 +228,25 @@ object ThemeEngine {
             store(context, imported, CUSTOM_THEME_ID).also { apply(context, it) }
         }
 
+    /** Import a JSON theme as a new, inactive library entry; never replace Custom or apply it. */
+    fun importIntoLibrary(
+        context: Context,
+        json: String,
+    ): Result<ThemeDocument> =
+        runCatching {
+            val imported = decode(json).getOrThrow()
+            require(
+                assetReferences(imported).none { it.startsWith("assets/") },
+            ) { "This theme needs its asset package; import the ZIP instead" }
+            val destinationId = UUID.randomUUID().toString()
+            try {
+                store(context, imported, destinationId)
+            } catch (error: Exception) {
+                ThemeAssetStore.directory(context, destinationId).deleteRecursively()
+                throw error
+            }
+        }
+
     fun export(theme: ThemeDocument): String = encode(theme)
 
     fun resetCustom(context: Context): ThemeDocument = store(context, defaultCustom(), CUSTOM_THEME_ID).also { apply(context, it) }
@@ -321,12 +340,26 @@ object ThemeEngine {
         }
     }
 
+    /** Existing automation-compatible behavior: import into and activate Custom. */
     fun importPackage(
         context: Context,
         input: InputStream,
+    ): Result<ThemeDocument> = importPackageInternal(context, input, intoLibrary = false)
+
+    /** Safely add a ZIP theme to the library without touching active or Custom state. */
+    fun importPackageIntoLibrary(
+        context: Context,
+        input: InputStream,
+    ): Result<ThemeDocument> = importPackageInternal(context, input, intoLibrary = true)
+
+    private fun importPackageInternal(
+        context: Context,
+        input: InputStream,
+        intoLibrary: Boolean,
     ): Result<ThemeDocument> =
         runCatching {
             val staging = File(context.filesDir, "themes/.import-${UUID.randomUUID()}").apply { check(mkdirs()) }
+            val destinationId = if (intoLibrary) UUID.randomUUID().toString() else CUSTOM_THEME_ID
             try {
                 var total = 0L
                 val seen = mutableSetOf<String>()
@@ -369,7 +402,12 @@ object ThemeEngine {
                     imported,
                 ).forEach { require(ThemeAssetStore.assetFile(staging, it).isFile) { "Theme package is missing an asset" } }
                 imported.font?.let { Typeface.createFromFile(ThemeAssetStore.assetFile(staging, it.asset)) }
-                store(context, imported, CUSTOM_THEME_ID, staging).also { apply(context, it) }
+                store(context, imported, destinationId, staging).also {
+                    if (!intoLibrary) apply(context, it)
+                }
+            } catch (error: Exception) {
+                if (intoLibrary) ThemeAssetStore.directory(context, destinationId).deleteRecursively()
+                throw error
             } finally {
                 staging.deleteRecursively()
             }
