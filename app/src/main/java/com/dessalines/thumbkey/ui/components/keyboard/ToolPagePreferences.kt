@@ -41,7 +41,7 @@ internal fun defaultKaomoji() = KaomojiLibrary.categories.map { c ->
 }
 
 internal data class ToolPageConfig(
-    val pages: List<String> = listOf("CHARACTERS", "FORMATTING", "KAOMOJI", "QUICK_SETTINGS", "SNIPPETS"),
+    val pages: List<String> = listOf("CHARACTERS", "FORMATTING", "KAOMOJI", "UNICODE", "QUICK_SETTINGS", "SNIPPETS"),
     val hiddenPages: Set<String> = setOf("SNIPPETS"),
     val formats: List<String> = FancyTextFormatter.styles.map { it.id },
     val hiddenFormats: Set<String> = emptySet(),
