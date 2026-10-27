@@ -51,6 +51,6 @@ class KeyMaterialRecipesTest {
         assertEquals(GradientDistribution.SHARED, opal.borderDistribution)
         assertEquals(GradientDistribution.INCREMENTAL, lava.borderDistribution)
         assertEquals(GradientDistribution.SAME, cobalt.borderDistribution)
-        assertEquals(26f, lava.borderPhaseStepDegrees)
+        assertEquals(26f, lava.borderPhaseStepDegrees, 0.001f)
     }
 }
