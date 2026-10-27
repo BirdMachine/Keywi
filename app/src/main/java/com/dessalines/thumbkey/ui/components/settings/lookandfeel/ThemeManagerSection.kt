@@ -210,15 +210,19 @@ fun ThemeManagerSection(
                 Button(
                     enabled = !busy,
                     onClick = {
+                        val leavingCustom = current.id == CUSTOM_THEME_ID
                         runCatching {
                             // Custom's live controls can differ from its last saved manifest.
                             // Save them before leaving, so reselecting Custom restores the scratch work.
-                            if (current.id == CUSTOM_THEME_ID) snapshotCustom()
+                            if (leavingCustom) snapshotCustom()
                             ThemeEngine.apply(context, pendingTheme)
                         }.fold(
                             onSuccess = {
                                 pendingThemeId = null
-                                changed("Applied ${pendingTheme.name}. Custom scratch edits were preserved.")
+                                changed(
+                                    if (leavingCustom) "Applied ${pendingTheme.name}. Custom scratch edits were preserved."
+                                    else "Applied ${pendingTheme.name}.",
+                                )
                             },
                             onFailure = { message = "Could not apply theme: ${it.message ?: "unknown error"}" },
                         )
