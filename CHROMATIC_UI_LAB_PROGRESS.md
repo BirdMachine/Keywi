@@ -88,3 +88,25 @@ Aim for **working, testable changes** and an APK when feasible, not only mockups
 - Explore patterned **filled** tracks, customizable spacing/intensity/color, and per-slider pattern overrides only if a clear settings model emerges. Keep simple defaults and no overdraw-heavy animations.
 - Inspect theme recipe contrast with existing user-configured glyph colors, and consider a clear "temporary preview vs apply" flow in Theme Manager before adding more recipes. Existing library tile selection calls `ThemeEngine.apply`; investigate preservation of unsaved Custom edits before modifying behavior.
 - Next run: validate new pattern selector UI interaction in a focused Compose test; consider screenshot diff assertions to ensure patterns never silently disappear; try an emulator only if a reliable free test route is available. The build-verified APK is ready for optional manual testing.
+
+## Session 3 — 2026-10-27 05:00 EDT (complete)
+
+**Feature head:** [`35ec1031bba3752d41c74b4bd19cc69d2b2e857d`](https://github.com/BirdMachine/Keywi/commit/35ec1031bba3752d41c74b4bd19cc69d2b2e857d)
+Related commits: `60dc42a` (stage selection / preserve scratch), `a124d34` (regression tests), `075a719` (active vs selected tile indicators and accessibility state), `358a3c3` (wire active ID), `35ec103` (accurate status messaging).
+
+**Implemented**
+- Saved-theme tiles now **stage a selection** instead of immediately applying it. A selected theme shows its own saved backdrop in the tile; the active keyboard and test bench remain unchanged until the explicit **Apply selected theme** action. **Cancel selection** leaves everything untouched.
+- The strip now distinguishes **Active** from **Selected** and exposes descriptive accessibility state on the theme tile. This is not yet a full temporary keyboard-theme preview; only tile artwork is previewed.
+- Before explicitly applying another theme while Custom is active, snapshot the **live** Custom controls to the Custom manifest. Reselecting Custom restores scratch edits, even when they were not previously saved via the editor. No saved library theme is modified.
+- Reset Custom now requires an explicit destructive-action confirmation, with **Keep Custom** cancellation.
+- Added Robolectric Compose regression tests for staging/canceling/applying, preservation and restoration of Custom's modified key border phase, saved-theme immutability, and reset cancellation.
+
+**Verified validation**
+- [Keywi CI run 40478213845](https://github.com/BirdMachine/Keywi/actions/runs/40478213845) **completed successfully** on feature SHA `35ec103`. Kotlin formatting, full unit tests (including the new composition regressions), Android lint and debug APK assembly all passed.
+- Nonexpired `keywi-debug` artifact ID **12721454020** (ZIP ~32.4 MB), available in that run's Artifacts section. No device or Android emulator visual validation claimed. Previous screenshot evidence remains Robolectric-only.
+- Earlier in-flight PR runs were cancelled by the workflow's expected PR concurrency behavior as new commits arrived. Final feature run is green. Draft PR #57 remains unmerged; Dev/main untouched.
+
+**Follow-up research / hazards**
+- Investigated `ThemeEngine.importIntoCustom` and `importPackage`: both currently write to Custom and immediately apply the imported theme. That behavior is **not** changed by this session's safe library-selection flow. A later explicit import staging/confirmation design should prevent accidental loss of Custom scratch work and allow importing to the library without automatic activation, especially for future Explore/download workflows.
+- A selected tile currently previews its **backdrop**, not a full temporarily themed keyboard. Avoid describing it as a live keyboard preview until the test bench supports read-only theme overrides.
+- Next: evaluate safe import staging and a read-only selected-theme preview, or return to expressive non-shader styling (pattern intensity/spacing and lightweight material details). Choose one bounded feature, add regression coverage, and verify another build. Preserve the successful APK above as fallback.
