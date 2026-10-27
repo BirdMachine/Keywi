@@ -26,6 +26,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
@@ -221,6 +222,22 @@ fun ToolbarCycler(
     onOpenSettings: (() -> Unit)? = null,
 ) {
     val context = LocalContext.current
+    var interactionRevision by remember { mutableIntStateOf(0) }
+    var interacting by remember { mutableStateOf(false) }
+    LaunchedEffect(interactionRevision) {
+        if (interactionRevision > 0) {
+            interacting = true
+            delay(180)
+            interacting = false
+        }
+    }
+    var previousPage by remember { mutableStateOf(page) }
+    LaunchedEffect(page) {
+        if (page != previousPage) {
+            previousPage = page
+            interactionRevision++
+        }
+    }
     var iconRevision by remember { mutableIntStateOf(0) }
     DisposableEffect(context) {
         val prefs = context.getSharedPreferences("toolbar_views", Context.MODE_PRIVATE)
@@ -288,10 +305,12 @@ fun ToolbarCycler(
                 .semantics {
                     contentDescription = "${page.title}, page ${(visiblePages.indexOf(page) + 1).coerceAtLeast(1)} of ${visiblePages.size}"
                     onClick("Toggle suggestions") {
+                        interactionRevision++
                         toggle()
                         true
                     }
                     onLongClick("Hold action") {
+                        interactionRevision++
                         action(ToolbarViewPreferences.action(context, ToolbarGesture.HOLD))
                         true
                     }
@@ -330,6 +349,7 @@ fun ToolbarCycler(
                 }.pointerInput(taps, toolConfig) {
                     detectTapGestures(
                         onPress = {
+                            interactionRevision++
                             taps.pause()
                             if (!tryAwaitRelease()) taps.cancel()
                         },
@@ -343,6 +363,7 @@ fun ToolbarCycler(
                     var distance = 0f
                     detectVerticalDragGestures(
                         onDragStart = {
+                            interactionRevision++
                             taps.cancel()
                             distance = 0f
                         },
@@ -361,10 +382,18 @@ fun ToolbarCycler(
         Box(contentAlignment = Alignment.Center) {
             val light = toolbarIconIsLight(iconStyle, iconBackground)
             val tint = (if (light) Color.White else Color.Black).copy(alpha = if (enabled || page != ToolbarPage.CHARACTERS) 1f else .65f)
+            val keys = KeyThemePreferences.current
+            val flashColor = if (!KeywiPowerPreferences.advancedThemingEnabled) MaterialTheme.colorScheme.primary else
+                when (keys.borderStyle) {
+                    KeyBorderStyle.GRADIENT -> keys.borderGradient.stops.firstOrNull()?.color ?: MaterialTheme.colorScheme.primary
+                    KeyBorderStyle.SOLID -> keys.borderColor
+                    else -> MaterialTheme.colorScheme.primary
+                }
             Box(
                 Modifier.size(30.dp).clip(CircleShape)
-                    .background((if (light) Color.Black else Color.White).copy(alpha = .35f))
-                    .border(1.dp, tint.copy(alpha = .55f), CircleShape),
+                    .background(if (interacting) flashColor.copy(alpha = .32f) else
+                        (if (light) Color.Black else Color.White).copy(alpha = .35f))
+                    .border(1.dp, if (interacting) flashColor else tint.copy(alpha = .55f), CircleShape),
                 contentAlignment = Alignment.Center,
             ) { Icon(Icons.Outlined.Diamond, null, Modifier.size(21.dp), tint = tint) }
             Column(
