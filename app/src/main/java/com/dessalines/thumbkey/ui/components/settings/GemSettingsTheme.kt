@@ -83,7 +83,8 @@ fun GemSettingsTheme(
     dripEnabled: Boolean = false,
     content: @Composable () -> Unit,
 ) {
-    if (!enabled) {
+    val power = com.dessalines.thumbkey.ui.components.keyboard.rememberKeywiPowerMode()
+    if (!enabled || power == com.dessalines.thumbkey.ui.components.keyboard.KeywiPowerMode.DESPERATE) {
         content()
         return
     }

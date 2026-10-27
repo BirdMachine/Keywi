@@ -229,7 +229,7 @@ object ActionGifRuntime {
     ) {
         val state = ActionGifPreferences.current
         if ((!state.enabled && !preview) || state.assets.isEmpty() || (!preview && state.phase != phase)) return
-        if (KeywiPowerPreferences.load(context) == KeywiPowerMode.RESTRICTED && !preview) return
+        if (KeywiPowerPreferences.load(context) == KeywiPowerMode.DESPERATE || (KeywiPowerPreferences.load(context) == KeywiPowerMode.RESTRICTED && !preview)) return
         val now = SystemClock.uptimeMillis()
         if (!preview && lastAt >= 0 && now - lastAt < state.cooldownMs) return
         val id =
@@ -332,6 +332,7 @@ fun ActionGifOverlayLayer(
     val context = LocalContext.current
     val state = ActionGifPreferences.current
     val power = KeywiPowerPreferences.load(context)
+    if (power == KeywiPowerMode.DESPERATE) return
     if ((!state.enabled && !preview) || state.aboveKeys != aboveKeys || (power == KeywiPowerMode.RESTRICTED && !preview)) return
     val pulses = ActionGifRuntime.pulses
     // Only live sources are decoded. Keep at most eight cached images, never an entire pack.

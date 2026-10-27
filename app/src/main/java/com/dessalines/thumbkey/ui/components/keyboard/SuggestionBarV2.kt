@@ -221,6 +221,15 @@ private fun SuggestionLozengeSlot(
     onSuggestionClick: (String) -> Unit,
     onSuggestionLongClick: ((String) -> Unit)? = null,
 ) {
+    if (!KeywiPowerPreferences.advancedThemingEnabled) {
+        if (suggestion != null) Box(
+            Modifier.padding(end = 6.dp).combinedClickable(
+                onClick = { onSuggestionClick(suggestion) },
+                onLongClick = onSuggestionLongClick?.let { action -> { action(suggestion) } },
+            ),
+        ) { Text(displayText ?: suggestion, Modifier.padding(10.dp), color = MaterialTheme.colorScheme.onSurface) }
+        return
+    }
     AnimatedContent(
         targetState = suggestion,
         transitionSpec = { lozengeTransform(motionStyle) },
@@ -625,6 +634,7 @@ fun SuggestionBarV2(
 
 /** The toggle follows the key border, including its metallic gradient, above the active fill. */
 private fun Modifier.suggestionToggleKeyBorder(theme: KeyThemeState): Modifier =
+    if (!KeywiPowerPreferences.advancedThemingEnabled) this else
     when (theme.borderStyle) {
         KeyBorderStyle.GRADIENT -> {
             keyboardGradientBorder(theme.borderGradient, 2.dp, 18.dp)

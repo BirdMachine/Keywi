@@ -116,6 +116,7 @@ fun QuickSettingsWorkspace(
                                 KeywiPowerMode.UNBRIDLED -> "Unbridled"
                                 KeywiPowerMode.CONSERVED -> "Conserved"
                                 KeywiPowerMode.RESTRICTED -> "Restricted"
+                                KeywiPowerMode.DESPERATE -> "Desperate"
                             }
                         Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
                             RadioButton(
@@ -136,6 +137,7 @@ fun QuickSettingsWorkspace(
                             KeywiPowerMode.UNBRIDLED -> "Full motion and fastest suggestions."
                             KeywiPowerMode.CONSERVED -> "Animated keyboard, with less background work."
                             KeywiPowerMode.RESTRICTED -> "Still backgrounds, fewer updates, and no keypress GIF playback."
+                            KeywiPowerMode.DESPERATE -> "Plain keyboard and settings. Advanced theme rendering and visual effects are off."
                         },
                         style = MaterialTheme.typography.bodySmall,
                     )

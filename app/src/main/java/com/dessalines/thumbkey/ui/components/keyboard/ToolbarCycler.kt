@@ -234,7 +234,7 @@ fun ToolbarCycler(
         onDispose { prefs.unregisterOnSharedPreferenceChangeListener(listener) }
     }
     val iconStyle = remember(iconRevision) { ToolbarViewPreferences.iconStyle(context) }
-    val toolbar = remember(TaskerThemeAutomation.revision) { ToolbarThemePreferences.load(context) }
+    val toolbar = remember(TaskerThemeAutomation.revision) { ToolbarThemePreferences.load(context) }.let { if (KeywiPowerPreferences.advancedThemingEnabled) it else it.copy(mode = BackdropMode.NONE) }
     val iconBackground =
         if (toolbar.mode == BackdropMode.COLORFUL && toolbar.stops.isNotEmpty()) {
             val colors = toolbar.stops.map { it.color }

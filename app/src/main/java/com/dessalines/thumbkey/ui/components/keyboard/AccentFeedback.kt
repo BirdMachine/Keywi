@@ -88,6 +88,7 @@ fun KeyAccentOverlay(
     trigger: Int = 0,
     onProgress: ((Float) -> Unit)? = null,
 ) {
+    if (!KeywiPowerPreferences.advancedThemingEnabled) return
     val config = rememberAccentFeedback()
     val fallback = MaterialTheme.colorScheme.tertiaryContainer
     var progress by remember { mutableFloatStateOf(1f) }

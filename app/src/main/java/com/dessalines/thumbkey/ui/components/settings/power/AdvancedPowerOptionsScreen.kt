@@ -102,6 +102,16 @@ fun AdvancedPowerOptionsScreen(navController: NavController) {
                     },
                     onClick = { choose(KeywiPowerMode.RESTRICTED) },
                 )
+                Preference(
+                    selected = selected == KeywiPowerMode.DESPERATE,
+                    showChevron = false,
+                    title = { Text("Desperate") },
+                    summary = { Text("Plain keyboard and settings: no artwork, gradients, glass, glow or visual effects. " +
+"Saved themes are kept.") },
+                    icon = { RadioButton(selected = selected == KeywiPowerMode.DESPERATE, onClick = null) },
+                    onClick = { choose(KeywiPowerMode.DESPERATE) },
+                )
+
             }
         }
     }
