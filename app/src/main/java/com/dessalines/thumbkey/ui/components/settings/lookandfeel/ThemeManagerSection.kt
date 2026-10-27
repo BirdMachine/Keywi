@@ -50,6 +50,7 @@ import com.dessalines.thumbkey.ui.components.settings.GemOutlinedButton as Outli
 fun ThemeManagerSection(
     onThemeApplied: () -> Unit,
     onEditTheme: () -> Unit,
+    refreshRevision: Int = 0,
 ) {
     val context = LocalContext.current
     ThemeEngine.ensureMigrated(context)
@@ -148,7 +149,7 @@ fun ThemeManagerSection(
         }
 
     @Suppress("UNUSED_VARIABLE")
-    val refreshToken = refresh
+    val refreshToken = refresh + refreshRevision
     val current = active()
 
     Column(
