@@ -10,10 +10,14 @@ Open **Settings → Themes & appearance**. This opens **Theme manager**, with th
 2. Open **Advanced theme editor**. Editing a saved theme copies it into Custom; the named original stays intact.
 3. Adjust the appearance. Controls apply as you edit, so inspect the test keyboard as you go.
 4. **Save** captures the current appearance into Custom. **Revert** restores the appearance captured when that editor session opened; it is not a global history undo.
-5. Return to Theme manager. With Custom active, choose **Save as…**, enter a **Theme name**, and save a named library entry.
-6. Choose **Export** to write the active theme as a `.keywi-theme.zip` through Android's file picker. It includes the theme's app-owned image, GIF and font assets.
+5. Return to Theme manager. With Custom active, choose **Save as…**, enter a **Theme name**, and save a named library entry. If the name already exists (ignoring case and surrounding spaces), confirm **Overwrite** or choose **Cancel** to keep it unchanged.
+6. Choose **Export** to write the active theme as a `.keywi-theme.zip` through Android's file picker. It includes the theme's app-owned image, GIF and font assets, plus key-flash colors, fade duration and the drag-trail toggle.
 
 **Import** accepts a packaged theme or a supported JSON document and loads it into Custom. Inspect it, then use **Save as…** if you want a named entry. **Reset Custom** resets the scratch theme.
+
+To refresh a selected saved theme from the current appearance, choose **Update saved theme** and confirm. After editing through Custom, use **Save as…** with the original name and confirm **Overwrite** instead. **Delete theme…** removes a saved user theme after confirmation; if it is active, Keywi switches to your existing Custom. Custom and built-in themes are protected.
+
+Key-flash settings live under **Settings → Keypress effects → Key flash & drag trails**. Newly saved themes include these settings. Older packages without them retain your current feedback settings when imported; re-save or update and export to include them. Per-action GIF/PNG typing overlays are separate.
 
 Saving a named theme and exporting a theme are separate actions in this version. Export does not automatically create a named library entry, request an author name, or open a share sheet. You can share the exported ZIP from your file manager.
 
