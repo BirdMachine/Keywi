@@ -277,6 +277,57 @@ class ThemeAssetPackageTest {
     }
 
     @Test
+    fun jsonLibraryImportsAreInactiveUniqueAndPreserveUnsavedCustomEdits() {
+        ThemeEngine.resetCustom(context)
+        val beforeCustom = ThemeEngine.export(ThemeEngine.loadCustom(context))
+        KeyThemePreferences.save(context, KeyThemePreferences.load(context).copy(borderPhaseStepDegrees = 172f))
+        val beforeLive = KeyThemePreferences.load(context)
+        val source = ThemeEngine.builtInThemes().first()
+
+        val first = ThemeEngine.importIntoLibrary(context, ThemeEngine.export(source)).getOrThrow()
+        val second = ThemeEngine.importIntoLibrary(context, ThemeEngine.export(source)).getOrThrow()
+
+        assertNotEquals(CUSTOM_THEME_ID, first.id)
+        assertNotEquals(source.id, first.id)
+        assertNotEquals(first.id, second.id)
+        assertEquals(source.keys, first.keys)
+        assertEquals(CUSTOM_THEME_ID, ThemeEngine.activeThemeId(context))
+        assertEquals(beforeCustom, ThemeEngine.export(ThemeEngine.loadCustom(context)))
+        assertEquals(beforeLive, KeyThemePreferences.load(context))
+        assertTrue(ThemeEngine.listThemes(context).any { it.id == first.id })
+        assertTrue(ThemeEngine.listThemes(context).any { it.id == second.id })
+    }
+
+    @Test
+    fun zipLibraryImportCopiesAssetsWithoutApplyingOrReplacingCustom() {
+        ThemeEngine.ensureMigrated(context)
+        val original = selectedGif()
+        val source = ThemeEngine.captureCurrent(context, "Custom", CUSTOM_THEME_ID)
+        ThemeEngine.saveCustom(
+            context,
+            source.copy(backdrop = source.backdrop.copy(mode = BackdropMode.GIF, mediaUri = Uri.fromFile(original).toString())),
+        )
+        val saved = ThemeEngine.saveCustomAs(context, "Portable library import")
+        val bytes = packageBytes(saved)
+        ThemeEngine.beginEditing(context, saved)
+        KeyThemePreferences.save(context, KeyThemePreferences.load(context).copy(borderPhaseStepDegrees = 113f))
+        val beforeCustom = ThemeEngine.export(ThemeEngine.loadCustom(context))
+        val beforeLive = KeyThemePreferences.load(context)
+
+        val imported = ThemeEngine.importPackageIntoLibrary(context, ByteArrayInputStream(bytes)).getOrThrow()
+
+        assertNotEquals(CUSTOM_THEME_ID, imported.id)
+        assertNotEquals(saved.id, imported.id)
+        assertEquals(saved.name, imported.name)
+        assertEquals(CUSTOM_THEME_ID, ThemeEngine.activeThemeId(context))
+        assertEquals(beforeCustom, ThemeEngine.export(ThemeEngine.loadCustom(context)))
+        assertEquals(beforeLive, KeyThemePreferences.load(context))
+        assertArrayEquals(gif, ownedFile(imported, requireNotNull(imported.backdrop.mediaUri)).readBytes())
+        assertTrue(ThemeEngine.missingAssets(context, imported).isEmpty())
+        assertTrue(ThemeEngine.listThemes(context).any { it.id == imported.id })
+    }
+
+    @Test
     fun customPreviewReflectsLiveEditsWithoutSavingOrReplacingInactiveCustom() {
         ThemeEngine.ensureMigrated(context)
         val savedCustom = ThemeEngine.loadCustom(context)
