@@ -57,6 +57,8 @@ fun ThemeManagerSection(
     var refresh by remember { mutableStateOf(0) }
     var expanded by remember { mutableStateOf(false) }
     var naming by remember { mutableStateOf(false) }
+    var pendingThemeId by remember { mutableStateOf<String?>(null) }
+    var confirmReset by remember { mutableStateOf(false) }
     var name by remember { mutableStateOf("") }
     var message by remember { mutableStateOf<String?>(null) }
     val scope = rememberCoroutineScope()
@@ -173,6 +175,7 @@ fun ThemeManagerSection(
         // Library tiles are rendered with each theme's actual saved backdrop.
         // The renderer resolves app-owned assets instead of depending on source URIs.
         val libraryThemes = listOf(ThemeEngine.customPreview(context)) + themes()
+        val pendingTheme = libraryThemes.firstOrNull { it.id == pendingThemeId && it.id != current.id }
         ThemeLibraryStrip(
             themes =
                 libraryThemes.map { theme ->
@@ -188,16 +191,43 @@ fun ThemeManagerSection(
                         }
                     }
                 },
-            selectedId = current.id,
+            selectedId = pendingTheme?.id ?: current.id,
             onSelect = { id ->
-                if (!busy && id != current.id) {
-                    libraryThemes.firstOrNull { it.id == id }?.let {
-                        ThemeEngine.apply(context, it)
-                        changed()
-                    }
+                if (!busy) {
+                    // Browsing is never an implicit apply or an overwrite of live Custom edits.
+                    pendingThemeId = id.takeUnless { it == current.id }
+                    message = null
                 }
             },
         )
+        Text("Applied: ${current.name}. Tap another theme to select it without changing your keyboard.",
+            style = MaterialTheme.typography.bodySmall)
+        if (pendingTheme != null) {
+            Text("Selected: ${pendingTheme.name} (not applied). Its tile shows its saved backdrop; the test keyboard still shows your active theme.",
+                style = MaterialTheme.typography.bodySmall)
+            Row(horizontalArrangement = Arrangement.spacedBy(8.dp), modifier = Modifier.fillMaxWidth()) {
+                Button(
+                    enabled = !busy,
+                    onClick = {
+                        runCatching {
+                            // Custom's live controls can differ from its last saved manifest.
+                            // Save them before leaving, so reselecting Custom restores the scratch work.
+                            if (current.id == CUSTOM_THEME_ID) snapshotCustom()
+                            ThemeEngine.apply(context, pendingTheme)
+                        }.fold(
+                            onSuccess = {
+                                pendingThemeId = null
+                                changed("Applied ${pendingTheme.name}. Custom scratch edits were preserved.")
+                            },
+                            onFailure = { message = "Could not apply theme: ${it.message ?: "unknown error"}" },
+                        )
+                    },
+                    modifier = Modifier.weight(1f),
+                ) { Text("Apply selected theme") }
+                OutlinedButton(enabled = !busy, onClick = { pendingThemeId = null },
+                    modifier = Modifier.weight(1f)) { Text("Cancel selection") }
+            }
+        }
 
         Row(horizontalArrangement = Arrangement.spacedBy(8.dp), modifier = Modifier.fillMaxWidth()) {
             if (current.id != CUSTOM_THEME_ID) {
@@ -245,14 +275,32 @@ fun ThemeManagerSection(
         }
 
         if (current.id == CUSTOM_THEME_ID) {
-            TextButton(onClick = {
-                ThemeEngine.resetCustom(context)
-                changed("Custom reset to defaults")
-            }) {
+            TextButton(enabled = !busy, onClick = { confirmReset = true }) {
                 Text("Reset Custom")
             }
         }
         message?.let { Text(it, style = MaterialTheme.typography.bodySmall) }
+    }
+
+    if (confirmReset) {
+        AlertDialog(
+            onDismissRequest = { confirmReset = false },
+            title = { Text("Reset Custom?") },
+            text = { Text("This replaces your current Custom scratch theme with defaults, including unsaved edits. Saved library themes will not change.") },
+            confirmButton = {
+                TextButton(onClick = {
+                    confirmReset = false
+                    runCatching { ThemeEngine.resetCustom(context) }.fold(
+                        onSuccess = {
+                            pendingThemeId = null
+                            changed("Custom reset to defaults")
+                        },
+                        onFailure = { message = "Reset failed: ${it.message ?: "unknown error"}" },
+                    )
+                }) { Text("Reset Custom") }
+            },
+            dismissButton = { TextButton(onClick = { confirmReset = false }) { Text("Keep Custom") } },
+        )
     }
 
     if (naming) {
