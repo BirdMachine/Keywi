@@ -497,13 +497,43 @@ private fun SuggestionLozengeAppearanceSection() {
 private fun KeyAppearanceSection(onOpenKeyDesign: () -> Unit) {
     val context = LocalContext.current
     var state by remember { mutableStateOf(KeyThemePreferences.load(context)) }
+    var recipeUndo by remember { mutableStateOf<KeyThemeState?>(null) }
 
     fun persist(next: KeyThemeState) {
+        recipeUndo = null
         state = next
         KeyThemePreferences.save(context, next)
     }
+
+    fun applyRecipe(recipe: KeyMaterialRecipe) {
+        recipeUndo = state
+        state = recipe.applyTo(state)
+        KeyThemePreferences.save(context, state)
+    }
+
     Column(Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(6.dp)) {
         Text("Keys", style = MaterialTheme.typography.titleSmall)
+        Text("Material recipes", style = MaterialTheme.typography.titleSmall)
+        Text(
+            "One-tap global key finishes. Your individual key and group designs stay intact.",
+            style = MaterialTheme.typography.bodySmall,
+        )
+        Row(
+            Modifier.fillMaxWidth().horizontalScroll(rememberScrollState()),
+            horizontalArrangement = Arrangement.spacedBy(8.dp),
+        ) {
+            KeyMaterialRecipe.entries.forEach { recipe ->
+                OutlinedButton(
+                    onClick = { applyRecipe(recipe) },
+                    modifier = Modifier.testTag("material-recipe:${recipe.name}"),
+                ) { Text(recipe.label) }
+            }
+        }
+        recipeUndo?.let { previous ->
+            OutlinedButton(onClick = { persist(previous) }, modifier = Modifier.testTag("material-recipe:undo")) {
+                Text("Undo last recipe")
+            }
+        }
         OutlinedButton(onClick = onOpenKeyDesign, modifier = Modifier.fillMaxWidth()) { Text("Design individual keys & groups") }
         Text("Key surface", style = MaterialTheme.typography.titleSmall)
         ChipRow(KeySurfaceStyle.entries, state.surfaceStyle, {
