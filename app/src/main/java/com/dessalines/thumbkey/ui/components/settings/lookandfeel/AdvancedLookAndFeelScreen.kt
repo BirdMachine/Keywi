@@ -86,6 +86,7 @@ import com.dessalines.thumbkey.ui.components.keyboard.ToolbarBorderPreferences
 import com.dessalines.thumbkey.ui.components.keyboard.ToolbarLayoutPreferences
 import com.dessalines.thumbkey.ui.components.keyboard.ToolbarThemePreferences
 import com.dessalines.thumbkey.ui.components.keyboard.keyboardGradientBackground
+import com.dessalines.thumbkey.ui.components.settings.GlassRailDensity
 import com.dessalines.thumbkey.ui.components.settings.GlassRailPattern
 import com.dessalines.thumbkey.ui.components.settings.GlassRailPreferences
 import com.dessalines.thumbkey.ui.components.settings.gemSectionModifier
@@ -828,6 +829,7 @@ internal fun ThemeEditorFold(
 internal fun GlassRailPatternPicker() {
     val context = LocalContext.current
     var pattern by remember(context) { mutableStateOf(GlassRailPreferences.load(context)) }
+    var density by remember(context) { mutableStateOf(GlassRailPreferences.loadDensity(context)) }
     var preview by rememberSaveable { mutableStateOf(.58f) }
     Column(Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 8.dp)) {
         Text("Studio slider textures", style = MaterialTheme.typography.titleSmall)
@@ -851,6 +853,24 @@ internal fun GlassRailPatternPicker() {
                 )
             }
         }
-        Slider(preview, { preview = it }, valueRange = 0f..1f, railPattern = pattern)
+        Text("Pattern spacing", style = MaterialTheme.typography.labelMedium)
+        Row(
+            Modifier.fillMaxWidth().horizontalScroll(rememberScrollState()),
+            horizontalArrangement = Arrangement.spacedBy(6.dp),
+        ) {
+            GlassRailDensity.entries.forEach { option ->
+                FilterChip(
+                    selected = density == option,
+                    onClick = {
+                        density = option
+                        GlassRailPreferences.saveDensity(context, option)
+                    },
+                    enabled = pattern != GlassRailPattern.PLAIN,
+                    label = { Text(option.label) },
+                    modifier = Modifier.testTag("glass-rail-density:${option.name}"),
+                )
+            }
+        }
+        Slider(preview, { preview = it }, valueRange = 0f..1f, railPattern = pattern, railDensity = density)
     }
 }

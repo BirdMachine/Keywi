@@ -36,10 +36,12 @@ fun GemGlassSlider(
     valueRange: ClosedFloatingPointRange<Float> = 0f..1f,
     steps: Int = 0,
     railPattern: GlassRailPattern? = null,
+    railDensity: GlassRailDensity? = null,
 ) {
     val context = LocalContext.current
     rememberGlassRailPreferences(context)
     val selectedRailPattern = railPattern ?: GlassRailPreferences.currentPattern
+    val selectedRailDensity = railDensity ?: GlassRailPreferences.currentDensity
     if (!com.dessalines.thumbkey.ui.components.keyboard.KeywiPowerPreferences.advancedThemingEnabled) {
         Slider(value, onValueChange, modifier, enabled, valueRange = valueRange, steps = steps, onValueChangeFinished = onValueChangeFinished)
         return
@@ -105,7 +107,7 @@ fun GemGlassSlider(
                     if (right > left) {
                         clipRect(left = left, top = y + 1.dp.toPx(), right = right, bottom = y + h - 1.dp.toPx()) {
                             val ink = (if (dark) Color.White else Color.Black).copy(alpha = (if (dark) .34f else .28f) * strength)
-                            val step = 6.dp.toPx()
+                            val step = selectedRailDensity.spacingDp.dp.toPx()
                             val stroke = .7.dp.toPx()
                             var x = inset
                             var index = 0
