@@ -17,6 +17,7 @@ import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
+import org.junit.After
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -29,6 +30,8 @@ import org.robolectric.annotation.Config
 class DesperatePowerTest {
     @get:Rule val compose = createComposeRule()
     private val context get() = RuntimeEnvironment.getApplication()
+
+    @After fun restorePower() { KeywiPowerPreferences.save(context, KeywiPowerMode.CONSERVED) }
 
     @Test fun desperateSuppressesVisualsAndRestoresTheSavedAppearance() {
         KeywiAppearancePreferences.save(context, true)

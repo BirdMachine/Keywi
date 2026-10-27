@@ -137,7 +137,8 @@ fun QuickSettingsWorkspace(
                             KeywiPowerMode.UNBRIDLED -> "Full motion and fastest suggestions."
                             KeywiPowerMode.CONSERVED -> "Animated keyboard, with less background work."
                             KeywiPowerMode.RESTRICTED -> "Still backgrounds, fewer updates, and no keypress GIF playback."
-                            KeywiPowerMode.DESPERATE -> "Plain keyboard and settings. Advanced theme rendering and visual effects are off."
+                            KeywiPowerMode.DESPERATE -> "Plain keyboard and settings. " +
+"Advanced theme rendering and visual effects are off."
                         },
                         style = MaterialTheme.typography.bodySmall,
                     )
