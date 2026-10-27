@@ -86,6 +86,8 @@ import com.dessalines.thumbkey.ui.components.keyboard.ToolbarBorderPreferences
 import com.dessalines.thumbkey.ui.components.keyboard.ToolbarLayoutPreferences
 import com.dessalines.thumbkey.ui.components.keyboard.ToolbarThemePreferences
 import com.dessalines.thumbkey.ui.components.keyboard.keyboardGradientBackground
+import com.dessalines.thumbkey.ui.components.settings.GlassRailPattern
+import com.dessalines.thumbkey.ui.components.settings.GlassRailPreferences
 import com.dessalines.thumbkey.ui.components.settings.gemSectionModifier
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -152,6 +154,7 @@ fun AdvancedLookAndFeelScreen(navController: NavController) {
                     Modifier.padding(horizontal = 16.dp),
                     style = MaterialTheme.typography.bodySmall,
                 )
+                GlassRailPatternPicker()
                 ThemeEditorJumpBar(selectedTitle = jumpTarget) { target ->
                     jumpTarget = target
                     jumpRevision++
@@ -818,4 +821,36 @@ internal fun ThemeEditorFold(
         headerModifier = Modifier.bringIntoViewRequester(bringIntoView),
         content = content,
     )
+}
+
+/** A reversible studio control for settings sliders, independent of keyboard theme exports. */
+@Composable
+internal fun GlassRailPatternPicker() {
+    val context = LocalContext.current
+    var pattern by remember(context) { mutableStateOf(GlassRailPreferences.load(context)) }
+    var preview by rememberSaveable { mutableStateOf(.58f) }
+    Column(Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 8.dp)) {
+        Text("Studio slider textures", style = MaterialTheme.typography.titleSmall)
+        Text(
+            "Decorates the unfilled rails of settings sliders. Saved locally; does not alter the keyboard theme.",
+            style = MaterialTheme.typography.bodySmall,
+        )
+        Row(
+            Modifier.fillMaxWidth().horizontalScroll(rememberScrollState()),
+            horizontalArrangement = Arrangement.spacedBy(6.dp),
+        ) {
+            GlassRailPattern.entries.forEach { option ->
+                FilterChip(
+                    selected = pattern == option,
+                    onClick = {
+                        pattern = option
+                        GlassRailPreferences.save(context, option)
+                    },
+                    label = { Text(option.label) },
+                    modifier = Modifier.testTag("glass-rail:${option.name}"),
+                )
+            }
+        }
+        Slider(preview, { preview = it }, valueRange = 0f..1f, railPattern = pattern)
+    }
 }

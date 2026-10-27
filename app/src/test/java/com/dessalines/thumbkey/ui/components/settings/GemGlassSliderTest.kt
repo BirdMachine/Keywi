@@ -19,6 +19,7 @@ import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.performSemanticsAction
 import androidx.compose.ui.unit.dp
 import org.junit.Assert.assertEquals
+import org.robolectric.RuntimeEnvironment
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -37,17 +38,34 @@ class GemGlassSliderTest {
 
     @Test fun lightGlassRetainsAccessibleAdjustment() = render(false)
 
-    private fun render(dark: Boolean) {
+    @Test fun stippledRailRetainsAccessibleAdjustment() = render(true, GlassRailPattern.DOTS)
+
+    @Test fun meshedRailRetainsAccessibleAdjustment() = render(false, GlassRailPattern.MESH)
+
+    @Test fun railPatternPreferencePersistsAndFallsBack() {
+        val context = RuntimeEnvironment.getApplication()
+        try {
+            GlassRailPreferences.save(context, GlassRailPattern.DIAGONAL)
+            assertEquals(GlassRailPattern.DIAGONAL, GlassRailPreferences.load(context))
+            context.getSharedPreferences("keywi_control_appearance", 0).edit()
+                .putString("glass_rail_pattern", "unknown").commit()
+            assertEquals(GlassRailPattern.PLAIN, GlassRailPreferences.load(context))
+        } finally {
+            GlassRailPreferences.save(context, GlassRailPattern.PLAIN)
+        }
+    }
+
+    private fun render(dark: Boolean, pattern: GlassRailPattern = GlassRailPattern.PLAIN) {
         var changed = 0f
         compose.setContent {
             MaterialTheme(colorScheme = if (dark) darkColorScheme() else lightColorScheme()) {
                 Box(Modifier.background(MaterialTheme.colorScheme.background).padding(24.dp).testTag("preview")) {
-                    GemGlassSlider(.6f, { changed = it }, Modifier.width(280.dp).testTag("slider"))
+                    GemGlassSlider(.6f, { changed = it }, Modifier.width(280.dp).testTag("slider"), railPattern = pattern)
                 }
             }
         }
         val image = compose.onNodeWithTag("preview").captureToImage().asAndroidBitmap()
-        val output = File("build/outputs/tool-page-review/glass-slider-${if (dark) "dark" else "light"}.png")
+        val output = File("build/outputs/tool-page-review/glass-slider-${if (dark) "dark" else "light"}-${pattern.name.lowercase()}.png")
         output.parentFile.mkdirs()
         output.outputStream().use { image.compress(Bitmap.CompressFormat.PNG, 100, it) }
         compose.onNodeWithTag("slider").performSemanticsAction(SemanticsActions.SetProgress) { it(.75f) }
