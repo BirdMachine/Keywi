@@ -199,6 +199,7 @@ class ThemeAssetPackageTest {
     fun brokenPackagesCannotReplaceCustomOrWriteOutsideThemeFolders() {
         ThemeEngine.ensureMigrated(context)
         val before = ThemeEngine.export(ThemeEngine.loadCustom(context))
+        val beforeLibraryIds = ThemeEngine.listThemes(context).map { it.id }
         val source = ThemeEngine.loadCustom(context)
         val missing = source.copy(backdrop = source.backdrop.copy(mode = BackdropMode.GIF, mediaUri = "assets/absent.gif"))
         val invalid =
@@ -217,7 +218,9 @@ class ThemeAssetPackageTest {
             )
         invalid.forEach { bytes ->
             assertTrue(ThemeEngine.importPackage(context, ByteArrayInputStream(bytes)).isFailure)
+            assertTrue(ThemeEngine.importPackageIntoLibrary(context, ByteArrayInputStream(bytes)).isFailure)
             assertEquals(before, ThemeEngine.export(ThemeEngine.loadCustom(context)))
+            assertEquals(beforeLibraryIds, ThemeEngine.listThemes(context).map { it.id })
             assertEquals(CUSTOM_THEME_ID, ThemeEngine.activeThemeId(context))
         }
         assertFalse(File(context.filesDir, "escaped").exists())
