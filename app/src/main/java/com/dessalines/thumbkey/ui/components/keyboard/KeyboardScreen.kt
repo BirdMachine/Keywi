@@ -943,6 +943,7 @@ fun KeyboardScreen(
                                         keyGradientCanvasWidth = gradientCanvasWidth,
                                         keyGradientCanvasHeight = gradientCanvasHeight,
                                         keyDesignId = "$i:$j",
+                                        keyDesignMode = mode,
                                         keyRectangles = keyRectangles,
                                         keySequenceIndex = keyboard.arr.take(i).sumOf { it.size } + j,
                                         keyGradientOffsetX = gradientOffsetX,

@@ -66,6 +66,7 @@ fun MachineCutSkeleton(
     var advanced by remember { mutableStateOf(false) }
     var shifted by remember { mutableStateOf(false) }
     var symbols by remember { mutableStateOf(false) }
+    val designMode = if (symbols) com.dessalines.thumbkey.utils.KeyboardMode.NUMERIC else if (shifted) com.dessalines.thumbkey.utils.KeyboardMode.SHIFTED else com.dessalines.thumbkey.utils.KeyboardMode.MAIN
     var ctrl by remember { mutableStateOf(false) }
     var alt by remember { mutableStateOf(false) }
     var momentaryAdvanced by remember { mutableStateOf(false) }
@@ -256,9 +257,9 @@ fun MachineCutSkeleton(
                             height = height,
                             radius = radius,
                             borderWidth = keyBorderWidth.dp,
-                            theme = theme.forKey("$index:$cellIndex"),
-                            groupSurface = theme.groupCanvasForKey("$index:$cellIndex", KeyGradientLayer.SURFACE, keyRectangles),
-                            groupBorder = theme.groupCanvasForKey("$index:$cellIndex", KeyGradientLayer.BORDER, keyRectangles),
+                            theme = theme.forKey("$index:$cellIndex", designMode),
+                            groupSurface = theme.groupCanvasForKey("$index:$cellIndex", KeyGradientLayer.SURFACE, keyRectangles, designMode),
+                            groupBorder = theme.groupCanvasForKey("$index:$cellIndex", KeyGradientLayer.BORDER, keyRectangles, designMode),
                             designId = "$index:$cellIndex",
                             sequenceIndex = rows.take(index).sumOf { it.size } + cellIndex,
                             appearanceEnabled = appearanceEnabled,
