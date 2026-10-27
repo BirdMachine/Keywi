@@ -50,6 +50,7 @@ import com.dessalines.thumbkey.ui.components.settings.GemOutlinedButton as Outli
 fun ThemeManagerSection(
     onThemeApplied: () -> Unit,
     onEditTheme: () -> Unit,
+    refreshRevision: Int = 0,
 ) {
     val context = LocalContext.current
     ThemeEngine.ensureMigrated(context)
@@ -57,6 +58,8 @@ fun ThemeManagerSection(
     var refresh by remember { mutableStateOf(0) }
     var expanded by remember { mutableStateOf(false) }
     var naming by remember { mutableStateOf(false) }
+    var pendingThemeId by remember { mutableStateOf<String?>(null) }
+    var confirmReset by remember { mutableStateOf(false) }
     var name by remember { mutableStateOf("") }
     var message by remember { mutableStateOf<String?>(null) }
     val scope = rememberCoroutineScope()
@@ -92,7 +95,7 @@ fun ThemeManagerSection(
                                     val second = it.read()
                                     it.reset()
                                     if (first == 'P'.code && second == 'K'.code) {
-                                        ThemeEngine.importPackage(context, it).getOrThrow()
+                                        ThemeEngine.importPackageIntoLibrary(context, it).getOrThrow()
                                     } else {
                                         val output = ByteArrayOutputStream()
                                         val buffer = ByteArray(8192)
@@ -102,14 +105,19 @@ fun ThemeManagerSection(
                                             require(output.size() + count <= 1024 * 1024) { "Theme document is too large" }
                                             output.write(buffer, 0, count)
                                         }
-                                        ThemeEngine.importIntoCustom(context, output.toString("UTF-8")).getOrThrow()
+                                        ThemeEngine.importIntoLibrary(context, output.toString("UTF-8")).getOrThrow()
                                     }
                                 }
                             }
                         }
                     busy = false
                     result.fold(
-                        onSuccess = { changed("Imported into Custom, including assets") },
+                        onSuccess = { imported ->
+                            // The newly imported theme is only selected; active keyboard and Custom remain untouched.
+                            refresh++
+                            pendingThemeId = imported.id
+                            message = "Imported ${imported.name} to your library. Review its tile, then Apply selected theme if you want to use it."
+                        },
                         onFailure = { message = "Import failed: ${it.message ?: "invalid theme"}" },
                     )
                 }
@@ -141,7 +149,7 @@ fun ThemeManagerSection(
         }
 
     @Suppress("UNUSED_VARIABLE")
-    val refreshToken = refresh
+    val refreshToken = refresh + refreshRevision
     val current = active()
 
     Column(
@@ -151,6 +159,10 @@ fun ThemeManagerSection(
         Text("✦ Saved themes", style = MaterialTheme.typography.titleMedium)
         Text(
             "Images, GIFs and fonts live in Keywi's theme folders. Exports include these assets.",
+            style = MaterialTheme.typography.bodySmall,
+        )
+        Text(
+            "Import adds a new saved theme without applying it or replacing Custom. Choose Apply selected theme when ready.",
             style = MaterialTheme.typography.bodySmall,
         )
         if (busy) Text("Copying theme files…", style = MaterialTheme.typography.bodySmall)
@@ -173,6 +185,7 @@ fun ThemeManagerSection(
         // Library tiles are rendered with each theme's actual saved backdrop.
         // The renderer resolves app-owned assets instead of depending on source URIs.
         val libraryThemes = listOf(ThemeEngine.customPreview(context)) + themes()
+        val pendingTheme = libraryThemes.firstOrNull { it.id == pendingThemeId && it.id != current.id }
         ThemeLibraryStrip(
             themes =
                 libraryThemes.map { theme ->
@@ -188,16 +201,48 @@ fun ThemeManagerSection(
                         }
                     }
                 },
-            selectedId = current.id,
+            selectedId = pendingTheme?.id ?: current.id,
+            activeId = current.id,
             onSelect = { id ->
-                if (!busy && id != current.id) {
-                    libraryThemes.firstOrNull { it.id == id }?.let {
-                        ThemeEngine.apply(context, it)
-                        changed()
-                    }
+                if (!busy) {
+                    // Browsing is never an implicit apply or an overwrite of live Custom edits.
+                    pendingThemeId = id.takeUnless { it == current.id }
+                    message = null
                 }
             },
         )
+        Text("Applied: ${current.name}. Tap another theme to select it without changing your keyboard.",
+            style = MaterialTheme.typography.bodySmall)
+        if (pendingTheme != null) {
+            Text("Selected: ${pendingTheme.name} (not applied). Its tile shows its saved backdrop; the test keyboard still shows your active theme.",
+                style = MaterialTheme.typography.bodySmall)
+            Row(horizontalArrangement = Arrangement.spacedBy(8.dp), modifier = Modifier.fillMaxWidth()) {
+                Button(
+                    enabled = !busy,
+                    onClick = {
+                        val leavingCustom = current.id == CUSTOM_THEME_ID
+                        runCatching {
+                            // Custom's live controls can differ from its last saved manifest.
+                            // Save them before leaving, so reselecting Custom restores the scratch work.
+                            if (leavingCustom) snapshotCustom()
+                            ThemeEngine.apply(context, pendingTheme)
+                        }.fold(
+                            onSuccess = {
+                                pendingThemeId = null
+                                changed(
+                                    if (leavingCustom) "Applied ${pendingTheme.name}. Custom scratch edits were preserved."
+                                    else "Applied ${pendingTheme.name}.",
+                                )
+                            },
+                            onFailure = { message = "Could not apply theme: ${it.message ?: "unknown error"}" },
+                        )
+                    },
+                    modifier = Modifier.weight(1f),
+                ) { Text("Apply selected theme") }
+                OutlinedButton(enabled = !busy, onClick = { pendingThemeId = null },
+                    modifier = Modifier.weight(1f)) { Text("Cancel selection") }
+            }
+        }
 
         Row(horizontalArrangement = Arrangement.spacedBy(8.dp), modifier = Modifier.fillMaxWidth()) {
             if (current.id != CUSTOM_THEME_ID) {
@@ -245,14 +290,32 @@ fun ThemeManagerSection(
         }
 
         if (current.id == CUSTOM_THEME_ID) {
-            TextButton(onClick = {
-                ThemeEngine.resetCustom(context)
-                changed("Custom reset to defaults")
-            }) {
+            TextButton(enabled = !busy, onClick = { confirmReset = true }) {
                 Text("Reset Custom")
             }
         }
         message?.let { Text(it, style = MaterialTheme.typography.bodySmall) }
+    }
+
+    if (confirmReset) {
+        AlertDialog(
+            onDismissRequest = { confirmReset = false },
+            title = { Text("Reset Custom?") },
+            text = { Text("This replaces your current Custom scratch theme with defaults, including unsaved edits. Saved library themes will not change.") },
+            confirmButton = {
+                TextButton(onClick = {
+                    confirmReset = false
+                    runCatching { ThemeEngine.resetCustom(context) }.fold(
+                        onSuccess = {
+                            pendingThemeId = null
+                            changed("Custom reset to defaults")
+                        },
+                        onFailure = { message = "Reset failed: ${it.message ?: "unknown error"}" },
+                    )
+                }) { Text("Reset Custom") }
+            },
+            dismissButton = { TextButton(onClick = { confirmReset = false }) { Text("Keep Custom") } },
+        )
     }
 
     if (naming) {

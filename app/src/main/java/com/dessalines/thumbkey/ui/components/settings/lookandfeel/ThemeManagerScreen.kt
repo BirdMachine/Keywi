@@ -12,7 +12,6 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.key
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -58,12 +57,13 @@ fun ThemeManagerScreen(navController: NavController) {
         ) {
             AdvancedThemeEditorEntry(navController)
 
-            key(managerRefresh, TaskerThemeAutomation.revision) {
-                ThemeManagerSection(
-                    onThemeApplied = { managerRefresh++ },
-                    onEditTheme = { navController.navigate("advancedLookAndFeelEditor") },
-                )
-            }
+            // Refresh theme data without remounting the section: document picker callbacks
+            // may still be importing when the Activity returns through ON_RESUME.
+            ThemeManagerSection(
+                onThemeApplied = { managerRefresh++ },
+                onEditTheme = { navController.navigate("advancedLookAndFeelEditor") },
+                refreshRevision = managerRefresh + TaskerThemeAutomation.revision,
+            )
 
             GemNavigationPreference(
                 title = { Text("Tasker theme updates") },

@@ -7,6 +7,9 @@ import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.horizontalScroll
+import androidx.compose.foundation.relocation.BringIntoViewRequester
+import androidx.compose.foundation.relocation.bringIntoViewRequester
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -32,6 +35,8 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.withFrameNanos
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.key
 import androidx.compose.runtime.mutableIntStateOf
@@ -45,8 +50,10 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
@@ -79,6 +86,10 @@ import com.dessalines.thumbkey.ui.components.keyboard.ToolbarBorderPreferences
 import com.dessalines.thumbkey.ui.components.keyboard.ToolbarLayoutPreferences
 import com.dessalines.thumbkey.ui.components.keyboard.ToolbarThemePreferences
 import com.dessalines.thumbkey.ui.components.keyboard.keyboardGradientBackground
+import com.dessalines.thumbkey.ui.components.settings.GlassRailDensity
+import com.dessalines.thumbkey.ui.components.settings.GlassRailIntensity
+import com.dessalines.thumbkey.ui.components.settings.GlassRailPattern
+import com.dessalines.thumbkey.ui.components.settings.GlassRailPreferences
 import com.dessalines.thumbkey.ui.components.settings.gemSectionModifier
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -96,6 +107,8 @@ fun AdvancedLookAndFeelScreen(navController: NavController) {
     val openingTheme = remember(context) { ThemeEngine.captureCurrent(context, "Opening appearance", CUSTOM_THEME_ID) }
     var editNotice by remember { mutableStateOf<String?>(null) }
     var editorRevision by remember { mutableIntStateOf(0) }
+    var jumpTarget by rememberSaveable { mutableStateOf<String?>(null) }
+    var jumpRevision by remember { mutableIntStateOf(0) }
 
     val editorBackground = if (com.dessalines.thumbkey.ui.components.settings.LocalSettingsDrip.current != null) androidx.compose.ui.graphics.Color.Transparent else MaterialTheme.colorScheme.surface
     Scaffold(containerColor = editorBackground, topBar = { SimpleTopAppBar(text = "Theme editor", navController = navController) }) { padding ->
@@ -143,8 +156,13 @@ fun AdvancedLookAndFeelScreen(navController: NavController) {
                     Modifier.padding(horizontal = 16.dp),
                     style = MaterialTheme.typography.bodySmall,
                 )
+                GlassRailPatternPicker()
+                ThemeEditorJumpBar(selectedTitle = jumpTarget) { target ->
+                    jumpTarget = target
+                    jumpRevision++
+                }
                 key(editorRevision) {
-                    ThemeEditorFold("Keyboard background", "Image, GIF, opacity and gradients", true) {
+                    ThemeEditorFold("Keyboard background", "Image, GIF, opacity and gradients", true, jumpTarget, jumpRevision) {
                         SurfaceThemeSection(
                             "Main backdrop",
                             "The large space behind and around the keys.",
@@ -152,7 +170,7 @@ fun AdvancedLookAndFeelScreen(navController: NavController) {
                             BackdropThemePreferences::save,
                         )
                     }
-                    ThemeEditorFold("Suggestion bar", "Toolbar, lozenges and current-word highlight") {
+                    ThemeEditorFold("Suggestion bar", "Toolbar, lozenges and current-word highlight", jumpTarget = jumpTarget, jumpRevision = jumpRevision) {
                         SurfaceThemeSection(
                             "Suggestion toolbar",
                             "The strip behind suggestion lozenges and the ✨ toggle.",
@@ -162,10 +180,10 @@ fun AdvancedLookAndFeelScreen(navController: NavController) {
                         )
                         SuggestionLozengeAppearanceSection()
                     }
-                    ThemeEditorFold("Keys", "Fill, borders, shadows and key surfaces", true) {
+                    ThemeEditorFold("Keys", "Fill, borders, shadows and key surfaces", true, jumpTarget, jumpRevision) {
                         KeyAppearanceSection { navController.navigate("advancedKeyWordSelection") }
                     }
-                    ThemeEditorFold("Typography", "Key labels, fonts and suggestion text") {
+                    ThemeEditorFold("Typography", "Key labels, fonts and suggestion text", jumpTarget = jumpTarget, jumpRevision = jumpRevision) {
                         FontAndSuggestionSection()
                     }
                 }
@@ -485,13 +503,63 @@ private fun SuggestionLozengeAppearanceSection() {
 private fun KeyAppearanceSection(onOpenKeyDesign: () -> Unit) {
     val context = LocalContext.current
     var state by remember { mutableStateOf(KeyThemePreferences.load(context)) }
+    var recipeUndo by remember { mutableStateOf<KeyThemeState?>(null) }
+    var activeRecipe by remember { mutableStateOf<KeyMaterialRecipe?>(null) }
 
     fun persist(next: KeyThemeState) {
+        recipeUndo = null
+        activeRecipe = null
         state = next
         KeyThemePreferences.save(context, next)
     }
+
+    fun applyRecipe(recipe: KeyMaterialRecipe) {
+        recipeUndo = state
+        activeRecipe = recipe
+        state = recipe.applyTo(state)
+        KeyThemePreferences.save(context, state)
+    }
+
     Column(Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(6.dp)) {
         Text("Keys", style = MaterialTheme.typography.titleSmall)
+        Text("Material recipes", style = MaterialTheme.typography.titleSmall)
+        Text(
+            "One-tap global key finishes. Your individual key and group designs stay intact.",
+            style = MaterialTheme.typography.bodySmall,
+        )
+        Row(
+            Modifier.fillMaxWidth().horizontalScroll(rememberScrollState()),
+            horizontalArrangement = Arrangement.spacedBy(8.dp),
+        ) {
+            KeyMaterialRecipe.entries.forEach { recipe ->
+                OutlinedButton(
+                    onClick = { applyRecipe(recipe) },
+                    modifier = Modifier.testTag("material-recipe:${recipe.name}"),
+                ) {
+                    val preview = recipe.applyTo(KeyThemeState())
+                    Row(
+                        horizontalArrangement = Arrangement.spacedBy(7.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                    ) {
+                        Box(
+                            Modifier.size(18.dp)
+                                .clip(RoundedCornerShape(5.dp))
+                                .background(Brush.linearGradient(preview.surfaceGradient.stops.map { it.color }))
+                                .border(1.dp, preview.borderGradient.stops.first().color, RoundedCornerShape(5.dp)),
+                        )
+                        Text(recipe.label)
+                    }
+                }
+            }
+        }
+        activeRecipe?.let { recipe ->
+            Text(recipe.description, style = MaterialTheme.typography.bodySmall)
+        }
+        recipeUndo?.let { previous ->
+            OutlinedButton(onClick = { persist(previous) }, modifier = Modifier.testTag("material-recipe:undo")) {
+                Text("Undo last recipe")
+            }
+        }
         OutlinedButton(onClick = onOpenKeyDesign, modifier = Modifier.fillMaxWidth()) { Text("Design individual keys & groups") }
         Text("Key surface", style = MaterialTheme.typography.titleSmall)
         ChipRow(KeySurfaceStyle.entries, state.surfaceStyle, {
@@ -691,21 +759,138 @@ private fun GradientEditor(
     }
 }
 
-/** Independent editor sections retain a clear connection to their controls as they expand. */
+/** Lightweight section shortcuts keep deep customization discoverable without a new editor hierarchy. */
 @Composable
-private fun ThemeEditorFold(
+internal fun ThemeEditorJumpBar(
+    selectedTitle: String?,
+    onJump: (String) -> Unit,
+) {
+    // Short aliases avoid duplicating the fold headings in accessibility/text searches.
+    val sections = listOf(
+        "Keyboard background" to "Backdrop",
+        "Suggestion bar" to "Suggestions",
+        "Keys" to "Key faces",
+        "Typography" to "Fonts",
+    )
+    Column(Modifier.fillMaxWidth().padding(top = 8.dp)) {
+        Text(
+            "Jump to a section · swipe for more",
+            Modifier.padding(horizontal = 16.dp, vertical = 2.dp),
+            style = MaterialTheme.typography.labelMedium,
+        )
+        Row(
+            Modifier.fillMaxWidth().horizontalScroll(rememberScrollState()).padding(horizontal = 12.dp),
+            horizontalArrangement = Arrangement.spacedBy(8.dp),
+        ) {
+            sections.forEach { (title, label) ->
+                FilterChip(
+                    selected = selectedTitle == title,
+                    onClick = { onJump(title) },
+                    label = { Text(label) },
+                    modifier = Modifier.testTag("theme-jump:$title"),
+                )
+            }
+        }
+    }
+}
+
+/** Independent editor sections retain their manual expansion state; shortcuts reopen and scroll to a target. */
+@Composable
+internal fun ThemeEditorFold(
     title: String,
     subtitle: String,
     initiallyExpanded: Boolean = false,
+    jumpTarget: String? = null,
+    jumpRevision: Int = 0,
     content: @Composable () -> Unit,
 ) {
     var expanded by rememberSaveable(title) { mutableStateOf(initiallyExpanded) }
+    val bringIntoView = remember { BringIntoViewRequester() }
+    LaunchedEffect(jumpRevision) {
+        if (jumpRevision > 0 && jumpTarget == title) {
+            expanded = true
+            // Let the expansion reach the layout pass before asking the scroll container to reveal it.
+            withFrameNanos { }
+            bringIntoView.bringIntoView()
+        }
+    }
     ThemeEditorExpandableSection(
         title = title,
         subtitle = subtitle,
         expanded = expanded,
         onExpandedChange = { expanded = it },
         modifier = Modifier.padding(horizontal = 12.dp, vertical = 4.dp),
+        headerModifier = Modifier.bringIntoViewRequester(bringIntoView),
         content = content,
     )
+}
+
+/** A reversible studio control for settings sliders, independent of keyboard theme exports. */
+@Composable
+internal fun GlassRailPatternPicker() {
+    val context = LocalContext.current
+    var pattern by remember(context) { mutableStateOf(GlassRailPreferences.load(context)) }
+    var density by remember(context) { mutableStateOf(GlassRailPreferences.loadDensity(context)) }
+    var intensity by remember(context) { mutableStateOf(GlassRailPreferences.loadIntensity(context)) }
+    var preview by rememberSaveable { mutableStateOf(.58f) }
+    Column(Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 8.dp)) {
+        Text("Studio slider textures", style = MaterialTheme.typography.titleSmall)
+        Text(
+            "Decorates the unfilled rails of settings sliders. Saved locally; does not alter the keyboard theme.",
+            style = MaterialTheme.typography.bodySmall,
+        )
+        Row(
+            Modifier.fillMaxWidth().horizontalScroll(rememberScrollState()),
+            horizontalArrangement = Arrangement.spacedBy(6.dp),
+        ) {
+            GlassRailPattern.entries.forEach { option ->
+                FilterChip(
+                    selected = pattern == option,
+                    onClick = {
+                        pattern = option
+                        GlassRailPreferences.save(context, option)
+                    },
+                    label = { Text(option.label) },
+                    modifier = Modifier.testTag("glass-rail:${option.name}"),
+                )
+            }
+        }
+        Text("Pattern spacing", style = MaterialTheme.typography.labelMedium)
+        Row(
+            Modifier.fillMaxWidth().horizontalScroll(rememberScrollState()),
+            horizontalArrangement = Arrangement.spacedBy(6.dp),
+        ) {
+            GlassRailDensity.entries.forEach { option ->
+                FilterChip(
+                    selected = density == option,
+                    onClick = {
+                        density = option
+                        GlassRailPreferences.saveDensity(context, option)
+                    },
+                    enabled = pattern != GlassRailPattern.PLAIN,
+                    label = { Text(option.label) },
+                    modifier = Modifier.testTag("glass-rail-density:${option.name}"),
+                )
+            }
+        }
+        Text("Pattern contrast", style = MaterialTheme.typography.labelMedium)
+        Row(
+            Modifier.fillMaxWidth().horizontalScroll(rememberScrollState()),
+            horizontalArrangement = Arrangement.spacedBy(6.dp),
+        ) {
+            GlassRailIntensity.entries.forEach { option ->
+                FilterChip(
+                    selected = intensity == option,
+                    onClick = {
+                        intensity = option
+                        GlassRailPreferences.saveIntensity(context, option)
+                    },
+                    enabled = pattern != GlassRailPattern.PLAIN,
+                    label = { Text(option.label) },
+                    modifier = Modifier.testTag("glass-rail-intensity:${option.name}"),
+                )
+            }
+        }
+        Slider(preview, { preview = it }, valueRange = 0f..1f, railPattern = pattern, railDensity = density, railIntensity = intensity)
+    }
 }
