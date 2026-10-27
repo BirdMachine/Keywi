@@ -44,6 +44,8 @@ class GemGlassSliderTest {
 
     @Test fun fineStippleRetainsAccessibleAdjustment() = render(true, GlassRailPattern.DOTS, GlassRailDensity.FINE)
 
+    @Test fun vividMeshRetainsAccessibleAdjustment() = render(false, GlassRailPattern.MESH, intensity = GlassRailIntensity.VIVID)
+
     @Test fun railPatternPreferencePersistsAndFallsBack() {
         val context = RuntimeEnvironment.getApplication()
         try {
@@ -70,21 +72,35 @@ class GemGlassSliderTest {
         }
     }
 
+    @Test fun railIntensityPreferencePersistsAndFallsBack() {
+        val context = RuntimeEnvironment.getApplication()
+        try {
+            GlassRailPreferences.saveIntensity(context, GlassRailIntensity.VIVID)
+            assertEquals(GlassRailIntensity.VIVID, GlassRailPreferences.loadIntensity(context))
+            context.getSharedPreferences("keywi_control_appearance", 0).edit()
+                .putString("glass_rail_intensity", "unknown").commit()
+            assertEquals(GlassRailIntensity.BALANCED, GlassRailPreferences.loadIntensity(context))
+        } finally {
+            GlassRailPreferences.saveIntensity(context, GlassRailIntensity.BALANCED)
+        }
+    }
+
     private fun render(
         dark: Boolean,
         pattern: GlassRailPattern = GlassRailPattern.PLAIN,
         density: GlassRailDensity = GlassRailDensity.BALANCED,
+        intensity: GlassRailIntensity = GlassRailIntensity.BALANCED,
     ) {
         var changed = 0f
         compose.setContent {
             MaterialTheme(colorScheme = if (dark) darkColorScheme() else lightColorScheme()) {
                 Box(Modifier.background(MaterialTheme.colorScheme.background).padding(24.dp).testTag("preview")) {
-                    GemGlassSlider(.6f, { changed = it }, Modifier.width(280.dp).testTag("slider"), railPattern = pattern, railDensity = density)
+                    GemGlassSlider(.6f, { changed = it }, Modifier.width(280.dp).testTag("slider"), railPattern = pattern, railDensity = density, railIntensity = intensity)
                 }
             }
         }
         val image = compose.onNodeWithTag("preview").captureToImage().asAndroidBitmap()
-        val output = File("build/outputs/tool-page-review/glass-slider-${if (dark) "dark" else "light"}-${pattern.name.lowercase()}${if (density == GlassRailDensity.BALANCED) "" else "-${density.name.lowercase()}"}.png")
+        val output = File("build/outputs/tool-page-review/glass-slider-${if (dark) "dark" else "light"}-${pattern.name.lowercase()}${if (density == GlassRailDensity.BALANCED) "" else "-${density.name.lowercase()}"}${if (intensity == GlassRailIntensity.BALANCED) "" else "-${intensity.name.lowercase()}"}.png")
         output.parentFile.mkdirs()
         output.outputStream().use { image.compress(Bitmap.CompressFormat.PNG, 100, it) }
         compose.onNodeWithTag("slider").performSemanticsAction(SemanticsActions.SetProgress) { it(.75f) }

@@ -145,3 +145,8 @@ Related commits: `9761468` (non-destructive JSON/ZIP library import APIs), `0831
 - Verified nonexpired `keywi-debug` artifact ID `12730981446`, ZIP size 32408562 bytes. [Download from build artifacts](https://github.com/BirdMachine/Keywi/actions/runs/40496485020).
 - Robolectric test writes a fine-stipple PNG, but it was **not independently visually inspected** this session. No emulator or physical-device visual validation. Dev/main unchanged; draft PR #57 unmerged.
 - The next session should check this journal, latest CI and branch head before adding further code; preserve this successful APK as a fallback. Suggested bounded next: contrast/readability review of recipes or focused theme-preview polish, then concise final report before 10 AM.
+
+## Session 5 — 2026-10-27 09:00 EDT (final session; pending CI verification)
+- Preflight confirmed branch head `c34cc73861e600710dc4c81df7f681da3055d402`, latest CI [40497167940](https://github.com/BirdMachine/Keywi/actions/runs/40497167940) successful, artifact `keywi-debug` ID `12730877599` nonexpired. Preserved as fallback.
+- Added opt-in **Pattern contrast** for Studio glass sliders: Subtle 55%, Balanced 100% default, Vivid 145% mark opacity, separate from spacing and pattern choice. Pure Compose Canvas; no shaders, no theme export changes, no changes to Material3 slider semantics. Contrast options disabled with Plain. Added persistence/unknown-value fallback and Robolectric light vivid-mesh semantics/screenshot test.
+- CI and APK validation for this commit are **pending**; do not treat this code as build-verified until the new workflow succeeds. Finalize after checking Actions result. No emulator/physical-device proof claimed.
