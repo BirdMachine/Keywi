@@ -192,6 +192,7 @@ fun ThemeManagerSection(
                     }
                 },
             selectedId = pendingTheme?.id ?: current.id,
+            activeId = current.id,
             onSelect = { id ->
                 if (!busy) {
                     // Browsing is never an implicit apply or an overwrite of live Custom edits.
