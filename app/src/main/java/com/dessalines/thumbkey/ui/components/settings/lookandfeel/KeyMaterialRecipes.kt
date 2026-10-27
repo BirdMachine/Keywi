@@ -49,6 +49,6 @@ internal enum class KeyMaterialRecipe(val label: String, val description: String
 
     companion object {
         private fun gradient(angle: Float, vararg colors: Long): KeyboardBackdrop =
-            KeyboardBackdrop.fromColors(colors.map { Color(it) }, angle)
+            KeyboardBackdrop.fromColors(colors.map { Color(it.toInt()) }, angle)
     }
 }
