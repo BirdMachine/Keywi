@@ -1,13 +1,14 @@
 name: Keywi Emulator Showcase
 
 on:
-  workflow_dispatch:
   push:
-    branches:
-      - feature/emulator-showcase-capture
+    branches: [main]
     paths:
-      - .github/workflows/emulator-showcase.yml
+      - app/src/main/java/com/dessalines/thumbkey/ui/components/keyboard/**
       - scripts/capture-keywi-showcase.py
+      - .github/workflows/emulator-showcase.yml
+      - .github/actions/setup-android-emulator/**
+  workflow_dispatch:
 
 permissions:
   contents: read
@@ -28,16 +29,8 @@ jobs:
         run: |
           base64 --decode .github/keywi-debug.keystore.b64 > .github/keywi-debug.keystore
           chmod 600 .github/keywi-debug.keystore
-      - uses: actions/setup-java@v5
-        with:
-          distribution: temurin
-          java-version: '21'
-      - uses: gradle/actions/setup-gradle@v6
-      - name: Enable KVM
-        run: |
-          echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
-          sudo udevadm control --reload-rules
-          sudo udevadm trigger --name-match=kvm
+      - name: Prepare Android emulator build
+        uses: ./.github/actions/setup-android-emulator
       - name: Build Keywi
         run: ./gradlew assembleDebug
       - name: Capture real keyboard
