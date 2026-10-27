@@ -20,6 +20,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -45,7 +46,9 @@ fun QuickSettingsWorkspace(
     var suggestions by remember { mutableStateOf(SuggestionPreferences.enabled(context)) }
     var power by remember { mutableStateOf(KeywiPowerPreferences.load(context)) }
     var sounds by remember { mutableStateOf(ActionSoundPreferences.get(context).enabled) }
-    var showControls by remember { mutableStateOf(false) }
+    val showControls = ToolbarControlsState.expanded
+    val scrollState = rememberScrollState()
+    LaunchedEffect(showControls) { if (showControls) scrollState.scrollTo(0) }
     DisposableEffect(context) {
         // The stationary cycler and other settings surfaces can change these while this page stays open.
         val preferences =
@@ -77,10 +80,11 @@ fun QuickSettingsWorkspace(
                 modifier = modifier.fillMaxSize().toolPageBackground(),
             ) {
                 Column(
-                    Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(12.dp),
+                    Modifier.fillMaxSize().verticalScroll(scrollState).padding(12.dp),
                     verticalArrangement = Arrangement.spacedBy(6.dp),
                 ) {
                     Text("Quick Settings", style = MaterialTheme.typography.titleMedium)
+                    if (showControls) ToolbarControlsPanel(onDismiss = { ToolbarControlsState.expanded = false })
                     toolConfig.visibleQuickTools().forEach { tool ->
                         when (tool) {
                             QuickTool.SUGGESTIONS -> {
@@ -91,7 +95,7 @@ fun QuickSettingsWorkspace(
                     }
                             }
                             QuickTool.FEEDBACK -> {
-                    com.dessalines.thumbkey.effects.FeedbackModeControl(onChanged = onPreferencesChanged)
+                    FeedbackModeWell(onChanged = onPreferencesChanged)
                             }
                             QuickTool.SOUNDS -> {
                     QuickSettingToggle("Use custom sound pack", sounds) {
@@ -144,7 +148,7 @@ fun QuickSettingsWorkspace(
                     )
                             }
                             QuickTool.TOOLBAR -> {
-                    ToolPageSurface(modifier = Modifier.fillMaxWidth(), onClick = { showControls = true }) { Text("Toolbar controls", modifier = Modifier.padding(horizontal = 12.dp, vertical = 12.dp)) }
+                    ToolPageSurface(modifier = Modifier.fillMaxWidth(), onClick = { ToolbarControlsState.expanded = !ToolbarControlsState.expanded }) { Text("Toolbar controls", modifier = Modifier.padding(horizontal = 12.dp, vertical = 12.dp)) }
                             }
                             QuickTool.THEMES -> {
                     ToolPageSurface(modifier = Modifier.fillMaxWidth(), onClick = { open("advancedLookAndFeel") }) { Text("Themes & appearance", modifier = Modifier.padding(horizontal = 12.dp, vertical = 12.dp)) }
@@ -164,7 +168,6 @@ fun QuickSettingsWorkspace(
                     ToolPageSurface(modifier = Modifier.fillMaxWidth(), onClick = { open("settings") }) { Text("All Keywi settings", modifier = Modifier.padding(horizontal = 12.dp, vertical = 12.dp)) }
                 }
             }
-            if (showControls) ToolbarControlsDialog(onDismiss = { showControls = false })
         }
     }
 }

@@ -536,6 +536,7 @@ fun SuggestionBarV2(
                 SuggestionToolbarContent(
                     page = page,
                     modifier = Modifier.weight(1f).fillMaxSize(),
+                    onReturnToKeyboard = { onPage(ToolbarPage.CHARACTERS) },
                 ) {
                     Row(
                         modifier =
@@ -671,6 +672,7 @@ private fun Modifier.suggestionToggleKeyBorder(theme: KeyThemeState): Modifier =
 internal fun SuggestionToolbarContent(
     page: ToolbarPage,
     modifier: Modifier = Modifier,
+    onReturnToKeyboard: (() -> Unit)? = null,
     characterContent: @Composable () -> Unit,
 ) {
     Box(modifier = modifier, contentAlignment = Alignment.Center) {
@@ -678,7 +680,7 @@ internal fun SuggestionToolbarContent(
             characterContent()
         } else {
             Text(
-                text = page.title,
+                text = "‹  ${page.title}",
                 style = MaterialTheme.typography.titleSmall,
                 fontWeight = FontWeight.SemiBold,
                 color = MaterialTheme.colorScheme.onSurface,
@@ -689,6 +691,9 @@ internal fun SuggestionToolbarContent(
                     Modifier
                         .fillMaxWidth()
                         .padding(horizontal = 6.dp)
+                        .then(if (onReturnToKeyboard != null) Modifier.clickable(
+                            onClickLabel = "Return to keyboard", onClick = onReturnToKeyboard,
+                        ) else Modifier)
                         .background(MaterialTheme.colorScheme.surface.copy(alpha = .78f), RoundedCornerShape(10.dp))
                         .padding(horizontal = 8.dp, vertical = 5.dp)
                         .semantics {

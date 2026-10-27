@@ -36,6 +36,7 @@ class QuickSettingsWorkspaceTest {
         ActionSoundPreferences.save(context, ActionSoundConfig())
         ActionGifPreferences.save(context, ActionGifState())
         KeywiPowerPreferences.save(context, KeywiPowerMode.CONSERVED)
+        ToolbarControlsState.expanded = false
         compose.setContent {
             MaterialTheme {
                 QuickSettingsWorkspace(onPreferencesChanged = { changes++ }, onOpenSettings = { route = it })
@@ -58,13 +59,13 @@ class QuickSettingsWorkspaceTest {
         }
     }
 
-    @Test fun feedbackCyclePersistsWithoutChangingTheCustomSoundSwitch() {
+    @Test fun feedbackChoicesPersistWithoutChangingTheCustomSoundSwitch() {
         show()
-        compose.onNodeWithText("Feedback: Sound → Vibrate only").performClick()
+        compose.onNodeWithText("Vibrate only").performClick()
         compose.runOnIdle { assertEquals(com.dessalines.thumbkey.effects.FeedbackMode.VIBRATE, com.dessalines.thumbkey.effects.FeedbackPreferences.get(context)) }
-        compose.onNodeWithText("Feedback: Vibrate only → Silent").performClick()
+        compose.onNodeWithText("Silent").performClick()
         compose.runOnIdle { assertEquals(com.dessalines.thumbkey.effects.FeedbackMode.SILENT, com.dessalines.thumbkey.effects.FeedbackPreferences.get(context)) }
-        compose.onNodeWithText("Feedback: Silent → Sound").performClick()
+        compose.onNodeWithText("Sound").performClick()
         compose.runOnIdle {
             assertEquals(com.dessalines.thumbkey.effects.FeedbackMode.SOUND, com.dessalines.thumbkey.effects.FeedbackPreferences.get(context))
             assertFalse(ActionSoundPreferences.get(context).enabled)
@@ -96,7 +97,18 @@ class QuickSettingsWorkspaceTest {
         ToolbarViewPreferences.setAction(context, ToolbarGesture.HOLD, ToolbarGestureAction.NONE)
         compose.onNodeWithText("Toolbar controls").performScrollTo().performClick()
         compose.onNodeWithText("Hold: Do nothing").assertExists()
-        compose.onNodeWithText("Done").performClick()
+        compose.onNodeWithText("Done").performScrollTo().performClick()
+    }
+
+    @Test fun desperateIsSelectableAndLeavesSavedSoundSourceIntact() {
+        show()
+        compose.onNodeWithContentDescription("Power mode Desperate").performScrollTo().performClick()
+        compose.runOnIdle { assertEquals(KeywiPowerMode.DESPERATE, KeywiPowerPreferences.load(context)) }
+        compose.onNodeWithText("Vibrate only").performScrollTo().performClick().assertIsSelected()
+        compose.runOnIdle {
+            assertFalse(ActionSoundPreferences.get(context).enabled)
+            KeywiPowerPreferences.save(context, KeywiPowerMode.CONSERVED)
+        }
     }
 
     @Test fun themeNavigationUsesExistingDestination() {

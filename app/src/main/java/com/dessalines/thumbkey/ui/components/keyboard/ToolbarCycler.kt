@@ -15,16 +15,11 @@ import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Diamond
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Switch
-import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.DropdownMenu
-import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
@@ -246,7 +241,6 @@ fun ToolbarCycler(
         } else {
             MaterialTheme.colorScheme.surface
         }
-    var showSettings by remember { mutableStateOf(false) }
     val toolConfig = rememberToolPageConfig()
     val visiblePages = toolConfig.visiblePages()
     val currentPage by rememberUpdatedState(page)
@@ -261,7 +255,10 @@ fun ToolbarCycler(
             ToolbarGestureAction.HOME -> changePage(ToolbarViewPreferences.home(context).takeIf { it in visiblePages } ?: ToolbarPage.CHARACTERS)
             ToolbarGestureAction.QUICK_SETTINGS -> changePage(ToolbarPage.QUICK_SETTINGS)
             ToolbarGestureAction.OPEN_SETTINGS -> openSettings?.invoke() ?: openKeywiSettings(context)
-            ToolbarGestureAction.CONFIGURE -> showSettings = true
+            ToolbarGestureAction.CONFIGURE -> {
+                ToolbarControlsState.expanded = true
+                changePage(ToolbarPage.QUICK_SETTINGS)
+            }
         }
     }
     val action by rememberUpdatedState(performAction)
@@ -325,7 +322,8 @@ fun ToolbarCycler(
                                 true
                             },
                             CustomAccessibilityAction("Configure toolbar controls") {
-                                showSettings = true
+                                ToolbarControlsState.expanded = true
+                                changePage(ToolbarPage.QUICK_SETTINGS)
                                 true
                             },
                         )
@@ -385,22 +383,23 @@ fun ToolbarCycler(
             }
         }
     }
-    if (showSettings) ToolbarControlsDialog(onDismiss = { showSettings = false })
+}
+
+/** Transient navigation request; never creates a second window over the IME. */
+internal object ToolbarControlsState {
+    var expanded by mutableStateOf(false)
 }
 
 @Composable
-fun ToolbarControlsDialog(onDismiss: () -> Unit) {
+internal fun ToolbarControlsPanel(onDismiss: () -> Unit) {
     val context = LocalContext.current
     val visiblePages = rememberToolPageConfig().visiblePages()
     var home by remember { mutableStateOf(ToolbarViewPreferences.home(context)) }
     var iconStyle by remember { mutableStateOf(ToolbarViewPreferences.iconStyle(context)) }
     var inverted by remember { mutableStateOf(ToolbarViewPreferences.invertScroll(context)) }
     var actions by remember { mutableStateOf(ToolbarGesture.entries.associateWith { ToolbarViewPreferences.action(context, it) }) }
-    AlertDialog(
-        onDismissRequest = onDismiss,
-        title = { Text("Toolbar controls") },
-        text = {
-            Column(Modifier.verticalScroll(rememberScrollState()), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+    Column(Modifier.padding(vertical = 8.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                Text("Toolbar controls", style = MaterialTheme.typography.titleMedium)
                 Text("Tap to toggle suggestions. Swipe up or down to change views. Scroll suggestions left or right.")
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Text("Invert tool scroll", Modifier.weight(1f))
@@ -444,10 +443,8 @@ fun ToolbarControlsDialog(onDismiss: () -> Unit) {
                     "These controls are always available from Quick Settings, even if you change the hold action.",
                     style = MaterialTheme.typography.bodySmall,
                 )
-            }
-        },
-        confirmButton = { TextButton(onClick = onDismiss) { Text("Done") } },
-    )
+        TextButton(onClick = onDismiss) { Text("Done") }
+    }
 }
 
 @Composable
@@ -458,14 +455,14 @@ private fun ToolbarChoice(
     onSelect: (Int) -> Unit,
 ) {
     var expanded by remember { mutableStateOf(false) }
-    Box {
-        TextButton(onClick = { expanded = true }) { Text("$title: $selected") }
-        DropdownMenu(expanded = expanded, onDismissRequest = { expanded = false }) {
+    Column {
+        TextButton(onClick = { expanded = !expanded }) { Text("$title: $selected") }
+        if (expanded) Column {
             choices.forEachIndexed { index, choice ->
-                DropdownMenuItem(text = { Text(choice) }, onClick = {
+                ToolPageSurface(selected = choice == selected, onClick = {
                     expanded = false
                     onSelect(index)
-                })
+                }) { Text(choice, Modifier.padding(12.dp)) }
             }
         }
     }
