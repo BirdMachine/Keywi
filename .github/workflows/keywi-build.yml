@@ -4,10 +4,12 @@ on:
   push:
     branches:
       - "main"
+      - "Dev"
   workflow_dispatch:
   pull_request:
     branches:
       - "main"
+      - "Dev"
 
 concurrency:
   group: keywi-ci-${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}

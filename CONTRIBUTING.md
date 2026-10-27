@@ -3,6 +3,7 @@
 <!-- prettier-ignore-start -->
 <!-- toc -->
 
+- [Keywi integration and releases](#keywi-integration-and-releases)
 - [Ways to contribute](#ways-to-contribute)
 - [How do I add my language or layout?](#how-do-i-add-my-language-or-layout)
 - [Theming guide](#theming-guide)
@@ -14,6 +15,17 @@
 
 <!-- tocstop -->
 <!-- prettier-ignore-end -->
+
+## Keywi integration and releases
+
+Keywi uses `Dev` (capital D) as its integration branch and `main` as its release branch.
+
+1. Start feature and fix branches from `Dev`, and target their pull requests at `Dev`.
+2. Merge reviewed work into `Dev` to test features together. CI validates the combined code and uploads a signed test APK as the `keywi-debug` workflow artifact.
+3. When the integrated changes are ready for release, open a pull request from `Dev` to `main`.
+4. A successful push to `main` publishes the verified APK as a GitHub Release. `Dev` builds do not publish releases.
+
+Keep the integration history when promoting `Dev` to `main` (use a merge commit rather than squashing the whole integration branch). If a fix lands directly on `main`, merge `main` back into `Dev` before continuing development. Documentation and emulator publishing remain limited to `main`.
 
 ## Ways to contribute
 
