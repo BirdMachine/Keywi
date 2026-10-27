@@ -25,10 +25,10 @@ Aim for **working, testable changes** and an APK when feasible, not only mockups
 - [x] Branch created from `Dev`.
 - [x] Mission, safeguards, and continuation structure written.
 - [x] Preflight audit of AdvancedLookAndFeelScreen and KeyDesignEditor; identified target: context-sensitive shortcuts and a compact editor navigation strip rather than replacing existing folds.
-- [ ] Implement at least one meaningful non-shader styling/customization enhancement.
-- [ ] Implement at least one coherent navigation/presentation improvement.
-- [ ] Add tests or coverage appropriate to changes.
-- [ ] Run CI/build and obtain a verified test APK if possible.
+- [x] Implement at least one meaningful non-shader styling/customization enhancement.
+- [x] Implement at least one coherent navigation/presentation improvement.
+- [x] Add tests or coverage appropriate to changes.
+- [x] Run CI/build and obtain a verified test APK if possible.
 - [ ] Capture trustworthy emulator/UI evidence if feasible.
 - [ ] Summarize improvements, tradeoffs, opportunities and remaining work.
 
@@ -43,3 +43,24 @@ Aim for **working, testable changes** and an APK when feasible, not only mockups
 - Candidate second experiment: non-shader material presets using existing gradient + surface/border/shadow controls; offer focused one-click combinations with an undo/revert path. Avoid overwriting unsaved Custom themes without affirmative selection.
 - Longer-range ideas: selective macro controls that map several existing styling parameters, snapshot/revert variations and optionally a reversible seed shuffle. These should remain design notes until safe data model is clear.
 - No emulator proof, APK or feature code change in this preflight. Next scheduled run should implement and test a small navigation improvement first, then tackle one visual preset.
+
+## Session 1 — 2026-10-27 01:00 EDT (complete)
+
+**Code and behavior**
+- Added a compact horizontally scrollable **Jump to a section** rail to the Advanced Theme Editor. Short labels (Backdrop, Suggestions, Key faces, Fonts) target existing folds; they reopen a manually collapsed fold and use Compose `BringIntoViewRequester` attached to the *header*, not the potentially taller-than-viewport body. The live preview, independent fold states, Save/Revert, and existing editor content remain.
+- Added three explicit non-GLSL global key **material recipes**: Opal enamel (jewel-tone shared border), Molten lacquer (staggered ember rim), Cobalt glass (cool cobalt gradients). Each uses existing Compose/keyboard gradient primitives; small gradient swatches and descriptions help users understand the choice. One-step Undo restores the prior global key state until the next manual edit. No theme library writes, no automatic application, and no changes to per-key overrides, groups, or background media.
+- Added Robolectric Compose tests for jump/expansion behavior and pure Kotlin tests for material uniqueness and preservation of key overrides/groups.
+- Opened **draft** PR [#57](https://github.com/BirdMachine/Keywi/pull/57) targeting Dev strictly for CI; do **not merge** without explicit approval. Main and Dev untouched.
+- Main feature SHA **`0c90dd3913e93969a0693b521fe3a21b8fbd0ee5`**. Earlier relevant changes: `bcc9255` (jump rail), `caab2fd` (jump tests), `f133611` (recipes), `2960dd1` (reversible controls), `b5f4212` (swatches), `7601dff` and `91456a6` (header-only reveal), `867169f` (recipe filename), `e6c65ff` (test import), `0c90dd3` (unique short chip labels).
+
+**Validation**
+- **Verified GitHub Actions success:** [Keywi CI run 40454068640](https://github.com/BirdMachine/Keywi/actions/runs/40454068640), all required validation/build steps successful: Kotlin formatting, unit tests, Android lint, debug APK assembly. Confirmed nonexpired `keywi-debug` APK artifact (artifact ID `12712037698`, ~32.4 MB), available from the run's Artifacts panel. This is build/test verification, **not** actual-device or emulator visual verification.
+- Resolved two CI regressions during iteration: ktlint's singular-class filename rule and a mistaken test import; the full unit suite then revealed a duplicate `Suggestion bar` text selector caused by the new chip, fixed with distinct concise jump labels. Final CI green. Avoid frequent commits while CI runs: PR concurrency cancels superseded builds.
+- No emulator screenshots captured. The existing `emulator-showcase.yml` is intentionally main-only; do not casually turn on screenshot workflows for every feature branch. The repository already has a Robolectric screenshot approach in `GemGlassSliderTest.kt` that could provide limited UI evidence next session, but not substitute for device testing.
+
+**Research and next session**
+- `BringIntoViewRequester` can scroll ancestors to a targeted modifier; targeting the compact header avoids oversize-section behavior. Reference: https://composables.com/jetpack-compose/androidx.compose.foundation/foundation/interfaces/BringIntoViewRequester/api
+- Existing `GemGlassSlider.kt` already draws glass, spectral rims, and gradient rails with standard Compose Canvas. A promising next **non-shader** experiment is opt-in patterned slider rails (fine ticks, stipple, mesh, diagonal hatching), rendered with inexpensive Canvas primitives, while retaining native Slider semantics and power-mode behavior. Prefer targeted tests/screenshots before broader adoption.
+- `drawWithCache` is an option for more intricate conventional 2D decorations where caching drawing objects is warranted; avoid claiming it automatically improves all draw performance. Reference: https://composables.com/jetpack-compose/androidx.compose.ui/ui/modifiers/drawWithCache/examples
+- Keep minimum comfortable touch targets (~48dp), readable contrasts, reduced-motion/power modes and no typed-content exposure. Reference: https://github.com/cvs-health/android-compose-accessibility-techniques/blob/main/doc/interactions/MinimumTouchTargetSize.md
+- Next: inspect artifact and visual previews; consider a screenshot test of material swatches, contrast guardrails, a reversible pattern selector for the glass slider, or richer theme navigation. Don't merge. Check new CI triggered by this journal-only commit before beginning further edits.
