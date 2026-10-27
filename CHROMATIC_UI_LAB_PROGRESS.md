@@ -29,7 +29,7 @@ Aim for **working, testable changes** and an APK when feasible, not only mockups
 - [x] Implement at least one coherent navigation/presentation improvement.
 - [x] Add tests or coverage appropriate to changes.
 - [x] Run CI/build and obtain a verified test APK if possible.
-- [ ] Capture trustworthy emulator/UI evidence if feasible.
+- [x] Capture trustworthy Robolectric Compose slider UI evidence (not an Android emulator/device).
 - [ ] Summarize improvements, tradeoffs, opportunities and remaining work.
 
 ## Run log
@@ -64,3 +64,27 @@ Aim for **working, testable changes** and an APK when feasible, not only mockups
 - `drawWithCache` is an option for more intricate conventional 2D decorations where caching drawing objects is warranted; avoid claiming it automatically improves all draw performance. Reference: https://composables.com/jetpack-compose/androidx.compose.ui/ui/modifiers/drawWithCache/examples
 - Keep minimum comfortable touch targets (~48dp), readable contrasts, reduced-motion/power modes and no typed-content exposure. Reference: https://github.com/cvs-health/android-compose-accessibility-techniques/blob/main/doc/interactions/MinimumTouchTargetSize.md
 - Next: inspect artifact and visual previews; consider a screenshot test of material swatches, contrast guardrails, a reversible pattern selector for the glass slider, or richer theme navigation. Don't merge. Check new CI triggered by this journal-only commit before beginning further edits.
+
+## Session 2 — 2026-10-27 03:00 EDT (complete)
+
+**Feature commit:** [`9c3e9f57544ec413c42cba66859301384a72489e`](https://github.com/BirdMachine/Keywi/commit/9c3e9f57544ec413c42cba66859301384a72489e)
+
+**Code and behavior**
+- Added opt-in **Studio slider textures** for the existing `GemGlassSlider` component: Plain (unchanged default), Ticks, Stipple, Mesh, Diagonal. Patterns decorate the **unfilled** recessed track using only Compose Canvas lines/circles and clipping. Filled chromatic gradient and glass thumb remain intact; unfilled region mirrors for RTL.
+- Added a compact, horizontally scrollable live pattern picker and adjustable demo slider in the Theme Editor, beneath the live preview. This changes the **settings UI sliders**, not the actual keyboard theme. Selection is persisted in local `keywi_control_appearance` preferences and deliberately **not** exported with keyboard themes. No existing theme files, saved groups, or per-key overrides touched.
+- The existing Material3 `Slider` still owns gesture/keyboard/accessibility semantics; `DESPERATE` power mode continues to use its lightweight stock fallback.
+- Extended `GemGlassSliderTest` with dark Stipple and light Mesh rendering + `SetProgress` semantics tests, and a preference persistence/unknown-value fallback test.
+
+**Verified validation**
+- [GitHub Actions CI run 40464835615](https://github.com/BirdMachine/Keywi/actions/runs/40464835615) **completed successfully** on feature SHA `9c3e9f5`: Kotlin formatting, full unit tests, Android lint, and debug APK assembly passed.
+- Nonexpired **`keywi-debug` artifact ID `12716790211`**, ZIP ~32.4 MB, is downloadable from the run's Artifacts panel.
+- Nonexpired **`tool-page-review` artifact ID `12716645148`** contains Robolectric Compose screenshots `glass-slider-dark-plain.png`, `glass-slider-dark-dots.png`, `glass-slider-light-plain.png`, `glass-slider-light-mesh.png`.
+- Inspected those actual PNG files: dotted/mesh marks are visible only in the unfilled track. The two pairs have identical 272×48 dimensions; comparing plain vs dotted dark images changed **61 pixels**, bounding box (165,22)-(256,26); plain vs mesh light changed **184 pixels**, bounding box (164,21)-(256,27). This is useful **Robolectric-rendered UI evidence**, not physical-device or Android-emulator verification. Slider semantics tests also passed.
+- Draft PR [#57](https://github.com/BirdMachine/Keywi/pull/57) still targets Dev; **no merge** and no changes to Dev/main.
+
+**Research and next candidates**
+- Official Android graphics docs: https://developer.android.com/develop/ui/compose/graphics/draw/modifiers — `drawWithCache` helps only when there are meaningful objects to cache; the present simple line/circle marks do not justify an extra caching layer without profiling.
+- Official accessibility semantics: https://developer.android.com/develop/ui/compose/accessibility/semantics — preserving the underlying Material3 Slider avoids rebuilding progress semantics. Tests explicitly use `SemanticsActions.SetProgress`.
+- Explore patterned **filled** tracks, customizable spacing/intensity/color, and per-slider pattern overrides only if a clear settings model emerges. Keep simple defaults and no overdraw-heavy animations.
+- Inspect theme recipe contrast with existing user-configured glyph colors, and consider a clear "temporary preview vs apply" flow in Theme Manager before adding more recipes. Existing library tile selection calls `ThemeEngine.apply`; investigate preservation of unsaved Custom edits before modifying behavior.
+- Next run: validate new pattern selector UI interaction in a focused Compose test; consider screenshot diff assertions to ensure patterns never silently disappear; try an emulator only if a reliable free test route is available. The build-verified APK is ready for optional manual testing.
