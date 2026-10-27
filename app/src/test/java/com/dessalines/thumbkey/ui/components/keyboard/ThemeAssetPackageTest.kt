@@ -278,6 +278,8 @@ class ThemeAssetPackageTest {
 
     @Test
     fun jsonLibraryImportsAreInactiveUniqueAndPreserveUnsavedCustomEdits() {
+        // Complete legacy asset migration before recording the unsaved scratch baseline.
+        ThemeEngine.ensureMigrated(context)
         ThemeEngine.resetCustom(context)
         val beforeCustom = ThemeEngine.export(ThemeEngine.loadCustom(context))
         KeyThemePreferences.save(context, KeyThemePreferences.load(context).copy(borderPhaseStepDegrees = 172f))
