@@ -30,9 +30,11 @@ data class ThemeDocument(
     val keys: KeyThemeState,
     val suggestionLozenges: SuggestionLozengeThemeState,
     val font: ThemeFont? = null,
+    // Null means an older theme: applying it leaves the existing feedback alone.
+    val accentFeedback: AccentFeedbackConfig? = null,
 )
 
-const val CURRENT_THEME_SCHEMA = 3
+const val CURRENT_THEME_SCHEMA = 4
 const val CUSTOM_THEME_ID = "custom"
 private const val NEON_AVIARY_THEME_ID = "builtin-neon-aviary"
 
@@ -94,6 +96,7 @@ object ThemeEngine {
             keys = KeyThemePreferences.load(context),
             suggestionLozenges = SuggestionLozengeThemePreferences.load(context),
             font = FontPreferences.snapshot(context),
+            accentFeedback = AccentFeedbackPreferences.get(context),
         )
 
     fun apply(
@@ -113,6 +116,7 @@ object ThemeEngine {
         ToolbarLayoutPreferences.saveKeyboardGap(context, theme.toolbarKeyboardGap)
         KeyThemePreferences.save(context, theme.keys)
         SuggestionLozengeThemePreferences.save(context, theme.suggestionLozenges)
+        theme.accentFeedback?.let { AccentFeedbackPreferences.save(context, it) }
         FontPreferences.applyTheme(
             context,
             theme.font?.copy(asset = requireNotNull(ThemeAssetStore.resolve(context, theme.id, theme.font.asset))),
@@ -206,14 +210,65 @@ object ThemeEngine {
         return readStored(context, id)
     }
 
+    fun themesNamed(context: Context, name: String): List<ThemeDocument> =
+        listThemes(context).filter { it.name.trim().equals(name.trim(), ignoreCase = true) }
+
+    fun isSavedTheme(context: Context, id: String): Boolean =
+        id != CUSTOM_THEME_ID && builtInThemes().none { it.id == id } && readStored(context, id) != null
+
+    /** Confirmation happens in the UI; the engine also refuses accidental name collisions. */
+    @Synchronized
     fun saveCustomAs(
         context: Context,
         name: String,
+        overwriteThemeId: String? = null,
     ): ThemeDocument {
-        val saved = store(context, loadCustom(context).copy(name = name.trim().ifBlank { "Untitled theme" }), UUID.randomUUID().toString())
+        val selectedName = name.trim().ifBlank { "Untitled theme" }
+        val matches = themesNamed(context, selectedName)
+        if (overwriteThemeId == null) {
+            require(matches.isEmpty()) { "A theme with this name already exists" }
+        } else {
+            require(isSavedTheme(context, overwriteThemeId)) { "Only a saved user theme can be overwritten" }
+            require(matches.size == 1 && matches.single().id == overwriteThemeId) { "The matching theme changed; choose a name again" }
+        }
+        val saved = store(context, loadCustom(context).copy(name = selectedName), overwriteThemeId ?: UUID.randomUUID().toString())
         apply(context, saved)
         saveCustom(context, defaultCustom())
         return saved
+    }
+
+    /** Update the selected saved theme from live appearance, without touching Custom. */
+    @Synchronized
+    fun updateSavedTheme(context: Context, id: String): ThemeDocument {
+        require(isSavedTheme(context, id)) { "Only a saved user theme can be updated" }
+        require(activeThemeId(context) == id) { "Select the saved theme before updating it" }
+        val existing = requireNotNull(readStored(context, id))
+        val saved = store(context, captureCurrent(context, existing.name, id), id)
+        apply(context, saved)
+        return saved
+    }
+
+    /** Active deletion falls back to existing Custom; its edits are never overwritten. */
+    @Synchronized
+    fun deleteSavedTheme(context: Context, id: String) {
+        require(isSavedTheme(context, id)) { "Custom and built-in themes cannot be deleted" }
+        val existing = requireNotNull(readStored(context, id))
+        val wasActive = activeThemeId(context) == id
+        val fallback = if (wasActive) loadCustom(context) else null
+        val directory = ThemeAssetStore.directory(context, id)
+        val removed = File(themeDir(context), ".deleted-${UUID.randomUUID()}")
+        check(directory.renameTo(removed)) { "Could not remove the saved theme" }
+        try {
+            fallback?.let { apply(context, it) }
+        } catch (error: Exception) {
+            if (removed.renameTo(directory)) {
+                runCatching { apply(context, existing) }.exceptionOrNull()?.let { error.addSuppressed(it) }
+            }
+            throw error
+        }
+        // Also remove a legacy migration backup so it cannot resurrect this entry.
+        File(themeDir(context), "$id.json").delete()
+        removed.deleteRecursively()
     }
 
     fun importIntoCustom(
@@ -386,6 +441,7 @@ object ThemeEngine {
             toolbarKeyboardGap = 0f,
             keys = KeyThemeState(),
             suggestionLozenges = SuggestionLozengeThemeState(),
+            accentFeedback = AccentFeedbackConfig(),
         )
 
     private fun neonAviaryTheme(): ThemeDocument {
@@ -419,6 +475,7 @@ object ThemeEngine {
         return ThemeDocument(
             id = NEON_AVIARY_THEME_ID,
             name = "Neon Aviary",
+            accentFeedback = AccentFeedbackConfig(),
             backdrop = BackdropThemeState(BackdropPreset.CUSTOM, night.angleDegrees, night.stops, BackdropMode.COLORFUL, 1f, null),
             toolbar =
                 BackdropThemeState(
@@ -502,7 +559,7 @@ object ThemeEngine {
                 theme.font?.let {
                     JSONObject().put("asset", it.asset).put("name", it.name)
                 },
-            ).toString(2)
+            ).put("accentFeedback", theme.accentFeedback?.let { encodeAccentFeedback(it) }).toString(2)
 
     internal fun decode(raw: String?): Result<ThemeDocument> =
         runCatching {
@@ -546,8 +603,26 @@ object ThemeEngine {
                 json.optJSONObject("font")?.let {
                     ThemeFont(it.getString("asset"), it.optString("name", "Custom font"))
                 },
+                json.optJSONObject("accentFeedback")?.let { decodeAccentFeedback(it) },
             )
         }
+
+    private fun encodeAccentFeedback(config: AccentFeedbackConfig): JSONObject =
+        JSONObject()
+            .put("durationMs", config.durationMs.coerceIn(0, 5000))
+            .put("colors", JSONArray().apply { config.colors.take(12).forEach { put(it.value.toString()) } })
+            .put("trailEnabled", config.trailEnabled)
+
+    private fun decodeAccentFeedback(json: JSONObject): AccentFeedbackConfig {
+        val colors = json.optJSONArray("colors") ?: JSONArray()
+        return AccentFeedbackConfig(
+            durationMs = json.optInt("durationMs", 300).coerceIn(0, 5000),
+            colors = (0 until minOf(colors.length(), 12)).mapNotNull { index ->
+                colors.optString(index).toULongOrNull()?.let { Color(it) }
+            },
+            trailEnabled = json.optBoolean("trailEnabled", false),
+        )
+    }
 
     private fun encodeBackdrop(state: BackdropThemeState) =
         JSONObject()

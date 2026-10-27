@@ -59,6 +59,10 @@ fun ThemeManagerSection(
     var naming by remember { mutableStateOf(false) }
     var name by remember { mutableStateOf("") }
     var message by remember { mutableStateOf<String?>(null) }
+    var nameError by remember { mutableStateOf<String?>(null) }
+    var overwriteTarget by remember { mutableStateOf<ThemeDocument?>(null) }
+    var updateTarget by remember { mutableStateOf<ThemeDocument?>(null) }
+    var deleteTarget by remember { mutableStateOf<ThemeDocument?>(null) }
     val scope = rememberCoroutineScope()
     var busy by remember { mutableStateOf(false) }
 
@@ -75,6 +79,28 @@ fun ThemeManagerSection(
         refresh++
         message = text
         onThemeApplied()
+    }
+
+    fun saveNamed(selectedName: String, overwriteId: String? = null) {
+        scope.launch {
+            busy = true
+            val result = withContext(Dispatchers.IO) {
+                runCatching {
+                    snapshotCustom()
+                    ThemeEngine.saveCustomAs(context, selectedName, overwriteId)
+                }
+            }
+            busy = false
+            result.fold(
+                onSuccess = { saved ->
+                    name = ""
+                    nameError = null
+                    naming = false
+                    changed(if (overwriteId == null) "Saved ${saved.name}" else "Updated ${saved.name}")
+                },
+                onFailure = { nameError = "Save failed: ${it.message}" },
+            )
+        }
     }
 
     val importLauncher =
@@ -150,7 +176,7 @@ fun ThemeManagerSection(
     ) {
         Text("✦ Saved themes", style = MaterialTheme.typography.titleMedium)
         Text(
-            "Images, GIFs and fonts live in Keywi's theme folders. Exports include these assets.",
+            "Themes include images, GIFs, fonts and key-flash colors, fade duration and drag-trail settings.",
             style = MaterialTheme.typography.bodySmall,
         )
         if (busy) Text("Copying theme files…", style = MaterialTheme.typography.bodySmall)
@@ -244,8 +270,19 @@ fun ThemeManagerSection(
             ) { Text("Export") }
         }
 
+        if (ThemeEngine.isSavedTheme(context, current.id)) {
+            Row(horizontalArrangement = Arrangement.spacedBy(8.dp), modifier = Modifier.fillMaxWidth()) {
+                OutlinedButton(enabled = !busy, onClick = { updateTarget = current }, modifier = Modifier.weight(1f)) {
+                    Text("Update saved theme")
+                }
+                OutlinedButton(enabled = !busy, onClick = { deleteTarget = current }, modifier = Modifier.weight(1f)) {
+                    Text("Delete theme…")
+                }
+            }
+        }
+
         if (current.id == CUSTOM_THEME_ID) {
-            TextButton(onClick = {
+            TextButton(enabled = !busy, onClick = {
                 ThemeEngine.resetCustom(context)
                 changed("Custom reset to defaults")
             }) {
@@ -255,49 +292,100 @@ fun ThemeManagerSection(
         message?.let { Text(it, style = MaterialTheme.typography.bodySmall) }
     }
 
-    if (naming) {
+    if (naming && overwriteTarget == null) {
         AlertDialog(
-            onDismissRequest = { naming = false },
+            onDismissRequest = { if (!busy) naming = false },
             title = { Text("Save Custom as theme") },
             text = {
+                Column {
                 OutlinedTextField(
                     value = name,
-                    onValueChange = { name = it },
+                    onValueChange = { name = it; nameError = null },
+                    enabled = !busy,
+                    isError = nameError != null,
                     singleLine = true,
                     label = { Text("Theme name") },
                 )
+                nameError?.let { Text(it, color = MaterialTheme.colorScheme.error) }
+                }
             },
             confirmButton = {
                 TextButton(
                     enabled = name.isNotBlank() && !busy,
                     onClick = {
-                        val selectedName = name
-                        scope.launch {
-                            busy = true
-                            val result =
-                                withContext(Dispatchers.IO) {
-                                    runCatching {
-                                        snapshotCustom()
-                                        ThemeEngine.saveCustomAs(context, selectedName)
-                                    }
-                                }
-                            busy = false
-                            result.fold(
-                                onSuccess = { saved ->
-                                    name = ""
-                                    naming = false
-                                    changed("Saved ${saved.name}")
-                                },
-                                onFailure = {
-                                    message = "Save failed: ${it.message}"
-                                    naming = false
-                                },
-                            )
+                        val selectedName = name.trim()
+                        val matches = ThemeEngine.themesNamed(context, selectedName)
+                        when {
+                            matches.isEmpty() -> saveNamed(selectedName)
+                            matches.size > 1 -> nameError = "Several themes have this name. Choose a unique name, or select one and use Update saved theme."
+                            !ThemeEngine.isSavedTheme(context, matches.single().id) -> nameError = "Built-in themes cannot be overwritten. Choose another name."
+                            else -> overwriteTarget = matches.single()
                         }
                     },
                 ) { Text("Save") }
             },
-            dismissButton = { TextButton(onClick = { naming = false }) { Text("Cancel") } },
+            dismissButton = { TextButton(enabled = !busy, onClick = { naming = false }) { Text("Cancel") } },
+        )
+    }
+
+    overwriteTarget?.let { target ->
+        AlertDialog(
+            onDismissRequest = { overwriteTarget = null },
+            title = { Text("Name exists — overwrite?") },
+            text = { Text("Replace “${target.name}” with your current Custom theme? The saved theme keeps its identity.") },
+            confirmButton = {
+                TextButton(onClick = {
+                    overwriteTarget = null
+                    saveNamed(name.trim(), target.id)
+                }) { Text("Overwrite") }
+            },
+            dismissButton = { TextButton(onClick = { overwriteTarget = null }) { Text("Cancel") } },
+        )
+    }
+
+    updateTarget?.let { target ->
+        AlertDialog(
+            onDismissRequest = { updateTarget = null },
+            title = { Text("Update saved theme?") },
+            text = { Text("Save the current appearance, including key-flash settings, over “${target.name}”? Custom is kept intact.") },
+            confirmButton = {
+                TextButton(onClick = {
+                    updateTarget = null
+                    scope.launch {
+                        busy = true
+                        val result = withContext(Dispatchers.IO) { runCatching { ThemeEngine.updateSavedTheme(context, target.id) } }
+                        busy = false
+                        result.fold(
+                            onSuccess = { changed("Updated ${it.name}") },
+                            onFailure = { message = "Update failed: ${it.message}" },
+                        )
+                    }
+                }) { Text("Update") }
+            },
+            dismissButton = { TextButton(onClick = { updateTarget = null }) { Text("Cancel") } },
+        )
+    }
+
+    deleteTarget?.let { target ->
+        AlertDialog(
+            onDismissRequest = { deleteTarget = null },
+            title = { Text("Delete saved theme?") },
+            text = { Text("Delete “${target.name}” and its saved media? If active, the keyboard switches to Custom. Your Custom edits are kept.") },
+            confirmButton = {
+                TextButton(onClick = {
+                    deleteTarget = null
+                    scope.launch {
+                        busy = true
+                        val result = withContext(Dispatchers.IO) { runCatching { ThemeEngine.deleteSavedTheme(context, target.id) } }
+                        busy = false
+                        result.fold(
+                            onSuccess = { changed("Deleted ${target.name}") },
+                            onFailure = { message = "Delete failed: ${it.message}" },
+                        )
+                    }
+                }) { Text("Delete") }
+            },
+            dismissButton = { TextButton(onClick = { deleteTarget = null }) { Text("Cancel") } },
         )
     }
 }
