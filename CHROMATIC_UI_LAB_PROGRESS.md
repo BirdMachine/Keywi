@@ -139,3 +139,9 @@ Related commits: `9761468` (non-destructive JSON/ZIP library import APIs), `0831
 - Added an independent **Pattern spacing** setting (Fine 4dp / Balanced 6dp default / Open 10dp) for the existing opt-in non-shader slider textures. Spacing persists locally, uses the original Material3 slider semantics, and does not alter theme exports or keyboard input. The spacing chips are disabled when Plain is selected.
 - Extended Robolectric slider tests for Fine stipple screenshot/semantics and preference fallback. This checkpoint records intended tests; CI status for this new commit must be verified separately. No device/emulator evidence claimed.
 - Next: inspect CI result and artifact; if green, journal the verified SHA and preserve as fallback. If failed, repair in bounded commit. Final 9 AM session should favor polish and morning report.
+
+**Verification of spacing feature**
+- [Keywi CI run 40496485020](https://github.com/BirdMachine/Keywi/actions/runs/40496485020) completed **successfully** on feature commit [`602c0b03`](https://github.com/BirdMachine/Keywi/commit/602c0b03cc0f5524e15e53ba89fb429d7fa2d3ab). Kotlin formatting, full unit tests (including density preference and fine-stipple Compose semantics), Android lint and debug APK assembly passed.
+- Verified nonexpired `keywi-debug` artifact ID `12730981446`, ZIP size 32408562 bytes. [Download from build artifacts](https://github.com/BirdMachine/Keywi/actions/runs/40496485020).
+- Robolectric test writes a fine-stipple PNG, but it was **not independently visually inspected** this session. No emulator or physical-device visual validation. Dev/main unchanged; draft PR #57 unmerged.
+- The next session should check this journal, latest CI and branch head before adding further code; preserve this successful APK as a fallback. Suggested bounded next: contrast/readability review of recipes or focused theme-preview polish, then concise final report before 10 AM.
