@@ -7,6 +7,9 @@ import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.horizontalScroll
+import androidx.compose.foundation.relocation.BringIntoViewRequester
+import androidx.compose.foundation.relocation.bringIntoViewRequester
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -32,6 +35,8 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.withFrameNanos
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.key
 import androidx.compose.runtime.mutableIntStateOf
@@ -47,6 +52,7 @@ import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
@@ -96,6 +102,8 @@ fun AdvancedLookAndFeelScreen(navController: NavController) {
     val openingTheme = remember(context) { ThemeEngine.captureCurrent(context, "Opening appearance", CUSTOM_THEME_ID) }
     var editNotice by remember { mutableStateOf<String?>(null) }
     var editorRevision by remember { mutableIntStateOf(0) }
+    var jumpTarget by rememberSaveable { mutableStateOf<String?>(null) }
+    var jumpRevision by remember { mutableIntStateOf(0) }
 
     val editorBackground = if (com.dessalines.thumbkey.ui.components.settings.LocalSettingsDrip.current != null) androidx.compose.ui.graphics.Color.Transparent else MaterialTheme.colorScheme.surface
     Scaffold(containerColor = editorBackground, topBar = { SimpleTopAppBar(text = "Theme editor", navController = navController) }) { padding ->
@@ -143,8 +151,12 @@ fun AdvancedLookAndFeelScreen(navController: NavController) {
                     Modifier.padding(horizontal = 16.dp),
                     style = MaterialTheme.typography.bodySmall,
                 )
+                ThemeEditorJumpBar(selectedTitle = jumpTarget) { target ->
+                    jumpTarget = target
+                    jumpRevision++
+                }
                 key(editorRevision) {
-                    ThemeEditorFold("Keyboard background", "Image, GIF, opacity and gradients", true) {
+                    ThemeEditorFold("Keyboard background", "Image, GIF, opacity and gradients", true, jumpTarget, jumpRevision) {
                         SurfaceThemeSection(
                             "Main backdrop",
                             "The large space behind and around the keys.",
@@ -152,7 +164,7 @@ fun AdvancedLookAndFeelScreen(navController: NavController) {
                             BackdropThemePreferences::save,
                         )
                     }
-                    ThemeEditorFold("Suggestion bar", "Toolbar, lozenges and current-word highlight") {
+                    ThemeEditorFold("Suggestion bar", "Toolbar, lozenges and current-word highlight", jumpTarget = jumpTarget, jumpRevision = jumpRevision) {
                         SurfaceThemeSection(
                             "Suggestion toolbar",
                             "The strip behind suggestion lozenges and the ✨ toggle.",
@@ -162,10 +174,10 @@ fun AdvancedLookAndFeelScreen(navController: NavController) {
                         )
                         SuggestionLozengeAppearanceSection()
                     }
-                    ThemeEditorFold("Keys", "Fill, borders, shadows and key surfaces", true) {
+                    ThemeEditorFold("Keys", "Fill, borders, shadows and key surfaces", true, jumpTarget, jumpRevision) {
                         KeyAppearanceSection { navController.navigate("advancedKeyWordSelection") }
                     }
-                    ThemeEditorFold("Typography", "Key labels, fonts and suggestion text") {
+                    ThemeEditorFold("Typography", "Key labels, fonts and suggestion text", jumpTarget = jumpTarget, jumpRevision = jumpRevision) {
                         FontAndSuggestionSection()
                     }
                 }
@@ -691,21 +703,61 @@ private fun GradientEditor(
     }
 }
 
-/** Independent editor sections retain a clear connection to their controls as they expand. */
+/** Lightweight section shortcuts keep deep customization discoverable without a new editor hierarchy. */
 @Composable
-private fun ThemeEditorFold(
+internal fun ThemeEditorJumpBar(
+    selectedTitle: String?,
+    onJump: (String) -> Unit,
+) {
+    val sections = listOf("Keyboard background", "Suggestion bar", "Keys", "Typography")
+    Column(Modifier.fillMaxWidth().padding(top = 8.dp)) {
+        Text(
+            "Jump to a section · swipe for more",
+            Modifier.padding(horizontal = 16.dp, vertical = 2.dp),
+            style = MaterialTheme.typography.labelMedium,
+        )
+        Row(
+            Modifier.fillMaxWidth().horizontalScroll(rememberScrollState()).padding(horizontal = 12.dp),
+            horizontalArrangement = Arrangement.spacedBy(8.dp),
+        ) {
+            sections.forEach { title ->
+                FilterChip(
+                    selected = selectedTitle == title,
+                    onClick = { onJump(title) },
+                    label = { Text(title) },
+                    modifier = Modifier.testTag("theme-jump:$title"),
+                )
+            }
+        }
+    }
+}
+
+/** Independent editor sections retain their manual expansion state; shortcuts reopen and scroll to a target. */
+@Composable
+internal fun ThemeEditorFold(
     title: String,
     subtitle: String,
     initiallyExpanded: Boolean = false,
+    jumpTarget: String? = null,
+    jumpRevision: Int = 0,
     content: @Composable () -> Unit,
 ) {
     var expanded by rememberSaveable(title) { mutableStateOf(initiallyExpanded) }
+    val bringIntoView = remember { BringIntoViewRequester() }
+    LaunchedEffect(jumpRevision) {
+        if (jumpRevision > 0 && jumpTarget == title) {
+            expanded = true
+            // Let the expansion reach the layout pass before asking the scroll container to reveal it.
+            withFrameNanos { }
+            bringIntoView.bringIntoView()
+        }
+    }
     ThemeEditorExpandableSection(
         title = title,
         subtitle = subtitle,
         expanded = expanded,
         onExpandedChange = { expanded = it },
-        modifier = Modifier.padding(horizontal = 12.dp, vertical = 4.dp),
+        modifier = Modifier.padding(horizontal = 12.dp, vertical = 4.dp).bringIntoViewRequester(bringIntoView),
         content = content,
     )
 }
