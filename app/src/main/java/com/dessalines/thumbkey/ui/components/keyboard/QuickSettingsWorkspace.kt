@@ -8,6 +8,8 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.selection.selectable
+import androidx.compose.ui.semantics.Role
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.HorizontalDivider
@@ -122,18 +124,18 @@ fun QuickSettingsWorkspace(
                                 KeywiPowerMode.RESTRICTED -> "Restricted"
                                 KeywiPowerMode.DESPERATE -> "Desperate"
                             }
-                        Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
-                            RadioButton(
-                                modifier = Modifier.semantics { contentDescription = "Power mode $title" },
-                                selected = power == mode,
-                                onClick = {
+                        Row(
+                            Modifier.fillMaxWidth()
+                                .semantics { contentDescription = "Power mode $title" }
+                                .selectable(selected = power == mode, role = Role.RadioButton, onClick = {
                                     power = mode
                                     KeywiPowerPreferences.save(context, mode)
-                                    if (mode == KeywiPowerMode.RESTRICTED) ActionGifRuntime.clear()
                                     onPreferencesChanged()
-                                },
-                            )
-                            Text(title)
+                                }),
+                            verticalAlignment = Alignment.CenterVertically,
+                        ) {
+                            RadioButton(selected = power == mode, onClick = null)
+                            Text(title, Modifier.padding(vertical = 12.dp))
                         }
                     }
                     Text(

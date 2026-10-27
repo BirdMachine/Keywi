@@ -49,7 +49,7 @@ class QuickSettingsWorkspaceTest {
         compose.onNodeWithContentDescription("Suggestions").performClick()
         compose.onNodeWithContentDescription("Use custom sound pack").performClick()
         compose.onNodeWithContentDescription("Keypress images & GIFs").performClick()
-        compose.onNodeWithContentDescription("Power mode Restricted").performClick()
+        compose.onNodeWithContentDescription("Power mode Restricted").performScrollTo().performClick()
         compose.runOnIdle {
             assertFalse(SuggestionPreferences.enabled(context))
             assertTrue(ActionSoundPreferences.get(context).enabled)

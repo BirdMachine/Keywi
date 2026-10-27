@@ -131,7 +131,8 @@ class ToolbarCyclerTest {
         show()
         cycler().performTouchInput { longClick() }
         compose.onNodeWithText("Home view: Character input").performClick()
-        compose.onNodeWithText("Kaomoji").performClick()
+        compose.onNodeWithText("Kaomoji").performScrollTo().performClick()
+        compose.runOnIdle { assertEquals(ToolbarPage.KAOMOJI, ToolbarViewPreferences.home(RuntimeEnvironment.getApplication())) }
         compose.onNodeWithText("Done").performScrollTo().performClick()
         cycler().performTouchInput { doubleClick() }
         settleTaps()
