@@ -110,3 +110,26 @@ Related commits: `60dc42a` (stage selection / preserve scratch), `a124d34` (regr
 - Investigated `ThemeEngine.importIntoCustom` and `importPackage`: both currently write to Custom and immediately apply the imported theme. That behavior is **not** changed by this session's safe library-selection flow. A later explicit import staging/confirmation design should prevent accidental loss of Custom scratch work and allow importing to the library without automatic activation, especially for future Explore/download workflows.
 - A selected tile currently previews its **backdrop**, not a full temporarily themed keyboard. Avoid describing it as a live keyboard preview until the test bench supports read-only theme overrides.
 - Next: evaluate safe import staging and a read-only selected-theme preview, or return to expressive non-shader styling (pattern intensity/spacing and lightweight material details). Choose one bounded feature, add regression coverage, and verify another build. Preserve the successful APK above as fallback.
+
+## Session 4 — 2026-10-27 07:00 EDT (complete)
+
+**Verified feature SHA:** [`859dd4fcbc881dbb6f605b36851f2d96e5a522e7`](https://github.com/BirdMachine/Keywi/commit/859dd4fcbc881dbb6f605b36851f2d96e5a522e7)
+Related commits: `9761468` (non-destructive JSON/ZIP library import APIs), `0831d95` (stage imported theme in manager), `48bcfb6` (new package/JSON tests), `4d6a3a6` (migration-aware test setup), `859dd4f` (invalid-package cleanup regressions).
+
+**Code and behavior**
+- Changed the Theme Manager **Import** UI from destructive `importIntoCustom`/`importPackage` to new `importIntoLibrary`/`importPackageIntoLibrary` methods. Imports now receive unique local theme IDs, appear as a **selected, inactive** library tile, and show explicit instructions to use **Apply selected theme** if desired. Existing active keyboard, live Custom edits, and saved Custom manifest are not replaced by import.
+- ZIP packages still validate size, entry paths, assets and optional fonts in staging; new library imports copy bundled assets into their own per-theme directory. If a new library import fails, its destination directory is cleaned up. Importing the same name twice creates separate entries rather than silently overwriting an existing saved theme.
+- Retained the legacy import-to-Custom methods for existing automation/callers. This UI change is deliberately scoped to the Theme Manager; review other import callers before any global behavior change.
+- Added Robolectric tests proving JSON and ZIP library imports leave Custom and live state intact, preserve packaged GIF bytes, generate distinct IDs, and reject malicious/malformed packages without leaving a visible library theme.
+- Draft PR [#57](https://github.com/BirdMachine/Keywi/pull/57) remains **open and unmerged**, targeting Dev; Dev and main unchanged.
+
+**CI / verification**
+- [GitHub Actions Keywi CI run 40493948672](https://github.com/BirdMachine/Keywi/actions/runs/40493948672) **completed successfully** for SHA `859dd4f`: Kotlin formatting, full unit suite, Android lint, and debug APK assembly. Verified nonexpired `keywi-debug` artifact **12729962583**, ZIP size 32,406,128 bytes (~32.4 MB), downloadable from the run.
+- Initial test run [40493122367](https://github.com/BirdMachine/Keywi/actions/runs/40493122367) failed **one test out of 170** because the test recorded its Custom manifest before the one-time legacy asset migration. That migration legitimately synchronized live Custom state, invalidating the baseline; test setup now calls `ensureMigrated` first. Later CI is fully green. Intermediate CI runs were cancelled due to expected PR concurrency.
+- **No Android emulator/physical-device verification** for import picker or keyboard visuals; prior Robolectric slider screenshots remain the only visual evidence. Do not claim the new import interaction has been device-tested.
+
+**Research / remaining opportunities**
+- Android's Storage Access Framework permits `ACTION_OPEN_DOCUMENT` / `ActivityResultContracts.OpenDocument` to return a readable URI; since KeyWi copies import bytes immediately to app-owned storage, it does not need persistent access to the source file. Reference: https://developer.android.com/training/data-storage/shared/documents-files
+- Potential lifecycle concern for a later focused test: `ThemeManagerScreen` remounts its section on `ON_RESUME`; verify picker-return and pending selection survive that remount on an actual device or instrumented UI test before describing it as fully tested.
+- A future **Explore** gallery can use the same stage-before-apply model. Still needed: delete/rename/overwrite confirmation for saved themes, read-only full-keyboard preview of a selected theme, and a visual contrast/accessibility audit of material recipes.
+- Next (9 AM final session): inspect the latest CI and this journal, prefer one bounded visually expressive non-shader polish item (e.g., adjustable patterned-slider density/intensity or recipe swatch contrast), and reverify a debug APK. Conclude before 10 AM with a concise final report and direct best verified build link. Do not merge.
