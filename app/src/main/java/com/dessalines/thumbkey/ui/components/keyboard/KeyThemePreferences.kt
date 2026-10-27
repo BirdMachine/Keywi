@@ -1,6 +1,7 @@
 package com.dessalines.thumbkey.ui.components.keyboard
 
 import android.content.Context
+import com.dessalines.thumbkey.utils.KeyboardMode
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
@@ -25,7 +26,19 @@ data class KeyDesignGroup(
     val keyIds: Set<String>,
     val design: KeyDesignOverride,
     val sharedGradientCanvas: Boolean = false,
-)
+    val modeDesigns: Map<KeyboardMode, KeyDesignOverride> = emptyMap(),
+    val modeSharedCanvases: Map<KeyboardMode, Boolean> = emptyMap(),
+) {
+    fun designForMode(mode: KeyboardMode): KeyDesignOverride? = modeDesigns[keyDesignMode(mode)]
+        ?: design.takeIf { modeDesigns.isEmpty() || it != KeyDesignOverride() }
+    fun sharesCanvas(mode: KeyboardMode): Boolean = modeSharedCanvases[keyDesignMode(mode)] ?: sharedGradientCanvas
+}
+
+fun keyDesignMode(mode: KeyboardMode): KeyboardMode = when (mode) {
+    KeyboardMode.NUMERIC -> KeyboardMode.NUMERIC
+    KeyboardMode.SHIFTED -> KeyboardMode.SHIFTED
+    else -> KeyboardMode.MAIN
+}
 
 data class KeyThemeState(
     val surfaceStyle: KeySurfaceStyle = KeySurfaceStyle.GRADIENT,
@@ -164,7 +177,7 @@ object KeyThemePreferences {
 }
 
 /** Later groups override earlier groups, then the specific key overrides the group. */
-fun KeyThemeState.forKey(keyId: String): KeyThemeState {
+fun KeyThemeState.forKey(keyId: String, mode: KeyboardMode = KeyboardMode.MAIN): KeyThemeState {
     var theme = this
 
     fun applyDesign(design: KeyDesignOverride) {
@@ -197,7 +210,7 @@ fun KeyThemeState.forKey(keyId: String): KeyThemeState {
                 borderGradient = design.borderGradient ?: theme.borderGradient,
             )
     }
-    keyGroups.filter { keyId in it.keyIds }.forEach { applyDesign(it.design) }
+    keyGroups.filter { keyId in it.keyIds }.forEach { group -> group.designForMode(mode)?.let(::applyDesign) }
     keyOverrides[keyId]?.let { applyDesign(it) }
     return theme
 }
@@ -271,7 +284,9 @@ internal fun JSONArray.addGroup(group: KeyDesignGroup) {
                 "keys",
                 JSONArray(group.keyIds.toList()),
             ).put("design", encodeDesign(group.design))
-            .put("sharedGradientCanvas", group.sharedGradientCanvas),
+            .put("sharedGradientCanvas", group.sharedGradientCanvas)
+            .put("modeDesigns", JSONObject().apply { group.modeDesigns.forEach { (mode, design) -> put(mode.name, encodeDesign(design)) } })
+            .put("modeSharedCanvases", JSONObject().apply { group.modeSharedCanvases.forEach { (mode, shared) -> put(mode.name, shared) } }),
     )
 }
 
@@ -287,6 +302,18 @@ internal fun decodeGroups(raw: String?): List<KeyDesignGroup> =
                     (0 until keys.length()).map { keys.getString(it) }.toSet(),
                     decodeDesign(json.getJSONObject("design")),
                     sharedGradientCanvas = json.optBoolean("sharedGradientCanvas", false),
+                    modeDesigns = buildMap {
+                        val modes = json.optJSONObject("modeDesigns")
+                        listOf(KeyboardMode.MAIN, KeyboardMode.SHIFTED, KeyboardMode.NUMERIC).forEach { mode ->
+                            modes?.optJSONObject(mode.name)?.let { put(mode, decodeDesign(it)) }
+                        }
+                    },
+                    modeSharedCanvases = buildMap {
+                        val modes = json.optJSONObject("modeSharedCanvases")
+                        listOf(KeyboardMode.MAIN, KeyboardMode.SHIFTED, KeyboardMode.NUMERIC).forEach { mode ->
+                            if (modes?.has(mode.name) == true) put(mode, modes.getBoolean(mode.name))
+                        }
+                    },
                 )
             }.getOrNull()
         }

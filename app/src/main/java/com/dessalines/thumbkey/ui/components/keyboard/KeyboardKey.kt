@@ -167,6 +167,7 @@ fun KeyboardKey(
     keyGradientOffsetX: Float = 0f,
     keyGradientOffsetY: Float = 0f,
     keyDesignId: String = "",
+    keyDesignMode: com.dessalines.thumbkey.utils.KeyboardMode = com.dessalines.thumbkey.utils.KeyboardMode.MAIN,
     keySequenceIndex: Int = 0,
     keyRectangles: Map<String, KeyCanvasRect> = emptyMap(),
 ) {
@@ -246,7 +247,7 @@ fun KeyboardKey(
 
     val appearanceEnabled = KeywiAppearancePreferences.currentEnabled
     val baseKeyTheme = KeyThemePreferences.current
-    val keyTheme = baseKeyTheme.forKey(keyDesignId)
+    val keyTheme = baseKeyTheme.forKey(keyDesignId, keyDesignMode)
     val density = LocalDensity.current
     val gradientWidthPx = with(density) { keyGradientCanvasWidth.dp.toPx() }
     val gradientHeightPx = with(density) { keyGradientCanvasHeight.dp.toPx() }
@@ -259,6 +260,7 @@ fun KeyboardKey(
                     keyDesignId,
                     KeyGradientLayer.SURFACE,
                     keyRectangles,
+                    keyDesignMode,
                 )?.scaled(density.density)
         } else {
             null
@@ -270,6 +272,7 @@ fun KeyboardKey(
                     keyDesignId,
                     KeyGradientLayer.BORDER,
                     keyRectangles,
+                    keyDesignMode,
                 )?.scaled(density.density)
         } else {
             null

@@ -1,5 +1,6 @@
 package com.dessalines.thumbkey.ui.components.settings.lookandfeel
 
+import com.dessalines.thumbkey.utils.KeyboardMode
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -74,6 +75,7 @@ internal fun BorderDistributionEditor(
 internal fun KeyDesignOverrideEditor(
     selectedIds: Set<String>,
     groupMode: Boolean,
+    selectedMode: KeyboardMode = KeyboardMode.MAIN,
     onSelectGroup: (Set<String>) -> Unit,
 ) {
     val context = LocalContext.current
@@ -82,12 +84,12 @@ internal fun KeyDesignOverrideEditor(
     var editingGroupId by remember { mutableStateOf<String?>(null) }
     var newGroupRevision by remember(groupMode) { mutableIntStateOf(0) }
     val existingGroup = if (groupMode) state.keyGroups.firstOrNull { it.id == editingGroupId } else null
-    val savedDesign = if (groupMode) existingGroup?.design else selectedIds.firstOrNull()?.let { state.keyOverrides[it] }
+    val savedDesign = if (groupMode) existingGroup?.designForMode(selectedMode) else selectedIds.firstOrNull()?.let { state.keyOverrides[it] }
     val draftTarget = if (groupMode) editingGroupId else selectedIds.firstOrNull()
-    var design by remember(groupMode, draftTarget, newGroupRevision, savedDesign) { mutableStateOf(savedDesign ?: KeyDesignOverride()) }
+    var design by remember(groupMode, draftTarget, selectedMode, newGroupRevision, savedDesign) { mutableStateOf(savedDesign ?: KeyDesignOverride()) }
     var groupName by remember(groupMode, draftTarget, newGroupRevision) { mutableStateOf(existingGroup?.id.orEmpty()) }
-    var sharedCanvas by remember(groupMode, draftTarget, newGroupRevision, existingGroup?.sharedGradientCanvas) {
-        mutableStateOf(existingGroup?.sharedGradientCanvas ?: true)
+    var sharedCanvas by remember(groupMode, draftTarget, selectedMode, newGroupRevision, existingGroup) {
+        mutableStateOf(existingGroup?.sharesCanvas(selectedMode) ?: true)
     }
     val inheritedGlyphColor = MaterialTheme.colorScheme.onSurface
     var message by remember(selectedIds, groupMode) { mutableStateOf<String?>(null) }
@@ -110,9 +112,21 @@ internal fun KeyDesignOverrideEditor(
                 style = MaterialTheme.typography.bodySmall,
             )
             Text(
-                "Positions apply across boards and keyboard modes. Individual overrides win over groups; later groups win over earlier ones. Inherit uses the group's or theme's design.",
+                if (groupMode) {
+                    "Group edits apply to ${selectedMode.name.lowercase()} mode only. " +
+                        "Other modes keep their own styles. Individual overrides take priority."
+                } else {
+                    "Individual overrides apply across modes and take priority over group styles."
+                },
                 style = MaterialTheme.typography.bodySmall,
             )
+            if (groupMode && existingGroup?.design != null && existingGroup.design != KeyDesignOverride()) {
+                Text(
+                    "This older group also has a shared style. Reset in a mode " +
+                        "to restore inheritance there without changing other modes.",
+                    style = MaterialTheme.typography.bodySmall,
+                )
+            }
             if (state.keyGroups.isNotEmpty()) {
                 Text("Saved groups", style = MaterialTheme.typography.labelMedium)
                 Row(Modifier.horizontalScroll(rememberScrollState()), horizontalArrangement = Arrangement.spacedBy(6.dp)) {
@@ -212,7 +226,13 @@ internal fun KeyDesignOverrideEditor(
                                     .first { candidate -> latest.keyGroups.none { it.id == candidate } }
                             }
                         val replacement =
-                            KeyDesignGroup(id = id, keyIds = selectedIds, design = design, sharedGradientCanvas = sharedCanvas)
+                            (latest.keyGroups.firstOrNull { it.id == existingGroup?.id } ?: KeyDesignGroup(id, selectedIds, KeyDesignOverride())).let { group ->
+                                group.copy(
+                                    id = id, keyIds = selectedIds,
+                                    modeDesigns = group.modeDesigns + (selectedMode to design),
+                                    modeSharedCanvases = group.modeSharedCanvases + (selectedMode to sharedCanvas),
+                                )
+                            }
                         val groups = latest.keyGroups.toMutableList()
                         val index = groups.indexOfFirst { it.id == existingGroup?.id || it.id == id }
                         if (index >= 0) groups[index] = replacement else groups.add(replacement)
@@ -227,7 +247,12 @@ internal fun KeyDesignOverrideEditor(
                     val latest = KeyThemePreferences.current
                     persist(
                         if (groupMode) {
-                            latest.copy(keyGroups = latest.keyGroups.filterNot { it.id == existingGroup?.id })
+                            latest.copy(keyGroups = latest.keyGroups.map { group ->
+                                if (group.id != existingGroup?.id) group else group.copy(
+                                    modeDesigns = group.modeDesigns + (selectedMode to KeyDesignOverride()),
+                                    modeSharedCanvases = group.modeSharedCanvases + (selectedMode to false),
+                                )
+                            })
                         } else {
                             latest.copy(keyOverrides = latest.keyOverrides - selectedIds)
                         },
@@ -238,7 +263,7 @@ internal fun KeyDesignOverrideEditor(
                         newGroupRevision++
                     }
                     message = "Override removed; inherited appearance restored."
-                }) { Text("Reset") }
+                }) { Text(if (groupMode) "Reset this mode" else "Reset") }
             }
             message?.let { Text(it, style = MaterialTheme.typography.bodySmall) }
         }

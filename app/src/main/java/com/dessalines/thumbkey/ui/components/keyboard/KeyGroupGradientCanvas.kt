@@ -1,5 +1,7 @@
 package com.dessalines.thumbkey.ui.components.keyboard
 
+import com.dessalines.thumbkey.utils.KeyboardMode
+
 /** Coordinates use the caller's canvas units (dp in ME, pixels in HK). */
 data class KeyCanvasRect(
     val left: Float,
@@ -57,6 +59,7 @@ fun KeyThemeState.groupCanvasForKey(
     keyId: String,
     layer: KeyGradientLayer,
     rectangles: Map<String, KeyCanvasRect>,
+    mode: KeyboardMode = KeyboardMode.MAIN,
 ): KeyCanvasRect? {
     val specific = keyOverrides[keyId]
     if (specific?.specifies(layer) == true) {
@@ -68,10 +71,11 @@ fun KeyThemeState.groupCanvasForKey(
     }
     val group =
         keyGroups.lastOrNull {
-            keyId in it.keyIds && (it.sharedGradientCanvas || it.design.specifies(layer))
+            keyId in it.keyIds && it.designForMode(mode)?.let { design -> it.sharesCanvas(mode) || design.specifies(layer) } == true
         } ?: return null
-    val assignedFill = layer == KeyGradientLayer.SURFACE && group.design.surfaceGradient != null
-    if (!group.sharedGradientCanvas && !assignedFill) return null
+    val design = group.designForMode(mode) ?: return null
+    val assignedFill = layer == KeyGradientLayer.SURFACE && design.surfaceGradient != null
+    if (!group.sharesCanvas(mode) && !assignedFill) return null
     val members = group.keyIds.mapNotNull { rectangles[it] }.filter { it.width > 0f && it.height > 0f }
     if (members.isEmpty() || keyId !in rectangles) return null
     val left = members.minOf { it.left }

@@ -315,6 +315,7 @@ fun AdvancedKeyWordSelectionScreen(
                 com.dessalines.thumbkey.ui.components.settings.lookandfeel.KeyDesignOverrideEditor(
                     selectedIds = if (designGroupMode) designKeys else setOf("$selectedRow:$selectedCol"),
                     groupMode = designGroupMode,
+                    selectedMode = selectedMode,
                     onSelectGroup = { ids ->
                         dismissKeyboard()
                         designGroupMode = true
