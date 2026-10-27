@@ -118,8 +118,10 @@ fun UnicodeLibraryTool(
         }
         hasMore = found.size > UNICODE_PAGE_SIZE
         results = found.take(UNICODE_PAGE_SIZE)
-        gridState.scrollToItem(0)
         searching = false
+        // scrollToItem can await the grid's first layout. Make the grid visible
+        // before waiting, and never wait for a grid on the empty-results branch.
+        if (results.isNotEmpty()) gridState.scrollToItem(0)
     }
     LaunchedEffect(results) {
         val checked = withContext(Dispatchers.Default) {
