@@ -7,6 +7,7 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.ui.Modifier
 import androidx.compose.material3.Text
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onAllNodesWithText
@@ -179,6 +180,36 @@ class ThemeManagerCompositionTest {
             assertEquals(CUSTOM_THEME_ID, ThemeEngine.activeThemeId(context))
             assertEquals(137f, KeyThemePreferences.load(context).borderPhaseStepDegrees, .001f)
         }
+    }
+
+    @Test
+    fun refreshingThemeManagerKeepsStagedSelection() {
+        val context =
+            androidx.test.core.app.ApplicationProvider
+                .getApplicationContext<Application>()
+        ThemeEngine.ensureMigrated(context)
+        ThemeEngine.resetCustom(context)
+        val saved = ThemeEngine.builtInThemes().first()
+        val revision = mutableIntStateOf(0)
+
+        compose.setContent {
+            MaterialTheme {
+                GemSettingsTheme(true) {
+                    Column(Modifier.verticalScroll(rememberScrollState())) {
+                        ThemeManagerSection(
+                            onThemeApplied = {},
+                            onEditTheme = {},
+                            refreshRevision = revision.intValue,
+                        )
+                    }
+                }
+            }
+        }
+        compose.onNodeWithText(saved.name).performScrollTo().performClick()
+        compose.onNodeWithText("Apply selected theme").performScrollTo().assertIsDisplayed()
+        compose.runOnIdle { revision.intValue++ }
+        compose.onNodeWithText("Apply selected theme").performScrollTo().assertIsDisplayed()
+        compose.runOnIdle { assertEquals(CUSTOM_THEME_ID, ThemeEngine.activeThemeId(context)) }
     }
 
     @Test
