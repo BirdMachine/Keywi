@@ -5,7 +5,10 @@ import android.net.Uri
 import androidx.compose.ui.graphics.Color
 import androidx.test.core.app.ApplicationProvider
 import org.json.JSONObject
-import org.junit.Assert.*
+import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
+import org.junit.Assert.assertNull
+import org.junit.Assert.assertTrue
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
