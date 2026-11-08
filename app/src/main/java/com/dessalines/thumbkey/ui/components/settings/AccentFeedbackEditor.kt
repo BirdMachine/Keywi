@@ -28,13 +28,13 @@ import com.dessalines.thumbkey.ui.components.settings.lookandfeel.ColorEditor
 import kotlin.math.roundToInt
 
 @Composable
-fun AccentFeedbackEditor() {
+fun AccentFeedbackEditor(modifier: Modifier = Modifier.padding(horizontal = 16.dp)) {
     val context = LocalContext.current
     val config = rememberAccentFeedback()
     val fallback = MaterialTheme.colorScheme.tertiaryContainer
     var preview by remember { mutableIntStateOf(0) }
     fun save(value: AccentFeedbackConfig) = AccentFeedbackPreferences.save(context, value)
-    Column(Modifier.padding(horizontal = 16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+    Column(modifier, verticalArrangement = Arrangement.spacedBy(8.dp)) {
         Text("Key flash & drag trails", style = MaterialTheme.typography.titleMedium)
         Text("Frames are colors visited in order during one fade. Drag trails share the same colors and fade time.", style = MaterialTheme.typography.bodySmall)
         Text("Fade-out: ${config.durationMs} ms" + if (config.durationMs == 0) " · off" else "")

@@ -187,7 +187,7 @@ fun ThemeEditorPageScreen(navController: NavController, page: ThemeEditorPage) {
                         ThemeEditorPage.TAP_EFFECTS -> {
                             com.dessalines.thumbkey.effects.FeedbackModeControl()
                             Text("Tap effects are stored separately from exported appearance themes.", style = MaterialTheme.typography.bodySmall)
-                            com.dessalines.thumbkey.ui.components.settings.AccentFeedbackEditor()
+                            com.dessalines.thumbkey.ui.components.settings.AccentFeedbackEditor(modifier = Modifier)
                             com.dessalines.thumbkey.ui.components.settings.boards.ActionOverlaySettingsContent()
                         }
                     }
