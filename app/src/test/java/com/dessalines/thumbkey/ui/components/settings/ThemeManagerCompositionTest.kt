@@ -9,6 +9,7 @@ import androidx.compose.ui.test.onAllNodesWithText
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performScrollTo
+import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
@@ -19,6 +20,9 @@ import com.dessalines.thumbkey.ui.components.keyboard.KeywiAppearancePreferences
 import com.dessalines.thumbkey.ui.components.keyboard.ThemeEngine
 import com.dessalines.thumbkey.ui.components.settings.lookandfeel.AdvancedLookAndFeelScreen
 import com.dessalines.thumbkey.ui.components.settings.lookandfeel.ThemeManagerScreen
+import com.dessalines.thumbkey.ui.components.settings.lookandfeel.ThemeEditorPage
+import com.dessalines.thumbkey.ui.components.settings.lookandfeel.ThemeEditorPageScreen
+import com.dessalines.thumbkey.ui.components.keyboard.AccentFeedbackPreferences
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 import org.junit.Rule
@@ -34,6 +38,8 @@ import org.robolectric.annotation.GraphicsMode
 class ThemeManagerCompositionTest {
     @get:Rule
     val compose = createComposeRule()
+
+    private lateinit var navigation: NavHostController
 
     @Test
     fun navigationPreferenceComposesWithoutACallerPreferenceProvider() {
@@ -62,9 +68,13 @@ class ThemeManagerCompositionTest {
             MaterialTheme {
                 GemSettingsTheme(true) {
                     val navController = rememberNavController()
+                    navigation = navController
                     NavHost(navController, startDestination = "manager") {
                         composable("manager") { ThemeManagerScreen(navController) }
                         composable("advancedLookAndFeelEditor") { AdvancedLookAndFeelScreen(navController) }
+                        ThemeEditorPage.entries.forEach { page ->
+                            composable(page.route) { ThemeEditorPageScreen(navController, page) }
+                        }
                     }
                 }
             }
@@ -82,8 +92,12 @@ class ThemeManagerCompositionTest {
         compose.onNodeWithText("Current / unfinished word chip").performScrollTo().assertIsDisplayed()
         compose.onNodeWithText("Current-word background", substring = true).performScrollTo().assertIsDisplayed()
         compose.onNodeWithText("Current-word highlight", substring = true).performScrollTo().assertIsDisplayed()
+        compose.runOnIdle { navigation.popBackStack() }
+        compose.onNodeWithText("Keys").performScrollTo().performClick()
         compose.onNodeWithText("Key surface gradient").performScrollTo().assertIsDisplayed()
         compose.onNodeWithText("Border gradient").performScrollTo().assertIsDisplayed()
+        compose.runOnIdle { navigation.popBackStack() }
+        compose.onNodeWithText("Keyboard background").performScrollTo().performClick()
         compose.onAllNodesWithText("Gif")[0].performScrollTo().performClick()
         compose.onNodeWithText("Choose media").performScrollTo().assertIsDisplayed()
         compose.runOnIdle {
@@ -107,15 +121,20 @@ class ThemeManagerCompositionTest {
             MaterialTheme {
                 GemSettingsTheme(true) {
                     val navController = rememberNavController()
+                    navigation = navController
                     NavHost(navController, startDestination = "manager") {
                         composable("manager") { ThemeManagerScreen(navController) }
                         composable("advancedLookAndFeelEditor") { AdvancedLookAndFeelScreen(navController) }
+                        ThemeEditorPage.entries.forEach { page ->
+                            composable(page.route) { ThemeEditorPageScreen(navController, page) }
+                        }
                     }
                 }
             }
         }
         compose.onNodeWithText("Edit").performScrollTo().performClick()
         compose.onNodeWithText("Enable custom keyboard backgrounds").assertIsDisplayed()
+        compose.onNodeWithText("Keyboard background").performScrollTo().performClick()
         compose.onAllNodesWithText("Edit gradient  ▼")[0].performScrollTo().performClick()
         compose.onNodeWithText("color stops", substring = true).performScrollTo().performClick()
         compose
@@ -128,5 +147,17 @@ class ThemeManagerCompositionTest {
             assertEquals(saved.backdrop.stops.size + 1, BackdropThemePreferences.load(context).stops.size)
             assertEquals(savedJson, ThemeEngine.export(requireNotNull(ThemeEngine.loadTheme(context, saved.id))))
         }
+        // The hub is recomposed on return. Revert must still use the original session snapshot.
+        compose.runOnIdle { navigation.popBackStack() }
+        compose.onNodeWithText("Revert").performScrollTo().performClick()
+        compose.runOnIdle { assertEquals(saved.backdrop.stops, BackdropThemePreferences.load(context).stops) }
+        compose.onNodeWithText("Tap effects").performScrollTo().performClick()
+        compose.onNodeWithText("Add color frame").performScrollTo().performClick()
+        compose.runOnIdle { assertEquals(1, AccentFeedbackPreferences.get(context).colors.size) }
+        compose.onNodeWithText("Add GIFs / PNGs").performScrollTo().assertIsDisplayed()
+        compose.runOnIdle { navigation.popBackStack() }
+        compose.onNodeWithText("Tap effects").performScrollTo().performClick()
+        compose.onNodeWithText("Frame 1").performScrollTo().assertIsDisplayed()
+        compose.onNodeWithText("Enable action overlays").performScrollTo().assertIsDisplayed()
     }
 }

@@ -35,7 +35,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.key
 import androidx.compose.runtime.mutableIntStateOf
-import androidx.compose.runtime.mutableStateMapOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
@@ -43,7 +42,6 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
@@ -87,24 +85,38 @@ import kotlin.math.roundToInt
 import com.dessalines.thumbkey.ui.components.settings.GemButton as Button
 import com.dessalines.thumbkey.ui.components.settings.GemSettingsTopAppBar as SimpleTopAppBar
 
+/** Top-level editors are destinations; detailed color/gradient controls stay local to their page. */
+enum class ThemeEditorPage(val route: String, val title: String, val summary: String) {
+    BACKGROUND("themeBackground", "Keyboard background", "Images, GIFs, opacity and gradients"),
+    SUGGESTIONS("themeSuggestions", "Suggestion bar", "Toolbar, lozenges and current-word highlight"),
+    KEYS("themeKeys", "Keys", "Fill, borders, shadows and individual key designs"),
+    TYPOGRAPHY("themeTypography", "Typography", "Fonts, key labels and suggestion motion"),
+    TAP_EFFECTS("themeTapEffects", "Tap effects", "Tap colors, fade frames, drag trails and GIF / PNG overlays"),
+}
+
+/** All editor entry points protect a named theme before changing its live appearance. */
+fun openThemeEditorPage(context: android.content.Context, navController: NavController, page: ThemeEditorPage) {
+    val active = ThemeEngine.loadActive(context)
+    if (active.id != CUSTOM_THEME_ID) ThemeEngine.beginEditing(context, active)
+    navController.navigate(page.route)
+}
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AdvancedLookAndFeelScreen(navController: NavController) {
-    val scrollState = rememberScrollState()
     val context = LocalContext.current
     var keywiEnabled by remember { mutableStateOf(KeywiAppearancePreferences.load(context)) }
-    val openingTheme = remember(context) { ThemeEngine.captureCurrent(context, "Opening appearance", CUSTOM_THEME_ID) }
-    var editNotice by remember { mutableStateOf<String?>(null) }
-    var editorRevision by remember { mutableIntStateOf(0) }
-
-    val editorBackground = if (com.dessalines.thumbkey.ui.components.settings.LocalSettingsDrip.current != null) androidx.compose.ui.graphics.Color.Transparent else MaterialTheme.colorScheme.surface
-    Scaffold(containerColor = editorBackground, topBar = { SimpleTopAppBar(text = "Theme editor", navController = navController) }) { padding ->
+    // Navigation disposes the hub's composition. Keep the original snapshot across subpage visits.
+    val openingTheme = rememberSaveable {
+        ThemeEngine.export(ThemeEngine.captureCurrent(context, "Opening appearance", CUSTOM_THEME_ID))
+    }
+    var editNotice by rememberSaveable { mutableStateOf<String?>(null) }
+    var editorRevision by rememberSaveable { mutableIntStateOf(0) }
+    val editorBackground = if (com.dessalines.thumbkey.ui.components.settings.LocalSettingsDrip.current != null) Color.Transparent else MaterialTheme.colorScheme.surface
+    Scaffold(containerColor = editorBackground, topBar = { SimpleTopAppBar(text = "Advanced themes", navController = navController) }) { padding ->
         Column(
-            Modifier
-                .padding(padding)
-                .verticalScroll(scrollState)
-                .background(editorBackground)
-                .imePadding(),
+            Modifier.padding(padding).verticalScroll(rememberScrollState()).background(editorBackground).imePadding(),
+            verticalArrangement = Arrangement.spacedBy(8.dp),
         ) {
             Row(gemSectionModifier(), Arrangement.SpaceBetween, Alignment.CenterVertically) {
                 Column(Modifier.weight(1f).padding(end = 12.dp)) {
@@ -117,77 +129,71 @@ fun AdvancedLookAndFeelScreen(navController: NavController) {
                 })
             }
             if (keywiEnabled) {
-                Row(
-                    Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 8.dp),
-                    horizontalArrangement = Arrangement.spacedBy(8.dp),
-                ) {
+                Row(Modifier.fillMaxWidth().padding(horizontal = 16.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                     Button(onClick = {
                         ThemeEngine.saveCustom(context, ThemeEngine.captureCurrent(context, "Custom", CUSTOM_THEME_ID))
                         editNotice = "Saved to Custom. Use Save as… in Theme manager to add it to the library."
                     }, modifier = Modifier.weight(1f)) { Text("Save") }
                     OutlinedButton(onClick = {
-                        ThemeEngine.apply(context, openingTheme)
+                        ThemeEngine.apply(context, ThemeEngine.decode(openingTheme).getOrThrow())
                         editorRevision++
-                        editNotice = "Reverted. All appearance controls have been refreshed."
+                        editNotice = "Appearance restored to when you opened Advanced themes."
                     }, modifier = Modifier.weight(1f)) { Text("Revert") }
                 }
-                editNotice?.let { Text(it, Modifier.padding(horizontal = 16.dp), style = MaterialTheme.typography.bodySmall) }
-                key(editorRevision) { KeywiThemeTestBench() }
-                Text(
-                    "✦ Live theme tuning",
-                    Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
-                    style = MaterialTheme.typography.titleMedium,
+            }
+            editNotice?.let { Text(it, Modifier.padding(horizontal = 16.dp), style = MaterialTheme.typography.bodySmall) }
+            Text("Choose a page to tune your theme.", Modifier.padding(horizontal = 16.dp), style = MaterialTheme.typography.bodyMedium)
+            ThemeEditorPage.entries.forEach { page ->
+                com.dessalines.thumbkey.ui.components.settings.GemNavigationPreference(
+                    title = { Text(page.title) },
+                    summary = { Text(page.summary) },
+                    enabled = keywiEnabled || page == ThemeEditorPage.TAP_EFFECTS,
+                    onClick = { openThemeEditorPage(context, navController, page) },
                 )
-                Text(
-                    "Use the test keyboard in Theme manager to inspect the actual geometry.",
-                    Modifier.padding(horizontal = 16.dp),
-                    style = MaterialTheme.typography.bodySmall,
-                )
-                key(editorRevision) {
-                    ThemeEditorFold("Keyboard background", "Image, GIF, opacity and gradients", true) {
-                        SurfaceThemeSection(
-                            "Main backdrop",
-                            "The large space behind and around the keys.",
-                            BackdropThemePreferences::load,
-                            BackdropThemePreferences::save,
-                        )
-                    }
-                    ThemeEditorFold("Suggestion bar", "Toolbar, lozenges and current-word highlight") {
-                        SurfaceThemeSection(
-                            "Suggestion toolbar",
-                            "The strip behind suggestion lozenges and the ✨ toggle.",
-                            ToolbarThemePreferences::load,
-                            ToolbarThemePreferences::save,
-                            true,
-                        )
-                        SuggestionLozengeAppearanceSection()
-                    }
-                    ThemeEditorFold("Keys", "Fill, borders, shadows and key surfaces", true) {
-                        KeyAppearanceSection { navController.navigate("advancedKeyWordSelection") }
-                    }
-                    ThemeEditorFold("Typography", "Key labels, fonts and suggestion text") {
-                        FontAndSuggestionSection()
-                    }
-                }
-                OutlinedButton(onClick = { navController.navigate("keypressEffects") }, modifier = Modifier.padding(16.dp)) {
-                    Text("Key flashes, drag trails & GIF / PNG effects")
-                }
+            }
+            if (!keywiEnabled) {
+                Text("Enable custom keyboard backgrounds to edit appearance. Tap effects are available independently.", Modifier.padding(horizontal = 16.dp), style = MaterialTheme.typography.bodySmall)
+            }
+            Text("Appearance saves to Custom. Tap effects apply immediately and are stored separately.", Modifier.padding(horizontal = 16.dp), style = MaterialTheme.typography.bodySmall)
+            key(editorRevision) { KeywiThemeTestBench() }
+        }
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun ThemeEditorPageScreen(navController: NavController, page: ThemeEditorPage) {
+    val context = LocalContext.current
+    val editorBackground = if (com.dessalines.thumbkey.ui.components.settings.LocalSettingsDrip.current != null) Color.Transparent else MaterialTheme.colorScheme.surface
+    Scaffold(containerColor = editorBackground, topBar = { SimpleTopAppBar(text = page.title, navController = navController) }) { padding ->
+        Column(
+            Modifier.padding(padding).verticalScroll(rememberScrollState()).imePadding(),
+            verticalArrangement = Arrangement.spacedBy(12.dp),
+        ) {
+            Text(page.summary, Modifier.padding(horizontal = 16.dp), style = MaterialTheme.typography.bodyMedium)
+            Text("Changes apply as you edit. Try them in the keyboard below.", Modifier.padding(horizontal = 16.dp), style = MaterialTheme.typography.bodySmall)
+            if (page != ThemeEditorPage.TAP_EFFECTS && !KeywiAppearancePreferences.load(context)) {
+                Text("Enable custom keyboard backgrounds in Advanced themes to edit this page.", Modifier.padding(16.dp))
             } else {
-                Column(
-                    Modifier.fillMaxWidth().alpha(0.42f).padding(horizontal = 16.dp, vertical = 10.dp),
-                    verticalArrangement = Arrangement.spacedBy(12.dp),
-                ) {
-                    Text("Main backdrop", style = MaterialTheme.typography.titleLarge)
-                    Text("Suggestion toolbar", style = MaterialTheme.typography.titleLarge)
-                    Text("Keys", style = MaterialTheme.typography.titleSmall)
-                    Text("Typography", style = MaterialTheme.typography.titleSmall)
-                    Text("Suggestions", style = MaterialTheme.typography.titleSmall)
-                    Text(
-                        "Enable custom keyboard backgrounds to edit Keywi appearance settings.",
-                        style = MaterialTheme.typography.bodySmall,
-                    )
+                Column(Modifier.fillMaxWidth().padding(horizontal = 16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                    when (page) {
+                        ThemeEditorPage.BACKGROUND -> SurfaceThemeSection("Main backdrop", "The large space behind and around the keys.", BackdropThemePreferences::load, BackdropThemePreferences::save)
+                        ThemeEditorPage.SUGGESTIONS -> {
+                            SurfaceThemeSection("Suggestion toolbar", "The strip behind suggestion lozenges and the ✨ toggle.", ToolbarThemePreferences::load, ToolbarThemePreferences::save, true)
+                            SuggestionLozengeAppearanceSection()
+                        }
+                        ThemeEditorPage.KEYS -> KeyAppearanceSection { navController.navigate("advancedKeyWordSelection") }
+                        ThemeEditorPage.TYPOGRAPHY -> FontAndSuggestionSection()
+                        ThemeEditorPage.TAP_EFFECTS -> {
+                            com.dessalines.thumbkey.effects.FeedbackModeControl()
+                            Text("Tap effects are stored separately from exported appearance themes.", style = MaterialTheme.typography.bodySmall)
+                            com.dessalines.thumbkey.ui.components.settings.AccentFeedbackEditor()
+                            com.dessalines.thumbkey.ui.components.settings.boards.ActionOverlaySettingsContent()
+                        }
+                    }
                 }
             }
+            KeywiThemeTestBench()
         }
     }
 }
@@ -689,23 +695,4 @@ private fun GradientEditor(
             )
         }, modifier = Modifier.fillMaxWidth()) { Text("＋ Add stop", fontSize = 12.sp) }
     }
-}
-
-/** Independent editor sections retain a clear connection to their controls as they expand. */
-@Composable
-private fun ThemeEditorFold(
-    title: String,
-    subtitle: String,
-    initiallyExpanded: Boolean = false,
-    content: @Composable () -> Unit,
-) {
-    var expanded by rememberSaveable(title) { mutableStateOf(initiallyExpanded) }
-    ThemeEditorExpandableSection(
-        title = title,
-        subtitle = subtitle,
-        expanded = expanded,
-        onExpandedChange = { expanded = it },
-        modifier = Modifier.padding(horizontal = 12.dp, vertical = 4.dp),
-        content = content,
-    )
 }

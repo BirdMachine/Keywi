@@ -20,7 +20,7 @@ Expected current scope: schema 3 carries backdrop, toolbar, key and suggestion s
 
 ## GIF: actual press/release and fade
 
-Use a short, real screen recording of the live keyboard. Set an easily visible fade (for example 1000 ms) and record its configured colors separately; these are demo settings, not settings recovered from the theme package. Keep normal animations enabled and choose a power mode that permits motion. Record idle → press/hold → release → complete fade, then a second key. Include a still-frame alternative in user-facing docs.
+Use a short, real screen recording of the live keyboard. Open **Advanced themes → Tap effects** in the updated editor. Set an easily visible fade (for example 1000 ms) and record its configured colors separately; these are demo settings, not settings recovered from the theme package. Keep normal animations enabled and choose a power mode that permits motion. Record idle → press/hold → release → complete fade, then a second key. Include a still-frame alternative in user-facing docs.
 
 Convert a reviewed recording with FFmpeg:
 

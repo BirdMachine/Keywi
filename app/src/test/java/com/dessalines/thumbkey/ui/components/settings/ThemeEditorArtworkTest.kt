@@ -42,6 +42,6 @@ class ThemeEditorArtworkTest {
         val file = File("build/outputs/color-review/theme-editor-followup.png")
         file.parentFile.mkdirs()
         file.outputStream().use { compose.onRoot().captureToImage().asAndroidBitmap().compress(android.graphics.Bitmap.CompressFormat.PNG, 100, it) }
-        compose.onNodeWithText("Key flashes, drag trails & GIF / PNG effects").performScrollTo().assertExists()
+        compose.onNodeWithText("Tap effects").performScrollTo().assertExists()
     }
 }
