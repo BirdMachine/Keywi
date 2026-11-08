@@ -79,10 +79,18 @@ Existing showcase workflow options include `-noaudio`, so that workflow cannot s
 | Archive inspection | Passed: manifest, ZIP CRC, media bytes and hash |
 | Dev build | `assembleDebug` passed on Java 21 / Android SDK 37 |
 | Existing ThemeAssetPackageTest | 9 tests, 0 failures, 0 skipped |
-| Exact supplied fixture | ThemeFixtureRoundTripTest: 1 test, 0 failures, 0 skipped; output `slyk-roundtrip.keywi-theme.zip` |
+| Exact supplied fixture | ThemeFixtureRoundTripTest: 1 test, 0 failures, 0 skipped; output `slyk-roundtrip.keywi-theme.zip` (4,252,477 bytes), CRC and GIF hash rechecked |
+| Flash/fade component checks | AccentFeedbackTest 3/3 and AccentFeedbackRenderTest 2/2 passed, including continued fade after finger release |
 | Fresh-storage restoration | Passed in Robolectric: removed all app-owned theme files, then restored the generated ZIP; values and every asset byte match |
-| Android file-picker / live IME | In progress; software emulator reached ADB after roughly five minutes |
+| Android file-picker / live IME | Blocked: API 35 software emulator reached ADB but failed to become stable; package installation ended with `Failure calling service package: Broken pipe (32)` and window service became unavailable |
 | Drive / Samsung file-manager behavior | Not tested |
-| Flash GIF / audible video | Pending actual capture and review |
+| Flash GIF / audible video | Not produced: no verified live app capture; existing capture workflow also disables audio |
 
 The exact-fixture test is an engine check in Robolectric API 34. It is not an APK uninstall/reinstall or provider test. No GIF/video is presented as an app capture without viewing the resulting frames and, for sound, listening to the audio.
+
+
+### Emulator attempt
+
+Used the existing private `keywi-dev` environment, preserving its old worktrees and creating checkpoint `v6` before installing missing host dependencies. A separate Dev checkout built the APK. Created an API 35 Google APIs x86_64 Pixel 6 AVD; the host has no `/dev/kvm`, so it ran with `-accel off`, SwiftShader and audio disabled. ADB became available after roughly five minutes, but Android's initial package verification and service startup remained very slow. A screen capture was black and was not used as a documentation illustration. After about fourteen minutes, the package installer returned a broken pipe and the window service was unavailable again. Keywi installation, file-picker import/export and live keyboard rendering were not verified. This is an emulator/environment failure, not evidence of a Keywi theme defect.
+
+During diagnosis the disposable guest's adbd was restarted as root and the first-boot dexopt preference was changed to `skip`; neither established a stable guest. The attempt's processes were stopped afterward. The next live acceptance pass needs a working accelerated Android environment. The existing GIF/audio capture recipe remains a checklist, not a delivered recording.
