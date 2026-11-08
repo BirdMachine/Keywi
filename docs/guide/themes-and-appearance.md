@@ -15,7 +15,11 @@ Open **Settings → Themes & appearance**. This opens **Theme manager**, with th
 
 **Import** accepts a packaged theme or a supported JSON document and loads it into Custom. Inspect it, then use **Save as…** if you want a named entry. **Reset Custom** resets the scratch theme.
 
-Saving a named theme and exporting a theme are separate actions in this version. Export does not automatically create a named library entry, request an author name, or open a share sheet. You can share the exported ZIP from your file manager.
+Saving a named theme and exporting a theme are separate actions in this version. Export does not automatically create a named library entry, request an author name, or open a share sheet. You can share the exported ZIP from your file manager. Android's file picker lets you choose a destination; open its location menu for Downloads, device storage and installed providers such as Drive. A provider must be installed, signed in and support the requested operation to appear. Keywi does not provide a separate Drive login.
+
+An export is a file outside Keywi; **Save as…** creates an entry in Keywi's saved-theme strip. If a new file is absent from a file app's Recent view, browse the destination selected during export and search for `.keywi-theme.zip`. Import loads into Custom; save it under a name to add a library tile.
+
+Schema 3 packages include visual appearance, referenced background media and imported fonts. They do not contain the separate key flash/fade preferences, action effects, sound customization or board geometry. See the [round-trip and media capture checklist](theme-roundtrip-and-capture.md) for verification and recording.
 
 ## Advanced theme editor
 

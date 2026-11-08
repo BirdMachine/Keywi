@@ -22,6 +22,7 @@ const pages = [
   ['troubleshooting.md', 'Troubleshooting', '?'],
   ['screenshots.md', 'Screenshot gallery', '▧'],
   ['maintaining-the-guide.md', 'Maintainer notes', '↗'],
+  ['theme-roundtrip-and-capture.md', 'Theme round-trip & capture', '◉'],
 ];
 const htmlName = name => name === 'README.md' ? 'index.html' : name.replace(/\.md$/, '.html');
 const escape = text => text.replaceAll('&', '&amp;').replaceAll('<', '&lt;').replaceAll('>', '&gt;').replaceAll('"', '&quot;');

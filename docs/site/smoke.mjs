@@ -31,7 +31,7 @@ try {
   await page.goto('http://127.0.0.1:8765/', { waitUntil: 'networkidle' });
   await page.screenshot({ path: 'handbook-preview/mobile.png', fullPage: true });
   if (errors.length) throw Error(errors.join('\n'));
-  console.log('Search, nine-page navigation, screenshots and mobile layout passed');
+  console.log('Search, handbook navigation, screenshots and mobile layout passed');
 } finally {
   await browser.close();
 }

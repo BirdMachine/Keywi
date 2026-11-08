@@ -22,7 +22,7 @@ class Page(HTMLParser):
 
 root = Path("_site").resolve()
 pages = {p.resolve(): Page(p) for p in root.glob("*.html")}
-assert len(pages) == 9, "Expected all nine handbook pages"
+assert len(pages) == 10, "Expected all ten handbook pages"
 for path, page in pages.items():
     for link in page.links:
         url = urlsplit(link)
