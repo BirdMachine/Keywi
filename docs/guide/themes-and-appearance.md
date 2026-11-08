@@ -17,6 +17,16 @@ Open **Settings → Themes & appearance**. This opens **Theme manager**, with th
 
 Saving a named theme and exporting a theme are separate actions in this version. Export does not automatically create a named library entry, request an author name, or open a share sheet. You can share the exported ZIP from your file manager.
 
+### Choose where the exported file goes
+
+**Export** opens Android's **Create document** picker. Use its location menu to choose a folder and confirm the filename before saving. A theme saved only inside Keywi's named-theme strip is still private app data; exporting creates the portable file. In your file manager, browse the destination you chose rather than relying on its recent-files or category view.
+
+**Import** opens Android's **Open document** picker. Local folders and cloud locations, including Google Drive, depend on which document providers are installed, signed in and exposed by Android. Keywi reads/writes the selected document through Android; it does not have a separate Drive login or sync service. Drive and Samsung My Files behavior still need device testing. The current completion message says only that export succeeded; showing the destination and offering Share afterward are requested improvements.
+
+### What a theme restores
+
+The package includes background images/GIFs, key and toolbar styling, suggestion appearance and an imported font when one is selected. Key flash colors/fade timing, sound packs/assignments, typing overlays, keyboard geometry and character layouts are separate settings in the current schema. Importing a theme does not reproduce all of the original device's feedback or input configuration.
+
 ## Advanced theme editor
 
 Enable **custom keyboard backgrounds** to use the appearance controls. Turning it off uses the original Thumb-Key styling; the disabled sections cannot be edited there.
@@ -61,4 +71,8 @@ Use the theme editor for the border's style and color; use tuning for its width 
 
 Restricted power mode turns GIFs into still images and disables Keywi animations. Check [Power options](power-backup-diagnostics.md) before troubleshooting a frozen animated theme.
 
-The editor's one-shot key-press overlay note is marked as planned. A typing-overlay screen exists in the source but has no visible navigation entry in this checkpoint; this guide does not present it as an available editor control. Advanced Sound likewise has source code but no routed settings entry here.
+The older screenshots in this guide predate the current Dev navigation. In the Dev source reviewed on 8 November 2026, **Settings → Keypress effects** opens **Key flash & drag trails**, plus **Sounds & sound packs** and **GIF / PNG overlays**. These are routed controls; updated emulator screenshots are still pending.
+
+**Key flash & drag trails** offers a fade duration from 0 to 5000 ms (0 turns it off), up to 12 ordered color frames, an optional trail and **Preview fade**. “Frames” are color stops visited during one fade, not a recording frame rate. The press starts the color sequence; lifting the finger does not cancel its remaining fade. An empty color list uses the active theme's accent. These preferences are separate from the portable theme package.
+
+For documentation, capture a silent GIF for the visible flash/fade and a video with an actual audio track for sound examples. Keep the GIF background's motion distinct from the key feedback. A silent screen recording does not verify sound playback.

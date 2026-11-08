@@ -1,6 +1,6 @@
 # Keywi settings guide ✦
 
-Welcome to your keyboard's control room. This guide follows the English settings in the build 516 source checkpoint (`c2f002d4`, 17 October 2026). Android's keyboard setup screens vary by device.
+Welcome to your keyboard's control room. This guide follows the English settings in the build 516 source checkpoint (`c2f002d4`, 17 October 2026). Android's keyboard setup screens vary by device. The theme/import and keypress-effect notes were source-reviewed against Dev on 8 November 2026; the existing screenshots remain from the earlier checkpoint.
 
 ## Start here
 
@@ -20,6 +20,7 @@ Open the Keywi app whenever you need settings. HK-Like also has a **⚙** shortc
 | --- | --- | --- |
 | Gem cuts | Choose ME-Like or experimental HK-Like; inspect the preview | [Cuts & layouts](cuts-and-layouts.md) |
 | Themes & appearance | Manage themes; edit backgrounds, keys, toolbar, colors and fonts; tune size and feedback | [Themes & appearance](themes-and-appearance.md) |
+| Keypress effects (current Dev) | Configure key flash/fade and trails; open sound packs and GIF/PNG overlays | [Themes & appearance](themes-and-appearance.md#media-and-motion) |
 | Board management | Create custom boards, assign tap/swipe/hold actions, edit A/B sides and board order | [Boards & key assignments](boards-and-keys.md) |
 | Key & Word Selection | Remap character keys; show the unfinished-word chip; enable dictionary long-press | [Boards & key assignments](boards-and-keys.md) |
 | Advanced input | Change gestures, field-aware behavior and physical-keyboard compatibility; read character-tool help | [Typing & clipboard](typing-and-clipboard.md) |
