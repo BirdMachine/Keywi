@@ -19,6 +19,8 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.semantics.stateDescription
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
@@ -41,6 +43,7 @@ fun ThemeLibraryStrip(
     selectedId: String?,
     onSelect: (String) -> Unit,
     modifier: Modifier = Modifier,
+    activeId: String? = selectedId,
 ) {
     Row(
         modifier =
@@ -52,9 +55,16 @@ fun ThemeLibraryStrip(
     ) {
         themes.forEach { theme ->
             val selected = theme.id == selectedId
+            val active = theme.id == activeId
             Surface(
                 onClick = { onSelect(theme.id) },
-                modifier = Modifier.width(178.dp).height(100.dp),
+                modifier = Modifier.width(178.dp).height(100.dp).semantics {
+                    stateDescription = when {
+                        active -> "Applied theme"
+                        selected -> "Selected for preview, not applied"
+                        else -> "Not selected"
+                    }
+                },
                 shape = RoundedCornerShape(14.dp),
                 color = MaterialTheme.colorScheme.surface,
                 border =
@@ -97,7 +107,17 @@ fun ThemeLibraryStrip(
                                     )
                                 }
                             }
-                            if (selected) Text("✓", fontWeight = FontWeight.Bold)
+                            if (selected || active) {
+                                Text(
+                                    when {
+                                        selected && active -> "✓ Active"
+                                        selected -> "✓ Selected"
+                                        else -> "Active"
+                                    },
+                                    fontWeight = FontWeight.Bold,
+                                    style = MaterialTheme.typography.labelSmall,
+                                )
+                            }
                         }
                     }
                 }

@@ -1,8 +1,13 @@
 package com.dessalines.thumbkey.ui.components.settings
 
 import android.app.Application
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.ui.Modifier
 import androidx.compose.material3.Text
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onAllNodesWithText
@@ -16,9 +21,11 @@ import com.dessalines.thumbkey.ui.components.keyboard.BackdropMode
 import com.dessalines.thumbkey.ui.components.keyboard.BackdropThemePreferences
 import com.dessalines.thumbkey.ui.components.keyboard.CUSTOM_THEME_ID
 import com.dessalines.thumbkey.ui.components.keyboard.KeywiAppearancePreferences
+import com.dessalines.thumbkey.ui.components.keyboard.KeyThemePreferences
 import com.dessalines.thumbkey.ui.components.keyboard.ThemeEngine
 import com.dessalines.thumbkey.ui.components.settings.lookandfeel.AdvancedLookAndFeelScreen
 import com.dessalines.thumbkey.ui.components.settings.lookandfeel.ThemeManagerScreen
+import com.dessalines.thumbkey.ui.components.settings.lookandfeel.ThemeManagerSection
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 import org.junit.Rule
@@ -129,4 +136,104 @@ class ThemeManagerCompositionTest {
             assertEquals(savedJson, ThemeEngine.export(requireNotNull(ThemeEngine.loadTheme(context, saved.id))))
         }
     }
+    @Test
+    fun selectingThemeIsNonDestructiveUntilApplyAndCustomScratchSurvivesSwitching() {
+        val context =
+            androidx.test.core.app.ApplicationProvider
+                .getApplicationContext<Application>()
+        KeywiAppearancePreferences.save(context, true)
+        ThemeEngine.ensureMigrated(context)
+        val saved = ThemeEngine.saveCustomAs(context, "Chromatic safe switch")
+        val savedJson = ThemeEngine.export(requireNotNull(ThemeEngine.loadTheme(context, saved.id)))
+        ThemeEngine.beginEditing(context, saved)
+        KeyThemePreferences.save(context, KeyThemePreferences.load(context).copy(borderPhaseStepDegrees = 137f))
+
+        compose.setContent {
+            MaterialTheme {
+                GemSettingsTheme(true) {
+                    Column(Modifier.verticalScroll(rememberScrollState())) {
+                        ThemeManagerSection(onThemeApplied = {}, onEditTheme = {})
+                    }
+                }
+            }
+        }
+        compose.onNodeWithText(saved.name).performScrollTo().performClick()
+        compose.onNodeWithText("Apply selected theme").performScrollTo().assertIsDisplayed()
+        compose.runOnIdle {
+            assertEquals(CUSTOM_THEME_ID, ThemeEngine.activeThemeId(context))
+            assertEquals(137f, KeyThemePreferences.load(context).borderPhaseStepDegrees, .001f)
+        }
+        compose.onNodeWithText("Cancel selection").performScrollTo().performClick()
+        compose.runOnIdle { assertEquals(CUSTOM_THEME_ID, ThemeEngine.activeThemeId(context)) }
+
+        compose.onNodeWithText(saved.name).performScrollTo().performClick()
+        compose.onNodeWithText("Apply selected theme").performScrollTo().performClick()
+        compose.runOnIdle {
+            assertEquals(saved.id, ThemeEngine.activeThemeId(context))
+            assertEquals(137f, ThemeEngine.loadCustom(context).keys.borderPhaseStepDegrees, .001f)
+            assertEquals(savedJson, ThemeEngine.export(requireNotNull(ThemeEngine.loadTheme(context, saved.id))))
+        }
+
+        compose.onNodeWithText("Custom").performScrollTo().performClick()
+        compose.onNodeWithText("Apply selected theme").performScrollTo().performClick()
+        compose.runOnIdle {
+            assertEquals(CUSTOM_THEME_ID, ThemeEngine.activeThemeId(context))
+            assertEquals(137f, KeyThemePreferences.load(context).borderPhaseStepDegrees, .001f)
+        }
+    }
+
+    @Test
+    fun refreshingThemeManagerKeepsStagedSelection() {
+        val context =
+            androidx.test.core.app.ApplicationProvider
+                .getApplicationContext<Application>()
+        ThemeEngine.ensureMigrated(context)
+        ThemeEngine.resetCustom(context)
+        val saved = ThemeEngine.builtInThemes().first()
+        val revision = mutableIntStateOf(0)
+
+        compose.setContent {
+            MaterialTheme {
+                GemSettingsTheme(true) {
+                    Column(Modifier.verticalScroll(rememberScrollState())) {
+                        ThemeManagerSection(
+                            onThemeApplied = {},
+                            onEditTheme = {},
+                            refreshRevision = revision.intValue,
+                        )
+                    }
+                }
+            }
+        }
+        compose.onNodeWithText(saved.name).performScrollTo().performClick()
+        compose.onNodeWithText("Apply selected theme").performScrollTo().assertIsDisplayed()
+        compose.runOnIdle { revision.intValue++ }
+        compose.onNodeWithText("Apply selected theme").performScrollTo().assertIsDisplayed()
+        compose.runOnIdle { assertEquals(CUSTOM_THEME_ID, ThemeEngine.activeThemeId(context)) }
+    }
+
+    @Test
+    fun resettingCustomRequiresExplicitConfirmation() {
+        val context =
+            androidx.test.core.app.ApplicationProvider
+                .getApplicationContext<Application>()
+        ThemeEngine.ensureMigrated(context)
+        ThemeEngine.resetCustom(context)
+        KeyThemePreferences.save(context, KeyThemePreferences.load(context).copy(borderPhaseStepDegrees = 193f))
+        compose.setContent {
+            MaterialTheme {
+                GemSettingsTheme(true) {
+                    Column(Modifier.verticalScroll(rememberScrollState())) {
+                        ThemeManagerSection(onThemeApplied = {}, onEditTheme = {})
+                    }
+                }
+            }
+        }
+        compose.onNodeWithText("Reset Custom").performScrollTo().performClick()
+        compose.onNodeWithText("Keep Custom").assertIsDisplayed().performClick()
+        compose.runOnIdle {
+            assertEquals(193f, KeyThemePreferences.load(context).borderPhaseStepDegrees, .001f)
+        }
+    }
+
 }

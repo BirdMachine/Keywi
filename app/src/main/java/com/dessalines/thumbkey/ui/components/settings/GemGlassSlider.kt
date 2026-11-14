@@ -15,8 +15,10 @@ import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.graphics.drawscope.clipRect
 import androidx.compose.ui.graphics.lerp
 import androidx.compose.ui.graphics.luminance
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
 import com.dessalines.thumbkey.ui.components.keyboard.KeyBorderStyle
@@ -33,7 +35,15 @@ fun GemGlassSlider(
     onValueChangeFinished: (() -> Unit)? = null,
     valueRange: ClosedFloatingPointRange<Float> = 0f..1f,
     steps: Int = 0,
+    railPattern: GlassRailPattern? = null,
+    railDensity: GlassRailDensity? = null,
+    railIntensity: GlassRailIntensity? = null,
 ) {
+    val context = LocalContext.current
+    rememberGlassRailPreferences(context)
+    val selectedRailPattern = railPattern ?: GlassRailPreferences.currentPattern
+    val selectedRailDensity = railDensity ?: GlassRailPreferences.currentDensity
+    val selectedRailIntensity = railIntensity ?: GlassRailPreferences.currentIntensity
     if (!com.dessalines.thumbkey.ui.components.keyboard.KeywiPowerPreferences.advancedThemingEnabled) {
         Slider(value, onValueChange, modifier, enabled, valueRange = valueRange, steps = steps, onValueChangeFinished = onValueChangeFinished)
         return
@@ -91,6 +101,43 @@ fun GemGlassSlider(
                 val fraction = ((state.value - valueRange.start) / (valueRange.endInclusive - valueRange.start)).coerceIn(0f, 1f)
                 val start = if (layoutDirection == LayoutDirection.Rtl) size.width * (1f - fraction) else 0f
                 val width = size.width * fraction
+                // Pattern marks decorate only the unfilled inset rail, including in RTL.
+                if (selectedRailPattern != GlassRailPattern.PLAIN) {
+                    val inset = 3.dp.toPx()
+                    val left = if (layoutDirection == LayoutDirection.Rtl) inset else size.width * fraction + inset
+                    val right = if (layoutDirection == LayoutDirection.Rtl) size.width * (1f - fraction) - inset else size.width - inset
+                    if (right > left) {
+                        clipRect(left = left, top = y + 1.dp.toPx(), right = right, bottom = y + h - 1.dp.toPx()) {
+                            val ink = (if (dark) Color.White else Color.Black).copy(alpha = (if (dark) .34f else .28f) * strength * selectedRailIntensity.alphaMultiplier)
+                            val step = selectedRailDensity.spacingDp.dp.toPx()
+                            val stroke = .7.dp.toPx()
+                            var x = inset
+                            var index = 0
+                            while (x < size.width) {
+                                when (selectedRailPattern) {
+                                    GlassRailPattern.TICKS -> {
+                                        val height = if (index % 4 == 0) 5.dp.toPx() else 2.5.dp.toPx()
+                                        drawLine(ink, Offset(x, center.y - height / 2), Offset(x, center.y + height / 2), stroke)
+                                    }
+                                    GlassRailPattern.DOTS -> {
+                                        drawCircle(ink, .65.dp.toPx(), Offset(x, center.y - 1.5.dp.toPx()))
+                                        drawCircle(ink, .65.dp.toPx(), Offset(x + step / 2, center.y + 1.5.dp.toPx()))
+                                    }
+                                    GlassRailPattern.MESH -> {
+                                        drawLine(ink, Offset(x, y + 1.dp.toPx()), Offset(x + step, y + h - 1.dp.toPx()), stroke)
+                                        drawLine(ink, Offset(x, y + h - 1.dp.toPx()), Offset(x + step, y + 1.dp.toPx()), stroke)
+                                    }
+                                    GlassRailPattern.DIAGONAL -> {
+                                        drawLine(ink, Offset(x, y + h - 1.dp.toPx()), Offset(x + step, y + 1.dp.toPx()), stroke)
+                                    }
+                                    GlassRailPattern.PLAIN -> Unit
+                                }
+                                x += step
+                                index++
+                            }
+                        }
+                    }
+                }
                 if (width > 0f) {
                     val seam = Brush.horizontalGradient(edges.map { it.copy(alpha = .8f * strength) })
                     drawRoundRect(seam, Offset(start, center.y - 2.dp.toPx()), Size(width, 4.dp.toPx()), CornerRadius(2.dp.toPx()), alpha = .16f)
