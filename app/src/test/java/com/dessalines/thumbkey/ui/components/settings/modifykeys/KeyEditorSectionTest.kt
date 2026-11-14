@@ -43,6 +43,7 @@ class KeyEditorSectionTest {
             MaterialTheme { AdvancedKeyWordSelectionScreen(rememberNavController(), viewModel) }
         }
         compose.onNodeWithText("Actions & values").performScrollTo().performClick()
+        compose.onNodeWithTag("key-matrix:0:1").performScrollTo().performClick()
         val actions = compose.onNodeWithTag("key-editor-header:Gesture Actions")
         val values = compose.onNodeWithTag("key-editor-header:Character Values")
         compose.onNodeWithText("↑ up").performScrollTo().performClick()
@@ -59,8 +60,8 @@ class KeyEditorSectionTest {
         values.performScrollTo().performClick()
         compose.onNodeWithText("center").performScrollTo().assertTextContains("(｡•̀ᴗ-)✧")
         actions.performScrollTo().performClick()
-        compose.onAllNodesWithText("key0_0")[0].assertExists()
-        compose.onAllNodesWithText("key0_0")[1].assertExists()
+        compose.onAllNodesWithText("key0_1")[0].assertExists()
+        compose.onAllNodesWithText("key0_1")[1].assertExists()
         // The preview and its matrix chooser are outside both collapsed bodies.
         actions.performScrollTo().performClick()
         values.performScrollTo().performClick()

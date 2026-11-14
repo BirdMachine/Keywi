@@ -39,6 +39,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.semantics.semantics
@@ -479,7 +480,7 @@ private fun MatrixKeyboardPreview(
                         MatrixKey(
                             key = key,
                             selected = "$row:$col" in selectedIds,
-                            modifier = Modifier.weight(key.widthMultiplier.toFloat().coerceAtLeast(1f)),
+                            modifier = Modifier.weight(key.widthMultiplier.toFloat().coerceAtLeast(1f)).testTag("key-matrix:$row:$col"),
                             onClick = { onSelect(row, col) },
                             onLongClick = { onLongSelect(row, col) },
                         )
