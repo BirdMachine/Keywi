@@ -221,6 +221,15 @@ private fun SuggestionLozengeSlot(
     onSuggestionClick: (String) -> Unit,
     onSuggestionLongClick: ((String) -> Unit)? = null,
 ) {
+    if (!KeywiPowerPreferences.advancedThemingEnabled) {
+        if (suggestion != null) Box(
+            Modifier.padding(end = 6.dp).combinedClickable(
+                onClick = { onSuggestionClick(suggestion) },
+                onLongClick = onSuggestionLongClick?.let { action -> { action(suggestion) } },
+            ),
+        ) { Text(displayText ?: suggestion, Modifier.padding(10.dp), color = MaterialTheme.colorScheme.onSurface) }
+        return
+    }
     AnimatedContent(
         targetState = suggestion,
         transitionSpec = { lozengeTransform(motionStyle) },
@@ -527,6 +536,7 @@ fun SuggestionBarV2(
                 SuggestionToolbarContent(
                     page = page,
                     modifier = Modifier.weight(1f).fillMaxSize(),
+                    onReturnToKeyboard = { onPage(ToolbarPage.CHARACTERS) },
                 ) {
                     Row(
                         modifier =
@@ -625,6 +635,7 @@ fun SuggestionBarV2(
 
 /** The toggle follows the key border, including its metallic gradient, above the active fill. */
 private fun Modifier.suggestionToggleKeyBorder(theme: KeyThemeState): Modifier =
+    if (!KeywiPowerPreferences.advancedThemingEnabled) this else
     when (theme.borderStyle) {
         KeyBorderStyle.GRADIENT -> {
             keyboardGradientBorder(theme.borderGradient, 2.dp, 18.dp)
@@ -661,6 +672,7 @@ private fun Modifier.suggestionToggleKeyBorder(theme: KeyThemeState): Modifier =
 internal fun SuggestionToolbarContent(
     page: ToolbarPage,
     modifier: Modifier = Modifier,
+    onReturnToKeyboard: (() -> Unit)? = null,
     characterContent: @Composable () -> Unit,
 ) {
     Box(modifier = modifier, contentAlignment = Alignment.Center) {
@@ -668,7 +680,7 @@ internal fun SuggestionToolbarContent(
             characterContent()
         } else {
             Text(
-                text = page.title,
+                text = "‹  ${page.title}",
                 style = MaterialTheme.typography.titleSmall,
                 fontWeight = FontWeight.SemiBold,
                 color = MaterialTheme.colorScheme.onSurface,
@@ -679,6 +691,9 @@ internal fun SuggestionToolbarContent(
                     Modifier
                         .fillMaxWidth()
                         .padding(horizontal = 6.dp)
+                        .then(if (onReturnToKeyboard != null) Modifier.clickable(
+                            onClickLabel = "Return to keyboard", onClick = onReturnToKeyboard,
+                        ) else Modifier)
                         .background(MaterialTheme.colorScheme.surface.copy(alpha = .78f), RoundedCornerShape(10.dp))
                         .padding(horizontal = 8.dp, vertical = 5.dp)
                         .semantics {

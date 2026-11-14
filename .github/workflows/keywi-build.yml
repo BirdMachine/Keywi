@@ -4,10 +4,12 @@ on:
   push:
     branches:
       - "main"
+      - "Dev"
   workflow_dispatch:
   pull_request:
     branches:
       - "main"
+      - "Dev"
 
 concurrency:
   group: keywi-ci-${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
@@ -20,6 +22,8 @@ jobs:
     permissions:
       contents: read
     env:
+      KEYWI_BUILD_CHANNEL: ${{ (github.base_ref || github.ref_name) == 'main' && 'main' || 'dev' }}
+      KEYWI_ARTIFACT_NAME: ${{ (github.base_ref || github.ref_name) == 'main' && 'keywi' || 'keywi-dev' }}
       KEYWI_DEBUG_STORE_FILE: ${{ github.workspace }}/.github/keywi-debug.keystore
       KEYWI_DEBUG_STORE_PASSWORD: keywi-debug
       KEYWI_DEBUG_KEY_ALIAS: keywi-debug
@@ -92,10 +96,18 @@ jobs:
       - name: Build Keywi debug APK
         run: ./gradlew assembleDebug
 
+      - name: Verify installed app label
+        run: |
+          expected_label=Keywi
+          if [[ "$KEYWI_BUILD_CHANNEL" == "dev" ]]; then expected_label=Keywi-dev; fi
+          aapt_path="$(find "$ANDROID_HOME/build-tools" -type f -name aapt | sort -V | tail -n 1)"
+          "$aapt_path" dump badging app/build/outputs/apk/debug/app-debug.apk > app/build/outputs/apk/debug/badging.txt
+          grep -Fx "application-label:'${expected_label}'" app/build/outputs/apk/debug/badging.txt
+
       - name: Stage APK
         run: |
           mkdir -p release
-          cp app/build/outputs/apk/debug/app-debug.apk release/Keywi-latest.apk
+          cp app/build/outputs/apk/debug/app-debug.apk "release/${KEYWI_ARTIFACT_NAME}.apk"
 
       - name: Upload test and lint diagnostics
         if: failure()
@@ -113,8 +125,8 @@ jobs:
       - name: Upload workflow artifact
         uses: actions/upload-artifact@v6
         with:
-          name: keywi-debug
-          path: release/Keywi-latest.apk
+          name: ${{ env.KEYWI_ARTIFACT_NAME }}
+          path: release/${{ env.KEYWI_ARTIFACT_NAME }}.apk
           retention-days: 14
 
 
@@ -132,8 +144,10 @@ jobs:
       - name: Restore validated APK
         uses: actions/download-artifact@v6
         with:
-          name: keywi-debug
+          name: keywi
           path: release/
+      - name: Preserve main release download filename
+        run: mv release/keywi.apk release/Keywi-latest.apk
       - name: Restore build version metadata
         run: echo "KEYWI_VERSION_CODE=$((300010 + GITHUB_RUN_NUMBER))" >> "$GITHUB_ENV"
       - name: Build release notes

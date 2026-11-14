@@ -20,11 +20,21 @@ val keywiDebugKeyAlias = providers.environmentVariable("KEYWI_DEBUG_KEY_ALIAS").
 val keywiDebugKeyPassword = providers.environmentVariable("KEYWI_DEBUG_KEY_PASSWORD").orNull
 val keywiCiVersionCode = providers.environmentVariable("KEYWI_VERSION_CODE").orNull?.toIntOrNull()
 
+// PR builds follow their target branch; local and feature-branch builds are development builds.
+val keywiCiBranch = providers.environmentVariable("GITHUB_BASE_REF").orNull?.takeIf { it.isNotBlank() }
+    ?: providers.environmentVariable("GITHUB_REF_NAME").orNull
+val keywiBuildChannel = providers.gradleProperty("keywiBuildChannel")
+    .orElse(providers.environmentVariable("KEYWI_BUILD_CHANNEL"))
+    .orElse(if (keywiCiBranch == "main") "main" else "dev")
+    .get()
+require(keywiBuildChannel in setOf("main", "dev")) { "keywiBuildChannel must be main or dev" }
+
 android {
     compileSdk = 37
 
     defaultConfig {
         applicationId = "com.birdmachine.keywi"
+        resValue("string", "app_name", if (keywiBuildChannel == "main") "Keywi" else "Keywi-dev")
         minSdk = 24
         targetSdk = 37
         versionCode = keywiCiVersionCode ?: 186
@@ -108,6 +118,7 @@ android {
     }
 
     buildFeatures {
+        resValues = true
         compose = true
         buildConfig = true
     }

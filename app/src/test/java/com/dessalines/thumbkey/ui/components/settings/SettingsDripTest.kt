@@ -82,7 +82,7 @@ class SettingsDripTest {
             MaterialTheme(colorScheme = darkColorScheme()) {
                 GemSettingsTheme(true, dripEnabled = true) {
                     Column {
-                        SettingsThemeBanner()
+                        SettingsHomeHeader()
                         GemNavigationPreference(
                             title = { Text("Themes & appearance") },
                             summary = { Text("Your active keyboard atmosphere") },
@@ -138,6 +138,9 @@ class SettingsDripTest {
                 }
             }
         }
+        compose.onNodeWithText("KEYWI ✦").assertIsDisplayed()
+        compose.onNodeWithText("A little keyboard atmosphere.").assertIsDisplayed()
+        compose.onNodeWithText("YOUR THEME, EVERYWHERE").assertIsDisplayed()
         compose.onNodeWithText("Gem cuts").assertIsDisplayed()
 
         fun capture(name: String) {
@@ -147,7 +150,9 @@ class SettingsDripTest {
             }
         }
         capture("home")
-        compose.onNodeWithText("Power options").performScrollTo().performClick()
+        compose.onNodeWithText("Power options").performScrollTo()
+        compose.onNodeWithText("KEYWI ✦").assertIsDisplayed()
+        compose.onNodeWithText("Power options").performClick()
         compose.onNodeWithText("Conserved").assertIsDisplayed().performClick()
         capture("power")
         compose.onNodeWithText("Unbridled").performClick()

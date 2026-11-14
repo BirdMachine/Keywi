@@ -16,6 +16,12 @@ fun ThumbkeyTheme(
     settings: AppSettings?,
     content: @Composable () -> Unit,
 ) {
+    val power = com.dessalines.thumbkey.ui.components.keyboard.rememberKeywiPowerMode()
+    if (power == com.dessalines.thumbkey.ui.components.keyboard.KeywiPowerMode.DESPERATE) {
+        val colors = if (isSystemInDarkTheme()) androidx.compose.material3.darkColorScheme() else androidx.compose.material3.lightColorScheme()
+        MaterialTheme(colorScheme = colors, typography = androidx.compose.material3.Typography(), content = content)
+        return
+    }
     val themeMode = ThemeMode.entries[settings?.theme ?: 0]
     val themeColor = ThemeColor.entries[settings?.themeColor ?: 0]
 

@@ -39,6 +39,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.semantics.semantics
@@ -315,6 +316,7 @@ fun AdvancedKeyWordSelectionScreen(
                 com.dessalines.thumbkey.ui.components.settings.lookandfeel.KeyDesignOverrideEditor(
                     selectedIds = if (designGroupMode) designKeys else setOf("$selectedRow:$selectedCol"),
                     groupMode = designGroupMode,
+                    selectedMode = selectedMode,
                     onSelectGroup = { ids ->
                         dismissKeyboard()
                         designGroupMode = true
@@ -331,13 +333,13 @@ fun AdvancedKeyWordSelectionScreen(
 
                 if (!effectsHk) {
                     selectedKey?.let { key ->
-                        Card(
-                            colors = CardDefaults.cardColors(containerColor = MATRIX_BLACK),
-                            border = BorderStroke(1.dp, MATRIX_GREEN),
+                        KeyEditorSection(
+                            title = "Character Values",
+                            colors = CardDefaults.cardColors(containerColor = MATRIX_BLACK, contentColor = MATRIX_GREEN),
                         ) {
                             Column(Modifier.padding(12.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
                                 Text(
-                                    "CHARACTER VALUES // key${selectedRow}_$selectedCol",
+                                    "key${selectedRow}_$selectedCol",
                                     color = MATRIX_GREEN,
                                     fontFamily = FontFamily.Monospace,
                                     fontWeight = FontWeight.Bold,
@@ -478,7 +480,7 @@ private fun MatrixKeyboardPreview(
                         MatrixKey(
                             key = key,
                             selected = "$row:$col" in selectedIds,
-                            modifier = Modifier.weight(key.widthMultiplier.toFloat().coerceAtLeast(1f)),
+                            modifier = Modifier.weight(key.widthMultiplier.toFloat().coerceAtLeast(1f)).testTag("key-matrix:$row:$col"),
                             onClick = { onSelect(row, col) },
                             onLongClick = { onLongSelect(row, col) },
                         )
@@ -700,9 +702,9 @@ private fun KeyEffectsAssignments(
     val gifs = ActionGifPreferences.current
     var direction by remember(hk) { mutableStateOf("CENTER") }
     val assignmentKey = "$keyId:$direction"
-    Card {
+    KeyEditorSection(title = "Gesture Actions") {
         Column(Modifier.padding(14.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
-            Text("GESTURE ACTIONS // $keyId", fontFamily = FontFamily.Monospace, fontWeight = FontWeight.Bold)
+            Text(keyId, fontFamily = FontFamily.Monospace, fontWeight = FontWeight.Bold)
             Text(
                 "Choose a gesture, then assign a clip from either pack. Changes save immediately. Inherit follows your global direction / playback rules.",
                 style = MaterialTheme.typography.bodySmall,

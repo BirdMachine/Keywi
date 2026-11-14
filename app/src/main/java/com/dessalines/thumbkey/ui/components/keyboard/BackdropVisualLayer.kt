@@ -10,6 +10,7 @@ import android.widget.ImageView
 import androidx.annotation.RequiresApi
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
@@ -37,6 +38,8 @@ fun BackdropVisualLayer(
     state: BackdropThemeState,
     modifier: Modifier = Modifier,
 ) {
+    val power = rememberKeywiPowerMode()
+    if (power == KeywiPowerMode.DESPERATE) return
     when (state.mode) {
         BackdropMode.COLORFUL -> {
             Box(
@@ -54,14 +57,21 @@ fun BackdropVisualLayer(
             val context = LocalContext.current
             val uri = state.mediaUri?.let(Uri::parse)
             val decodedDrawable =
-                remember(context, state.mediaUri) {
+                remember(context, state.mediaUri, power) {
                     if (uri != null && Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
-                        runCatching { decodeModernBackdrop(context, uri) }.getOrNull()
+                        runCatching {
+                            decodeModernBackdrop(context, uri).also { drawable ->
+                                if (!KeywiPowerPreferences.animationsEnabled(context)) (drawable as? AnimatedImageDrawable)?.stop()
+                            }
+                        }.getOrNull()
                     } else {
                         null
                     }
                 }
 
+            DisposableEffect(decodedDrawable) {
+                onDispose { if (Build.VERSION.SDK_INT >= 28) (decodedDrawable as? AnimatedImageDrawable)?.stop() }
+            }
             AndroidView(
                 modifier =
                     modifier

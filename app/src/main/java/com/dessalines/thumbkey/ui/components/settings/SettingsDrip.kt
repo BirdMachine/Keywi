@@ -17,6 +17,8 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -41,6 +43,8 @@ import androidx.compose.ui.graphics.drawscope.drawIntoCanvas
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.nativeCanvas
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.semantics.heading
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.dp
@@ -401,11 +405,18 @@ fun settingsDripBorder(): Brush {
 }
 
 @Composable
-fun SettingsThemeBanner() {
-    if (LocalSettingsDrip.current == null) return
-    Column(gemSectionModifier().padding(vertical = 6.dp), verticalArrangement = Arrangement.spacedBy(5.dp)) {
+fun SettingsHomeHeader() {
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .background(MaterialTheme.colorScheme.background)
+            .settingsDripSurface()
+            .statusBarsPadding()
+            .padding(horizontal = 24.dp, vertical = 12.dp),
+        verticalArrangement = Arrangement.spacedBy(4.dp),
+    ) {
         Text("A little keyboard atmosphere.", style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.primary)
-        Text("KEYWI ✦", style = MaterialTheme.typography.titleLarge)
+        Text("KEYWI ✦", modifier = Modifier.semantics { heading() }, style = MaterialTheme.typography.titleLarge)
         Text("YOUR THEME, EVERYWHERE", style = MaterialTheme.typography.bodySmall)
     }
 }

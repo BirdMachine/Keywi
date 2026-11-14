@@ -87,7 +87,9 @@ class ComposeKeyboardView(
         ThumbkeyTheme(settings = settings) {
             val themeAutomationRevision = TaskerThemeAutomation.revision
             var quickSettingsRevision by remember { mutableIntStateOf(0) }
-            val keywiEnabled = remember(quickSettingsRevision, themeAutomationRevision) { KeywiAppearancePreferences.load(ctx) }
+            val powerMode = com.dessalines.thumbkey.ui.components.keyboard.rememberKeywiPowerMode()
+            val advanced = powerMode != com.dessalines.thumbkey.ui.components.keyboard.KeywiPowerMode.DESPERATE
+            val keywiEnabled = advanced && remember(quickSettingsRevision, themeAutomationRevision) { KeywiAppearancePreferences.load(ctx) }
             val mainBackdrop = BackdropThemePreferences.load(ctx)
             val toolbarBackdrop = ToolbarThemePreferences.load(ctx)
             val keyboardColorScheme =
@@ -120,9 +122,9 @@ class ComposeKeyboardView(
                                 Toast.makeText(ctx, "Select text to format", Toast.LENGTH_SHORT).show()
                             }
                         }
-                        if (keywiEnabled) {
+                        if (keywiEnabled || !advanced) {
                             Box(Modifier.fillMaxWidth().zIndex(1f)) {
-                                if (toolbarBackdrop.mode !=
+                                if (advanced && toolbarBackdrop.mode !=
                                     BackdropMode.NONE
                                 ) {
                                     BackdropVisualLayer(toolbarBackdrop, Modifier.fillMaxWidth().height(42.dp))
@@ -162,7 +164,7 @@ class ComposeKeyboardView(
                                             if (activePalette == InputPalette.FANCY_TEXT) null else InputPalette.FANCY_TEXT
                                     },
                                 )
-                                val width = ToolbarBorderPreferences.loadWidth(ctx)
+                                val width = if (advanced) ToolbarBorderPreferences.loadWidth(ctx) else 0f
                                 val color = ToolbarBorderPreferences.loadColor(ctx)
                                 if (width > 0f) {
                                     Canvas(Modifier.fillMaxWidth().height(42.dp)) {

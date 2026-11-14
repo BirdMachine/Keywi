@@ -34,6 +34,10 @@ fun GemGlassSlider(
     valueRange: ClosedFloatingPointRange<Float> = 0f..1f,
     steps: Int = 0,
 ) {
+    if (!com.dessalines.thumbkey.ui.components.keyboard.KeywiPowerPreferences.advancedThemingEnabled) {
+        Slider(value, onValueChange, modifier, enabled, valueRange = valueRange, steps = steps, onValueChangeFinished = onValueChangeFinished)
+        return
+    }
     val dark = MaterialTheme.colorScheme.background.luminance() < .5f
     val theme = KeyThemePreferences.current
     val edges = when (theme.borderStyle) {

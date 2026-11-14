@@ -40,7 +40,7 @@ class SuggestionToolbarContentTest {
             MaterialTheme {
                 Column {
                     Box(Modifier.height(42.dp)) {
-                        SuggestionToolbarContent(page.value) {
+                        SuggestionToolbarContent(page.value, onReturnToKeyboard = { page.value = ToolbarPage.CHARACTERS }) {
                             TextButton(onClick = { selected++ }) { Text("Current word suggestion") }
                         }
                     }
@@ -52,14 +52,15 @@ class SuggestionToolbarContentTest {
             compose.runOnIdle { page.value = tool }
             compose.onNodeWithText("Current word suggestion").assertDoesNotExist()
             compose
-                .onNodeWithText(tool.title)
+                .onNodeWithText("‹  ${tool.title}")
                 .assertIsDisplayed()
                 .assert(SemanticsMatcher.keyIsDefined(SemanticsProperties.Heading))
                 .assert(SemanticsMatcher.expectValue(SemanticsProperties.LiveRegion, LiveRegionMode.Polite))
         }
-        compose.runOnIdle { page.value = ToolbarPage.CHARACTERS }
+        compose.onNodeWithText("‹  ${ToolbarPage.SNIPPETS.title}").performClick()
+        compose.runOnIdle { assertEquals(ToolbarPage.CHARACTERS, page.value) }
         ToolbarPage.entries.filter { it != ToolbarPage.CHARACTERS }.forEach { tool ->
-            compose.onNodeWithText(tool.title).assertDoesNotExist()
+            compose.onNodeWithText("‹  ${tool.title}").assertDoesNotExist()
         }
         compose.onNodeWithText("Current word suggestion").assertIsDisplayed().performClick()
         compose.runOnIdle { assertEquals(2, selected) }

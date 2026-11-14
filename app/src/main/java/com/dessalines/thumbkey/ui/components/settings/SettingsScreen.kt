@@ -92,7 +92,7 @@ fun SettingsScreen(
             },
         snackbarHost = { SnackbarHost(snackbarHostState) },
         topBar = {
-            GemSettingsTopAppBar(text = "KEYWI ✦", navController = navController, showBack = false)
+            SettingsHomeHeader()
         },
         content = { padding ->
             Column(
@@ -111,7 +111,6 @@ fun SettingsScreen(
                                 },
                         ).imePadding(),
             ) {
-                SettingsThemeBanner()
                 SettingsNoticeBanners(
                     versionCode = ctx.getVersionCode(),
                     lastViewedVersion = settings?.lastVersionCodeViewed,

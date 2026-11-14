@@ -4,6 +4,9 @@ import android.content.Context
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.net.Uri
+import androidx.compose.foundation.background
+import androidx.compose.foundation.border
+import androidx.compose.material3.Surface
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.isSystemInDarkTheme
@@ -72,6 +75,11 @@ internal val LocalToolPageStyle = staticCompositionLocalOf<ToolPageStyle?> { nul
 /** Stable opaque chrome, with a single still image shared by all key wells on the page. */
 @Composable
 internal fun ToolPageTheme(content: @Composable () -> Unit) {
+    val power = rememberKeywiPowerMode()
+    if (power == KeywiPowerMode.DESPERATE) {
+        CompositionLocalProvider(LocalToolPageStyle provides null) { content() }
+        return
+    }
     if (LocalToolPageStyle.current != null) {
         content()
         return
@@ -130,6 +138,7 @@ private val grain by lazy {
 
 @Composable
 internal fun Modifier.toolPageBackground(): Modifier {
+    if (!KeywiPowerPreferences.advancedThemingEnabled) return background(MaterialTheme.colorScheme.background)
     val style = LocalToolPageStyle.current ?: ToolPageStyle(isSystemInDarkTheme())
     return drawWithCache {
         val noise = ShaderBrush(ImageShader(grain, TileMode.Repeated, TileMode.Repeated))
@@ -168,6 +177,15 @@ internal fun ToolPageSurface(
     onLongClick: (() -> Unit)? = null,
     content: @Composable () -> Unit,
 ) {
+    if (!KeywiPowerPreferences.advancedThemingEnabled) {
+        val shape = RoundedCornerShape(radius.dp)
+        val plain = modifier.heightIn(min = 48.dp).clip(shape)
+            .background(if (selected) MaterialTheme.colorScheme.secondaryContainer else MaterialTheme.colorScheme.surface)
+            .semantics { this.selected = selected }
+            .combinedClickable(onClick = onClick, onDoubleClick = onDoubleClick, onLongClick = onLongClick, hapticFeedbackEnabled = false)
+        Box(plain, propagateMinConstraints = true, contentAlignment = Alignment.CenterStart) { content() }
+        return
+    }
     val style = LocalToolPageStyle.current ?: ToolPageStyle(MaterialTheme.colorScheme.background.luminance() < .5f)
     val theme = KeyThemePreferences.current
     val shape = RoundedCornerShape(radius.dp)

@@ -170,6 +170,7 @@ internal fun KeyboardBackdrop.brush(
 
 /** Paint a gradient across this composable's complete bounds. */
 fun Modifier.keyboardGradientBackground(backdrop: KeyboardBackdrop): Modifier {
+    if (!KeywiPowerPreferences.advancedThemingEnabled) return this
     val orderedStops = backdrop.sortedStops()
     if (orderedStops.isEmpty()) return this
     if (orderedStops.size == 1) return background(orderedStops.first().color)
@@ -197,6 +198,7 @@ fun Modifier.keyboardGradientBorder(
     offsetY: Float = 0f,
     phaseDegrees: Float = 0f,
 ): Modifier {
+    if (!KeywiPowerPreferences.advancedThemingEnabled) return this
     if (width.value <= 0f) return this
 
     return drawWithCache {

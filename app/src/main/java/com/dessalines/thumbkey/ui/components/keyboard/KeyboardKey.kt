@@ -167,6 +167,7 @@ fun KeyboardKey(
     keyGradientOffsetX: Float = 0f,
     keyGradientOffsetY: Float = 0f,
     keyDesignId: String = "",
+    keyDesignMode: com.dessalines.thumbkey.utils.KeyboardMode = com.dessalines.thumbkey.utils.KeyboardMode.MAIN,
     keySequenceIndex: Int = 0,
     keyRectangles: Map<String, KeyCanvasRect> = emptyMap(),
 ) {
@@ -246,7 +247,7 @@ fun KeyboardKey(
 
     val appearanceEnabled = KeywiAppearancePreferences.currentEnabled
     val baseKeyTheme = KeyThemePreferences.current
-    val keyTheme = baseKeyTheme.forKey(keyDesignId)
+    val keyTheme = baseKeyTheme.forKey(keyDesignId, keyDesignMode)
     val density = LocalDensity.current
     val gradientWidthPx = with(density) { keyGradientCanvasWidth.dp.toPx() }
     val gradientHeightPx = with(density) { keyGradientCanvasHeight.dp.toPx() }
@@ -259,6 +260,7 @@ fun KeyboardKey(
                     keyDesignId,
                     KeyGradientLayer.SURFACE,
                     keyRectangles,
+                    keyDesignMode,
                 )?.scaled(density.density)
         } else {
             null
@@ -270,6 +272,7 @@ fun KeyboardKey(
                     keyDesignId,
                     KeyGradientLayer.BORDER,
                     keyRectangles,
+                    keyDesignMode,
                 )?.scaled(density.density)
         } else {
             null
@@ -1052,8 +1055,7 @@ fun KeyboardKey(
                 )
             }
 
-    // a 3x3 grid
-    // Use box so they can overlap
+    // Nine visual legend slots; the whole-key gesture detector above stays unchanged.
     // Some magic padding numbers so that large radii don't obscure the legends
     val radiusPercent = keyRadius / 100F
     val keyRadiusAdd = 20.dp
@@ -1078,15 +1080,10 @@ fun KeyboardKey(
     Box(
         modifier = keyboardKeyModifier,
     ) {
-        Box(
-            contentAlignment = Alignment.TopStart,
-            modifier =
-                Modifier
-                    .fillMaxSize()
-                    .padding(
-                        horizontal = diagonalXPadding,
-                        vertical = diagonalYPadding,
-                    ),
+        GestureLabelSlot(
+            alignment = Alignment.TopStart,
+            horizontalInset = diagonalXPadding,
+            verticalInset = diagonalYPadding,
         ) {
             if (!hideSwipeHints) {
                 TaskerCommandLegend(effectKeyId, "TOP_LEFT", ((keySize - keyBorderWidth) * .28).dp) {
@@ -1096,12 +1093,10 @@ fun KeyboardKey(
                 }
             }
         }
-        Box(
-            contentAlignment = Alignment.TopCenter,
-            modifier =
-                Modifier
-                    .fillMaxSize()
-                    .padding(vertical = yPadding),
+        GestureLabelSlot(
+            alignment = Alignment.TopCenter,
+            horizontalInset = 0.dp,
+            verticalInset = yPadding,
         ) {
             if (!hideSwipeHints) {
                 TaskerCommandLegend(effectKeyId, "TOP", ((keySize - keyBorderWidth) * .28).dp) {
@@ -1111,15 +1106,10 @@ fun KeyboardKey(
                 }
             }
         }
-        Box(
-            contentAlignment = Alignment.TopEnd,
-            modifier =
-                Modifier
-                    .fillMaxSize()
-                    .padding(
-                        horizontal = diagonalXPadding,
-                        vertical = diagonalYPadding,
-                    ),
+        GestureLabelSlot(
+            alignment = Alignment.TopEnd,
+            horizontalInset = diagonalXPadding,
+            verticalInset = diagonalYPadding,
         ) {
             if (!hideSwipeHints) {
                 TaskerCommandLegend(effectKeyId, "TOP_RIGHT", ((keySize - keyBorderWidth) * .28).dp) {
@@ -1129,12 +1119,10 @@ fun KeyboardKey(
                 }
             }
         }
-        Box(
-            contentAlignment = Alignment.CenterStart,
-            modifier =
-                Modifier
-                    .fillMaxSize()
-                    .padding(horizontal = xPadding),
+        GestureLabelSlot(
+            alignment = Alignment.CenterStart,
+            horizontalInset = xPadding,
+            verticalInset = 0.dp,
         ) {
             if (!hideSwipeHints) {
                 TaskerCommandLegend(effectKeyId, "LEFT", ((keySize - keyBorderWidth) * .28).dp) {
@@ -1144,23 +1132,20 @@ fun KeyboardKey(
                 }
             }
         }
-        Box(
-            contentAlignment = Alignment.Center,
-            modifier =
-                Modifier
-                    .fillMaxSize(),
+        GestureLabelSlot(
+            alignment = Alignment.Center,
+            horizontalInset = 0.dp,
+            verticalInset = 0.dp,
         ) {
             TaskerCommandLegend(effectKeyId, "CENTER", ((keySize - keyBorderWidth) * .4).dp) {
                 KeyText(key.center, (keySize - keyBorderWidth).dp, hideLetters, hideSymbols, capsLock)
             }
         }
 
-        Box(
-            contentAlignment = Alignment.CenterEnd,
-            modifier =
-                Modifier
-                    .fillMaxSize()
-                    .padding(horizontal = xPadding),
+        GestureLabelSlot(
+            alignment = Alignment.CenterEnd,
+            horizontalInset = xPadding,
+            verticalInset = 0.dp,
         ) {
             if (!hideSwipeHints) {
                 TaskerCommandLegend(effectKeyId, "RIGHT", ((keySize - keyBorderWidth) * .28).dp) {
@@ -1170,15 +1155,10 @@ fun KeyboardKey(
                 }
             }
         }
-        Box(
-            contentAlignment = Alignment.BottomStart,
-            modifier =
-                Modifier
-                    .fillMaxSize()
-                    .padding(
-                        horizontal = diagonalXPadding,
-                        vertical = diagonalYPadding,
-                    ),
+        GestureLabelSlot(
+            alignment = Alignment.BottomStart,
+            horizontalInset = diagonalXPadding,
+            verticalInset = diagonalYPadding,
         ) {
             if (!hideSwipeHints) {
                 TaskerCommandLegend(effectKeyId, "BOTTOM_LEFT", ((keySize - keyBorderWidth) * .28).dp) {
@@ -1188,12 +1168,10 @@ fun KeyboardKey(
                 }
             }
         }
-        Box(
-            contentAlignment = Alignment.BottomCenter,
-            modifier =
-                Modifier
-                    .fillMaxSize()
-                    .padding(vertical = yPadding),
+        GestureLabelSlot(
+            alignment = Alignment.BottomCenter,
+            horizontalInset = 0.dp,
+            verticalInset = yPadding,
         ) {
             if (!hideSwipeHints) {
                 TaskerCommandLegend(effectKeyId, "BOTTOM", ((keySize - keyBorderWidth) * .28).dp) {
@@ -1203,15 +1181,10 @@ fun KeyboardKey(
                 }
             }
         }
-        Box(
-            contentAlignment = Alignment.BottomEnd,
-            modifier =
-                Modifier
-                    .fillMaxSize()
-                    .padding(
-                        horizontal = diagonalXPadding,
-                        vertical = diagonalYPadding,
-                    ),
+        GestureLabelSlot(
+            alignment = Alignment.BottomEnd,
+            horizontalInset = diagonalXPadding,
+            verticalInset = diagonalYPadding,
         ) {
             if (!hideSwipeHints) {
                 TaskerCommandLegend(effectKeyId, "BOTTOM_RIGHT", ((keySize - keyBorderWidth) * .28).dp) {
@@ -1223,7 +1196,7 @@ fun KeyboardKey(
         }
 
         if (!hideSwipeHints) {
-            Box(Modifier.fillMaxSize().padding(bottom = (keySize * .2).dp), contentAlignment = Alignment.BottomCenter) {
+            GestureLabelSlot(Alignment.BottomCenter, verticalInset = (keySize * .2).dp) {
                 TaskerCommandLegend(effectKeyId, "HOLD", 12.dp) {}
             }
         }
@@ -1241,7 +1214,7 @@ fun KeyboardKey(
                 Modifier
                     .fillMaxSize()
                     .background(color = Color(0, 0, 0, 0)),
-            visible = releasedKey.value != null && !isPasswordField,
+            visible = releasedKey.value != null && !isPasswordField && KeywiPowerPreferences.advancedThemingEnabled,
             enter = slideInVertically(tween(animationSpeed)),
             exit = fadeOut(tween(animationSpeed)),
         ) {
@@ -1337,13 +1310,15 @@ fun KeyText(
                 }
             if (!hideKey) {
                 val spSize = fontSize.toPx.pxToSp
-                Text(
-                    text = display.text,
-                    fontWeight = FontWeight.Bold,
-                    fontFamily = display.fontFamily,
-                    fontSize = spSize,
-                    lineHeight = spSize,
-                    color = color,
+                FittedGestureText(
+                    label = display.text,
+                    style = androidx.compose.material3.LocalTextStyle.current.copy(
+                        fontWeight = FontWeight.Bold,
+                        fontFamily = display.fontFamily ?: androidx.compose.material3.LocalTextStyle.current.fontFamily,
+                        fontSize = spSize,
+                        lineHeight = spSize,
+                        color = color,
+                    ),
                 )
             }
         }
