@@ -1314,7 +1314,7 @@ fun KeyText(
                     label = display.text,
                     style = androidx.compose.material3.LocalTextStyle.current.copy(
                         fontWeight = FontWeight.Bold,
-                        fontFamily = display.fontFamily,
+                        fontFamily = display.fontFamily ?: androidx.compose.material3.LocalTextStyle.current.fontFamily,
                         fontSize = spSize,
                         lineHeight = spSize,
                         color = color,

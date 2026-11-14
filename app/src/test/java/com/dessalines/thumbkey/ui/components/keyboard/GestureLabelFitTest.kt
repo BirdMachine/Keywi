@@ -2,8 +2,10 @@ package com.dessalines.thumbkey.ui.components.keyboard
 
 import android.app.Application
 import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.size
+import androidx.compose.material3.LocalTextStyle
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.CompositionLocalProvider
@@ -111,6 +113,44 @@ class GestureLabelFitTest {
             }
         }
         labels.forEach { compose.onNodeWithText(it).assertExists() }
+    }
+
+    @Test fun inheritedFontAndOrdinaryCharacterRenderingStayUnchanged() {
+        val style = TextStyle(fontFamily = FontFamily.Monospace, fontSize = 16.sp, lineHeight = 16.sp, fontWeight = FontWeight.Bold, color = Color.Red)
+        compose.setContent {
+            MaterialTheme {
+                CompositionLocalProvider(LocalTextStyle provides style, LocalKeyGlyphColor provides Color.Red) {
+                    Row {
+                        Box(Modifier.size(40.dp).background(Color.Black).testTag("actual")) {
+                            KeyText(KeyC(KeyAction.CommitText("a")), 80.dp, false, false, false)
+                        }
+                        Box(Modifier.size(40.dp).background(Color.Black).testTag("expected")) {
+                            Text("a", style = style)
+                        }
+                    }
+                }
+            }
+        }
+        val actual = compose.onNodeWithTag("actual").captureToImage().asAndroidBitmap()
+        val expected = compose.onNodeWithTag("expected").captureToImage().asAndroidBitmap()
+        assertTrue("Ordinary characters must retain their inherited font and size", actual.sameAs(expected))
+    }
+
+    @Test fun exceptionallyLongLabelUsesAnEntireEllipsisInsteadOfClippedGraphemes() {
+        val label = "👩🏽‍💻e\u0301".repeat(100)
+        val style = TextStyle(fontSize = 16.sp, color = Color.Red)
+        compose.setContent {
+            MaterialTheme {
+                Row {
+                    Box(Modifier.size(24.dp).background(Color.Black).testTag("actual")) { FittedGestureText(label, style) }
+                    Box(Modifier.size(24.dp).background(Color.Black).testTag("expected")) { FittedGestureText("…", style) }
+                }
+            }
+        }
+        val actual = compose.onNodeWithTag("actual").captureToImage().asAndroidBitmap()
+        val expected = compose.onNodeWithTag("expected").captureToImage().asAndroidBitmap()
+        assertTrue("Below the minimum, replace the whole label visually", actual.sameAs(expected))
+        compose.onNodeWithText(label).assertExists()
     }
 
     @Test fun scaleNeverEnlargesAndFitsBothAxes() {
