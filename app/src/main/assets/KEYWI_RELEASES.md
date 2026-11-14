@@ -1,5 +1,10 @@
 Keywi is your colorful keyboard playground, built on Thumb-Key's open-source foundation.
 
+## Saved themes and key flash
+- Saved user themes now have **Update saved theme** and **Delete theme…** controls with confirmation. Deleting an active theme switches to the existing Custom and preserves its edits.
+- **Save as…** detects an existing name and offers **Overwrite** or **Cancel**. Built-in themes and Custom cannot be deleted or overwritten as library entries.
+- New theme saves and exports include key-flash color frames, fade duration and the drag-trail toggle. Older themes leave your existing feedback settings unchanged.
+
 ## Tool controls follow-up
 - Feedback mode is a normal ↗ swipe preset on the emoji/tools key. The corner legend follows the mode; taps and other swipes keep their existing actions, and explicit Tasker assignments take priority.
 - The toolbar cycler uses a diamond in a disk again. Swipe down advances and up goes back; **Toolbar controls → Invert tool scroll** reverses this, including while the keyboard is open.
