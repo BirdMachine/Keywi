@@ -1,0 +1,92 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="390" height="960" viewBox="0 0 390 960" role="img" aria-labelledby="title desc"><title id="title">Creative Studio settings home</title><desc id="desc">Documentation wireframe. Example values and decoration, not a running keyboard interface.</desc><defs><linearGradient id="chroma" x1="0" y1="1" x2="1" y2="0"><stop stop-color="#997AE9"/><stop offset=".5" stop-color="#F4AAE3"/><stop offset="1" stop-color="#F6D98B"/></linearGradient><linearGradient id="glass" x2="1" y2="1"><stop stop-color="#3B3656"/><stop offset="1" stop-color="#21263D"/></linearGradient></defs>
+<rect x="0" y="0" width="390" height="960" rx="28" fill="#141627" stroke="none" stroke-width="1"/>
+<text x="24" y="29" font-family="DejaVu Sans, sans-serif" font-size="12" fill="#F6F3FC" font-weight="600" text-anchor="start">8:24</text>
+<text x="366" y="29" font-family="DejaVu Sans, sans-serif" font-size="12" fill="#BEC2DB" font-weight="400" text-anchor="end">82%</text>
+<text x="24" y="86" font-family="DejaVu Sans, sans-serif" font-size="31" fill="#F6F3FC" font-weight="600" text-anchor="start">Keywi</text>
+<text x="24" y="114" font-family="DejaVu Sans, sans-serif" font-size="12" fill="#BEC2DB" font-weight="400" text-anchor="start">MAKE A LITTLE KEYBOARD MAGIC</text>
+<path d="M342 80 Q324 51 342 44 Q360 51 342 80" fill="#F4AAE3" opacity=".22" transform="rotate(0 342 80)"/>
+<path d="M342 80 Q324 51 342 44 Q360 51 342 80" fill="#F4AAE3" opacity=".22" transform="rotate(90 342 80)"/>
+<path d="M342 80 Q324 51 342 44 Q360 51 342 80" fill="#F4AAE3" opacity=".22" transform="rotate(180 342 80)"/>
+<path d="M342 80 Q324 51 342 44 Q360 51 342 80" fill="#F4AAE3" opacity=".22" transform="rotate(270 342 80)"/>
+<circle cx="342" cy="80" r="5" fill="#F4AAE3" stroke="none" stroke-width="1"/>
+<rect x="24" y="140" width="342" height="48" rx="10" fill="#23263B" stroke="#8088A8" stroke-width="1"/>
+<circle cx="46" cy="162" r="7" fill="none" stroke="#BEC2DB" stroke-width="1.6"/>
+<path d="M51 167 L57 173" fill="none" stroke="#BEC2DB" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+<text x="70" y="170" font-family="DejaVu Sans, sans-serif" font-size="16" fill="#BEC2DB" font-weight="400" text-anchor="start">Find a control…</text>
+<text x="24" y="224" font-family="DejaVu Sans, sans-serif" font-size="18" fill="#F6F3FC" font-weight="500" text-anchor="start">Your workbench</text>
+<text x="366" y="224" font-family="DejaVu Sans, sans-serif" font-size="13" fill="#F4AAE3" font-weight="400" text-anchor="end">Custom</text>
+<rect x="30" y="244" width="330" height="128" rx="10" fill="url(#glass)" stroke="#8088A8" stroke-width="1"/>
+<rect x="39.0" y="253.0" width="82.36" height="23.75" rx="5" fill="#292E49" stroke="#67708D" stroke-width="1"/>
+<text x="80.18" y="269.625" font-family="DejaVu Sans, sans-serif" font-size="13" fill="#F6F3FC" font-weight="600" text-anchor="middle">A</text>
+<rect x="126.36" y="253.0" width="82.36" height="23.75" rx="5" fill="#292E49" stroke="#67708D" stroke-width="1"/>
+<text x="167.54" y="269.625" font-family="DejaVu Sans, sans-serif" font-size="13" fill="#F6F3FC" font-weight="600" text-anchor="middle">N</text>
+<rect x="213.72" y="253.0" width="82.36" height="23.75" rx="5" fill="#292E49" stroke="#67708D" stroke-width="1"/>
+<text x="254.9" y="269.625" font-family="DejaVu Sans, sans-serif" font-size="13" fill="#F6F3FC" font-weight="600" text-anchor="middle">I</text>
+<rect x="39.0" y="281.75" width="82.36" height="23.75" rx="5" fill="#292E49" stroke="#67708D" stroke-width="1"/>
+<text x="80.18" y="298.375" font-family="DejaVu Sans, sans-serif" font-size="13" fill="#F6F3FC" font-weight="600" text-anchor="middle">H</text>
+<rect x="126.36" y="281.75" width="82.36" height="23.75" rx="5" fill="#292E49" stroke="#67708D" stroke-width="1"/>
+<text x="167.54" y="298.375" font-family="DejaVu Sans, sans-serif" font-size="13" fill="#F6F3FC" font-weight="600" text-anchor="middle">O</text>
+<rect x="213.72" y="281.75" width="82.36" height="23.75" rx="5" fill="#292E49" stroke="#67708D" stroke-width="1"/>
+<text x="254.9" y="298.375" font-family="DejaVu Sans, sans-serif" font-size="13" fill="#F6F3FC" font-weight="600" text-anchor="middle">R</text>
+<rect x="39.0" y="310.5" width="82.36" height="23.75" rx="5" fill="#292E49" stroke="#67708D" stroke-width="1"/>
+<text x="80.18" y="327.125" font-family="DejaVu Sans, sans-serif" font-size="13" fill="#F6F3FC" font-weight="600" text-anchor="middle">T</text>
+<rect x="126.36" y="310.5" width="82.36" height="23.75" rx="5" fill="#292E49" stroke="#67708D" stroke-width="1"/>
+<text x="167.54" y="327.125" font-family="DejaVu Sans, sans-serif" font-size="13" fill="#F6F3FC" font-weight="600" text-anchor="middle">E</text>
+<rect x="213.72" y="310.5" width="82.36" height="23.75" rx="5" fill="#292E49" stroke="#67708D" stroke-width="1"/>
+<text x="254.9" y="327.125" font-family="DejaVu Sans, sans-serif" font-size="13" fill="#F6F3FC" font-weight="600" text-anchor="middle">S</text>
+<rect x="301.08" y="253.0" width="49.92" height="23.75" rx="5" fill="#30364E" stroke="#8088A8" stroke-width="1"/>
+<text x="326.03999999999996" y="269.625" font-family="DejaVu Sans, sans-serif" font-size="11" fill="#F6F3FC" font-weight="400" text-anchor="middle">⇧</text>
+<rect x="301.08" y="281.75" width="49.92" height="23.75" rx="5" fill="#30364E" stroke="#8088A8" stroke-width="1"/>
+<text x="326.03999999999996" y="298.375" font-family="DejaVu Sans, sans-serif" font-size="11" fill="#F6F3FC" font-weight="400" text-anchor="middle">123</text>
+<rect x="301.08" y="310.5" width="49.92" height="23.75" rx="5" fill="#30364E" stroke="#8088A8" stroke-width="1"/>
+<text x="326.03999999999996" y="327.125" font-family="DejaVu Sans, sans-serif" font-size="11" fill="#F6F3FC" font-weight="400" text-anchor="middle">⌫</text>
+<rect x="39" y="339.25" width="257.08" height="23.75" rx="5" fill="#30364E" stroke="#8088A8" stroke-width="1"/>
+<text x="167.54" y="355.875" font-family="DejaVu Sans, sans-serif" font-size="10" fill="#BEC2DB" font-weight="400" text-anchor="middle">space</text>
+<rect x="301.08" y="339.25" width="49.92" height="23.75" rx="5" fill="#30364E" stroke="#8088A8" stroke-width="1"/>
+<text x="326.03999999999996" y="355.875" font-family="DejaVu Sans, sans-serif" font-size="14" fill="#F6F3FC" font-weight="400" text-anchor="middle">↵</text>
+<text x="24" y="405" font-family="DejaVu Sans, sans-serif" font-size="11" fill="#A6E5DE" font-weight="600" text-anchor="start">CONTINUE EXPLORING</text>
+<rect x="24" y="420" width="162" height="48" rx="9" fill="#23263B" stroke="#8088A8" stroke-width="1"/>
+<text x="105.0" y="450" font-family="DejaVu Sans, sans-serif" font-size="14" fill="#F6F3FC" font-weight="500" text-anchor="middle">Tap colors</text>
+<rect x="198" y="420" width="168" height="48" rx="9" fill="#23263B" stroke="#8088A8" stroke-width="1"/>
+<text x="282.0" y="450" font-family="DejaVu Sans, sans-serif" font-size="14" fill="#F6F3FC" font-weight="500" text-anchor="middle">Group fill</text>
+<path d="M36 492 H175 Q190 492 190 508 V567 Q190 590 166 590 H24 V504 Z" fill="url(#glass)" stroke="#8088A8" stroke-width="1" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M35 510 L38.5 506 L45.5 506 L49 510 L42 520 Z" fill="none" stroke="#F4AAE3" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M35 510 L49 510 M38.5 506 L42 520 L45.5 506" fill="none" stroke="#F4AAE3" stroke-width="1" stroke-linecap="round" stroke-linejoin="round"/>
+<text x="36" y="539" font-family="DejaVu Sans, sans-serif" font-size="15" fill="#F6F3FC" font-weight="500" text-anchor="start">Dress your</text>
+<text x="36" y="557" font-family="DejaVu Sans, sans-serif" font-size="15" fill="#F6F3FC" font-weight="500" text-anchor="start">keyboard</text>
+<text x="36" y="577" font-family="DejaVu Sans, sans-serif" font-size="12" fill="#BEC2DB" font-weight="400" text-anchor="start">Themes, color &amp; type</text>
+<path d="M212 492 H351 Q366 492 366 508 V567 Q366 590 342 590 H200 V504 Z" fill="url(#glass)" stroke="#8088A8" stroke-width="1" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M211 510 L214.5 506 L221.5 506 L225 510 L218 520 Z" fill="none" stroke="#F4AAE3" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M211 510 L225 510 M214.5 506 L218 520 L221.5 506" fill="none" stroke="#F4AAE3" stroke-width="1" stroke-linecap="round" stroke-linejoin="round"/>
+<text x="212" y="539" font-family="DejaVu Sans, sans-serif" font-size="15" fill="#F6F3FC" font-weight="500" text-anchor="start">Shape your</text>
+<text x="212" y="557" font-family="DejaVu Sans, sans-serif" font-size="15" fill="#F6F3FC" font-weight="500" text-anchor="start">keyboard</text>
+<text x="212" y="577" font-family="DejaVu Sans, sans-serif" font-size="12" fill="#BEC2DB" font-weight="400" text-anchor="start">Geometry, keys &amp; boards</text>
+<path d="M36 604 H175 Q190 604 190 620 V679 Q190 702 166 702 H24 V616 Z" fill="url(#glass)" stroke="#8088A8" stroke-width="1" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M35 622 L38.5 618 L45.5 618 L49 622 L42 632 Z" fill="none" stroke="#A6E5DE" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M35 622 L49 622 M38.5 618 L42 632 L45.5 618" fill="none" stroke="#A6E5DE" stroke-width="1" stroke-linecap="round" stroke-linejoin="round"/>
+<text x="36" y="651" font-family="DejaVu Sans, sans-serif" font-size="15" fill="#F6F3FC" font-weight="500" text-anchor="start">Tune your typing</text>
+<text x="36" y="689" font-family="DejaVu Sans, sans-serif" font-size="12" fill="#BEC2DB" font-weight="400" text-anchor="start">Gestures &amp; suggestions</text>
+<path d="M212 604 H351 Q366 604 366 620 V679 Q366 702 342 702 H200 V616 Z" fill="url(#glass)" stroke="#8088A8" stroke-width="1" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M211 622 L214.5 618 L221.5 618 L225 622 L218 632 Z" fill="none" stroke="#A6E5DE" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M211 622 L225 622 M214.5 618 L218 632 L221.5 618" fill="none" stroke="#A6E5DE" stroke-width="1" stroke-linecap="round" stroke-linejoin="round"/>
+<text x="212" y="651" font-family="DejaVu Sans, sans-serif" font-size="15" fill="#F6F3FC" font-weight="500" text-anchor="start">Make it respond</text>
+<text x="212" y="689" font-family="DejaVu Sans, sans-serif" font-size="12" fill="#BEC2DB" font-weight="400" text-anchor="start">Sound, touch &amp; effects</text>
+<path d="M36 716 H175 Q190 716 190 732 V791 Q190 814 166 814 H24 V728 Z" fill="url(#glass)" stroke="#8088A8" stroke-width="1" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M35 734 L38.5 730 L45.5 730 L49 734 L42 744 Z" fill="none" stroke="#F6D98B" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M35 734 L49 734 M38.5 730 L42 744 L45.5 730" fill="none" stroke="#F6D98B" stroke-width="1" stroke-linecap="round" stroke-linejoin="round"/>
+<text x="36" y="763" font-family="DejaVu Sans, sans-serif" font-size="15" fill="#F6F3FC" font-weight="500" text-anchor="start">Build your toolkit</text>
+<text x="36" y="801" font-family="DejaVu Sans, sans-serif" font-size="12" fill="#BEC2DB" font-weight="400" text-anchor="start">Panels &amp; palettes</text>
+<path d="M212 716 H351 Q366 716 366 732 V791 Q366 814 342 814 H200 V728 Z" fill="url(#glass)" stroke="#8088A8" stroke-width="1" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M211 734 L214.5 730 L221.5 730 L225 734 L218 744 Z" fill="none" stroke="#F6D98B" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M211 734 L225 734 M214.5 730 L218 744 L221.5 730" fill="none" stroke="#F6D98B" stroke-width="1" stroke-linecap="round" stroke-linejoin="round"/>
+<text x="212" y="763" font-family="DejaVu Sans, sans-serif" font-size="15" fill="#F6F3FC" font-weight="500" text-anchor="start">Connect &amp;</text>
+<text x="212" y="781" font-family="DejaVu Sans, sans-serif" font-size="15" fill="#F6F3FC" font-weight="500" text-anchor="start">automate</text>
+<text x="212" y="801" font-family="DejaVu Sans, sans-serif" font-size="12" fill="#BEC2DB" font-weight="400" text-anchor="start">Tasks &amp; theme routines</text>
+<path d="M31 857 L34.5 853 L41.5 853 L45 857 L38 867 Z" fill="none" stroke="#A6E5DE" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M31 857 L45 857 M34.5 853 L38 867 L41.5 853" fill="none" stroke="#A6E5DE" stroke-width="1" stroke-linecap="round" stroke-linejoin="round"/>
+<text x="60" y="858" font-family="DejaVu Sans, sans-serif" font-size="17" fill="#F6F3FC" font-weight="500" text-anchor="start">App &amp; care</text>
+<text x="60" y="880" font-family="DejaVu Sans, sans-serif" font-size="12" fill="#BEC2DB" font-weight="400" text-anchor="start">Power, backups &amp; help</text>
+<path d="M347 856 l5 5 l-5 5" fill="none" stroke="#F6F3FC" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M60 894 L366 894" fill="none" stroke="#515872" stroke-width="1" stroke-linecap="round" stroke-linejoin="round"/>
+<rect x="151" y="942" width="88" height="4" rx="2" fill="#F6F3FC" stroke="none" stroke-width="1"/>
+</svg>

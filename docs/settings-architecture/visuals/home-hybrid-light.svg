@@ -1,0 +1,91 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="390" height="960" viewBox="0 0 390 960" role="img" aria-labelledby="title desc"><title id="title">Hybrid settings home, light appearance</title><desc id="desc">Documentation wireframe. Example values and decoration, not a running keyboard interface.</desc><defs><linearGradient id="chroma" x1="0" y1="1" x2="1" y2="0"><stop stop-color="#997AE9"/><stop offset=".5" stop-color="#7C286F"/><stop offset="1" stop-color="#735820"/></linearGradient><linearGradient id="glass" x2="1" y2="1"><stop stop-color="#E7DCF0"/><stop offset="1" stop-color="#DDE9F1"/></linearGradient></defs>
+<rect x="0" y="0" width="390" height="960" rx="28" fill="#F7F3FA" stroke="none" stroke-width="1"/>
+<text x="24" y="29" font-family="DejaVu Sans, sans-serif" font-size="12" fill="#202037" font-weight="600" text-anchor="start">8:24</text>
+<text x="366" y="29" font-family="DejaVu Sans, sans-serif" font-size="12" fill="#535A76" font-weight="400" text-anchor="end">82%</text>
+<text x="24" y="86" font-family="DejaVu Sans, sans-serif" font-size="31" fill="#202037" font-weight="600" text-anchor="start">Keywi</text>
+<text x="24" y="114" font-family="DejaVu Sans, sans-serif" font-size="12" fill="#535A76" font-weight="400" text-anchor="start">A LITTLE KEYBOARD ATMOSPHERE</text>
+<path d="M342 80 Q324 51 342 44 Q360 51 342 80" fill="#7C286F" opacity=".22" transform="rotate(0 342 80)"/>
+<path d="M342 80 Q324 51 342 44 Q360 51 342 80" fill="#7C286F" opacity=".22" transform="rotate(90 342 80)"/>
+<path d="M342 80 Q324 51 342 44 Q360 51 342 80" fill="#7C286F" opacity=".22" transform="rotate(180 342 80)"/>
+<path d="M342 80 Q324 51 342 44 Q360 51 342 80" fill="#7C286F" opacity=".22" transform="rotate(270 342 80)"/>
+<circle cx="342" cy="80" r="5" fill="#7C286F" stroke="none" stroke-width="1"/>
+<rect x="24" y="140" width="342" height="48" rx="10" fill="#E7E6F1" stroke="#727995" stroke-width="1"/>
+<circle cx="46" cy="162" r="7" fill="none" stroke="#535A76" stroke-width="1.6"/>
+<path d="M51 167 L57 173" fill="none" stroke="#535A76" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+<text x="70" y="170" font-family="DejaVu Sans, sans-serif" font-size="16" fill="#535A76" font-weight="400" text-anchor="start">Find a control…</text>
+<rect x="36" y="211" width="318" height="112" rx="10" fill="url(#glass)" stroke="#727995" stroke-width="1"/>
+<rect x="45.0" y="220.0" width="79.0" height="19.75" rx="5" fill="#E0DFEF" stroke="#858DA4" stroke-width="1"/>
+<text x="84.5" y="233.825" font-family="DejaVu Sans, sans-serif" font-size="13" fill="#202037" font-weight="600" text-anchor="middle">A</text>
+<rect x="129.0" y="220.0" width="79.0" height="19.75" rx="5" fill="#E0DFEF" stroke="#858DA4" stroke-width="1"/>
+<text x="168.5" y="233.825" font-family="DejaVu Sans, sans-serif" font-size="13" fill="#202037" font-weight="600" text-anchor="middle">N</text>
+<rect x="213.0" y="220.0" width="79.0" height="19.75" rx="5" fill="#E0DFEF" stroke="#858DA4" stroke-width="1"/>
+<text x="252.5" y="233.825" font-family="DejaVu Sans, sans-serif" font-size="13" fill="#202037" font-weight="600" text-anchor="middle">I</text>
+<rect x="45.0" y="244.75" width="79.0" height="19.75" rx="5" fill="#E0DFEF" stroke="#858DA4" stroke-width="1"/>
+<text x="84.5" y="258.575" font-family="DejaVu Sans, sans-serif" font-size="13" fill="#202037" font-weight="600" text-anchor="middle">H</text>
+<rect x="129.0" y="244.75" width="79.0" height="19.75" rx="5" fill="#E0DFEF" stroke="#858DA4" stroke-width="1"/>
+<text x="168.5" y="258.575" font-family="DejaVu Sans, sans-serif" font-size="13" fill="#202037" font-weight="600" text-anchor="middle">O</text>
+<rect x="213.0" y="244.75" width="79.0" height="19.75" rx="5" fill="#E0DFEF" stroke="#858DA4" stroke-width="1"/>
+<text x="252.5" y="258.575" font-family="DejaVu Sans, sans-serif" font-size="13" fill="#202037" font-weight="600" text-anchor="middle">R</text>
+<rect x="45.0" y="269.5" width="79.0" height="19.75" rx="5" fill="#E0DFEF" stroke="#858DA4" stroke-width="1"/>
+<text x="84.5" y="283.325" font-family="DejaVu Sans, sans-serif" font-size="13" fill="#202037" font-weight="600" text-anchor="middle">T</text>
+<rect x="129.0" y="269.5" width="79.0" height="19.75" rx="5" fill="#E0DFEF" stroke="#858DA4" stroke-width="1"/>
+<text x="168.5" y="283.325" font-family="DejaVu Sans, sans-serif" font-size="13" fill="#202037" font-weight="600" text-anchor="middle">E</text>
+<rect x="213.0" y="269.5" width="79.0" height="19.75" rx="5" fill="#E0DFEF" stroke="#858DA4" stroke-width="1"/>
+<text x="252.5" y="283.325" font-family="DejaVu Sans, sans-serif" font-size="13" fill="#202037" font-weight="600" text-anchor="middle">S</text>
+<rect x="297.0" y="220.0" width="48.0" height="19.75" rx="5" fill="#E8E7F0" stroke="#727995" stroke-width="1"/>
+<text x="321.0" y="233.825" font-family="DejaVu Sans, sans-serif" font-size="11" fill="#202037" font-weight="400" text-anchor="middle">⇧</text>
+<rect x="297.0" y="244.75" width="48.0" height="19.75" rx="5" fill="#E8E7F0" stroke="#727995" stroke-width="1"/>
+<text x="321.0" y="258.575" font-family="DejaVu Sans, sans-serif" font-size="11" fill="#202037" font-weight="400" text-anchor="middle">123</text>
+<rect x="297.0" y="269.5" width="48.0" height="19.75" rx="5" fill="#E8E7F0" stroke="#727995" stroke-width="1"/>
+<text x="321.0" y="283.325" font-family="DejaVu Sans, sans-serif" font-size="11" fill="#202037" font-weight="400" text-anchor="middle">⌫</text>
+<rect x="45" y="294.25" width="247.0" height="19.75" rx="5" fill="#E8E7F0" stroke="#727995" stroke-width="1"/>
+<text x="168.5" y="308.075" font-family="DejaVu Sans, sans-serif" font-size="10" fill="#535A76" font-weight="400" text-anchor="middle">space</text>
+<rect x="297.0" y="294.25" width="48.0" height="19.75" rx="5" fill="#E8E7F0" stroke="#727995" stroke-width="1"/>
+<text x="321.0" y="308.075" font-family="DejaVu Sans, sans-serif" font-size="14" fill="#202037" font-weight="400" text-anchor="middle">↵</text>
+<text x="24" y="350" font-family="DejaVu Sans, sans-serif" font-size="14" fill="#7C286F" font-weight="600" text-anchor="start">Custom</text>
+<text x="366" y="350" font-family="DejaVu Sans, sans-serif" font-size="14" fill="#146C69" font-weight="500" text-anchor="end">Try typing  ›</text>
+<text x="24" y="386" font-family="DejaVu Sans, sans-serif" font-size="11" fill="#146C69" font-weight="600" text-anchor="start">PINNED</text>
+<text x="366" y="386" font-family="DejaVu Sans, sans-serif" font-size="13" fill="#535A76" font-weight="400" text-anchor="end">Edit</text>
+<rect x="24" y="399" width="164" height="48" rx="9" fill="#E7E6F1" stroke="#727995" stroke-width="1"/>
+<text x="106.0" y="429" font-family="DejaVu Sans, sans-serif" font-size="14" fill="#202037" font-weight="500" text-anchor="middle">Tap colors</text>
+<rect x="200" y="399" width="166" height="48" rx="9" fill="#E7E6F1" stroke="#727995" stroke-width="1"/>
+<text x="283.0" y="429" font-family="DejaVu Sans, sans-serif" font-size="14" fill="#202037" font-weight="500" text-anchor="middle">Power mode</text>
+<path d="M31 497 L34.5 493 L41.5 493 L45 497 L38 507 Z" fill="none" stroke="#7C286F" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M31 497 L45 497 M34.5 493 L38 507 L41.5 493" fill="none" stroke="#7C286F" stroke-width="1" stroke-linecap="round" stroke-linejoin="round"/>
+<text x="60" y="498" font-family="DejaVu Sans, sans-serif" font-size="17" fill="#202037" font-weight="500" text-anchor="start">Look &amp; feel</text>
+<text x="60" y="520" font-family="DejaVu Sans, sans-serif" font-size="12" fill="#535A76" font-weight="400" text-anchor="start">Themes, surfaces &amp; tap effects</text>
+<path d="M347 496 l5 5 l-5 5" fill="none" stroke="#202037" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M60 537 L366 537" fill="none" stroke="#B3B7CA" stroke-width="1" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M31 562 L34.5 558 L41.5 558 L45 562 L38 572 Z" fill="none" stroke="#146C69" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M31 562 L45 562 M34.5 558 L38 572 L41.5 558" fill="none" stroke="#146C69" stroke-width="1" stroke-linecap="round" stroke-linejoin="round"/>
+<text x="60" y="563" font-family="DejaVu Sans, sans-serif" font-size="17" fill="#202037" font-weight="500" text-anchor="start">Layout &amp; keys</text>
+<text x="60" y="585" font-family="DejaVu Sans, sans-serif" font-size="12" fill="#535A76" font-weight="400" text-anchor="start">Geometry, mappings &amp; groups</text>
+<path d="M347 561 l5 5 l-5 5" fill="none" stroke="#202037" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M60 602 L366 602" fill="none" stroke="#B3B7CA" stroke-width="1" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M31 627 L34.5 623 L41.5 623 L45 627 L38 637 Z" fill="none" stroke="#735820" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M31 627 L45 627 M34.5 623 L38 637 L41.5 623" fill="none" stroke="#735820" stroke-width="1" stroke-linecap="round" stroke-linejoin="round"/>
+<text x="60" y="628" font-family="DejaVu Sans, sans-serif" font-size="17" fill="#202037" font-weight="500" text-anchor="start">Typing</text>
+<text x="60" y="650" font-family="DejaVu Sans, sans-serif" font-size="12" fill="#535A76" font-weight="400" text-anchor="start">Gestures, words &amp; field behavior</text>
+<path d="M347 626 l5 5 l-5 5" fill="none" stroke="#202037" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M60 667 L366 667" fill="none" stroke="#B3B7CA" stroke-width="1" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M31 692 L34.5 688 L41.5 688 L45 692 L38 702 Z" fill="none" stroke="#7C286F" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M31 692 L45 692 M34.5 688 L38 702 L41.5 688" fill="none" stroke="#7C286F" stroke-width="1" stroke-linecap="round" stroke-linejoin="round"/>
+<text x="60" y="693" font-family="DejaVu Sans, sans-serif" font-size="17" fill="#202037" font-weight="500" text-anchor="start">Feel &amp; sound</text>
+<text x="60" y="715" font-family="DejaVu Sans, sans-serif" font-size="12" fill="#535A76" font-weight="400" text-anchor="start">Sound, vibration &amp; feedback</text>
+<path d="M347 691 l5 5 l-5 5" fill="none" stroke="#202037" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M60 732 L366 732" fill="none" stroke="#B3B7CA" stroke-width="1" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M31 757 L34.5 753 L41.5 753 L45 757 L38 767 Z" fill="none" stroke="#146C69" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M31 757 L45 757 M34.5 753 L38 767 L41.5 753" fill="none" stroke="#146C69" stroke-width="1" stroke-linecap="round" stroke-linejoin="round"/>
+<text x="60" y="758" font-family="DejaVu Sans, sans-serif" font-size="17" fill="#202037" font-weight="500" text-anchor="start">Tools &amp; connections</text>
+<text x="60" y="780" font-family="DejaVu Sans, sans-serif" font-size="12" fill="#535A76" font-weight="400" text-anchor="start">Panels, toolbar &amp; Tasker</text>
+<path d="M347 756 l5 5 l-5 5" fill="none" stroke="#202037" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M60 797 L366 797" fill="none" stroke="#B3B7CA" stroke-width="1" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M31 822 L34.5 818 L41.5 818 L45 822 L38 832 Z" fill="none" stroke="#735820" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M31 822 L45 822 M34.5 818 L38 832 L41.5 818" fill="none" stroke="#735820" stroke-width="1" stroke-linecap="round" stroke-linejoin="round"/>
+<text x="60" y="823" font-family="DejaVu Sans, sans-serif" font-size="17" fill="#202037" font-weight="500" text-anchor="start">App &amp; care</text>
+<text x="60" y="845" font-family="DejaVu Sans, sans-serif" font-size="12" fill="#535A76" font-weight="400" text-anchor="start">Power, backups &amp; help</text>
+<path d="M347 821 l5 5 l-5 5" fill="none" stroke="#202037" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M60 862 L366 862" fill="none" stroke="#B3B7CA" stroke-width="1" stroke-linecap="round" stroke-linejoin="round"/>
+<text x="24" y="906" font-family="DejaVu Sans, sans-serif" font-size="13" fill="#535A76" font-weight="400" text-anchor="start">Recent: Suggestion chip color  ›</text>
+<rect x="151" y="942" width="88" height="4" rx="2" fill="#202037" stroke="none" stroke-width="1"/>
+</svg>
