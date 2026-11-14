@@ -24,6 +24,7 @@ Birdie's consolidated wishlist and 🌱 **Someday / Idea Incubator**. These are 
 
 ### Themes, sharing and everyday use
 
+- **New-release LED:** add a little visual/faux LED near Keywi’s title/top. When a newer GitHub release published from `main` is available than the installed version, turn the light on green and show **New release**; otherwise keep it unlit. A new branch commit alone should not count as a release. **Tap** downloads that release’s installable APK directly. **Tap and hold** opens the corresponding GitHub release page for details. Make the hold action discoverable with a tooltip/popup label reading **Hold to open release deets**, or temporarily replace the **New release** text with that hint.
 - **Save to…:** make theme exports easy to find, with a chosen folder and filename and useful completion feedback.
 - **Share after export:** offer Google Drive and other Android share targets; keep saving and sharing separately usable.
 - **Portable themes and feedback:** improve portability of theme assets, sound packs and flash/fade preferences. Sound packs and flash/fade preferences are currently separate from schema 3 theme packages.
