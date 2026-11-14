@@ -332,13 +332,13 @@ fun AdvancedKeyWordSelectionScreen(
 
                 if (!effectsHk) {
                     selectedKey?.let { key ->
-                        Card(
-                            colors = CardDefaults.cardColors(containerColor = MATRIX_BLACK),
-                            border = BorderStroke(1.dp, MATRIX_GREEN),
+                        KeyEditorSection(
+                            title = "Character Values",
+                            colors = CardDefaults.cardColors(containerColor = MATRIX_BLACK, contentColor = MATRIX_GREEN),
                         ) {
                             Column(Modifier.padding(12.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
                                 Text(
-                                    "CHARACTER VALUES // key${selectedRow}_$selectedCol",
+                                    "key${selectedRow}_$selectedCol",
                                     color = MATRIX_GREEN,
                                     fontFamily = FontFamily.Monospace,
                                     fontWeight = FontWeight.Bold,
@@ -701,9 +701,9 @@ private fun KeyEffectsAssignments(
     val gifs = ActionGifPreferences.current
     var direction by remember(hk) { mutableStateOf("CENTER") }
     val assignmentKey = "$keyId:$direction"
-    Card {
+    KeyEditorSection(title = "Gesture Actions") {
         Column(Modifier.padding(14.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
-            Text("GESTURE ACTIONS // $keyId", fontFamily = FontFamily.Monospace, fontWeight = FontWeight.Bold)
+            Text(keyId, fontFamily = FontFamily.Monospace, fontWeight = FontWeight.Bold)
             Text(
                 "Choose a gesture, then assign a clip from either pack. Changes save immediately. Inherit follows your global direction / playback rules.",
                 style = MaterialTheme.typography.bodySmall,

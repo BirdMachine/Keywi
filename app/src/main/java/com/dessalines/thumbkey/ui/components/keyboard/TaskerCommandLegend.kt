@@ -2,7 +2,6 @@ package com.dessalines.thumbkey.ui.components.keyboard
 
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.widthIn
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Bolt
 import androidx.compose.material.icons.outlined.Code
@@ -12,7 +11,6 @@ import androidx.compose.material.icons.outlined.PlayArrow
 import androidx.compose.material.icons.outlined.Settings
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.produceState
@@ -24,7 +22,6 @@ import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.sp
 import com.dessalines.thumbkey.effects.TaskerCommandDisplay
@@ -63,14 +60,14 @@ fun TaskerCommandSymbol(
     }
     when (display.kind) {
         TaskerCommandDisplayKind.TEXT -> {
-            Text(
-                display.value,
-                color = tint,
-                fontWeight = FontWeight.Bold,
-                fontSize = (size.value * .75f).sp,
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis,
-                modifier = modifier.widthIn(max = size * 2f),
+            FittedGestureText(
+                label = display.value,
+                style = androidx.compose.material3.LocalTextStyle.current.copy(
+                    color = tint,
+                    fontWeight = FontWeight.Bold,
+                    fontSize = (size.value * .75f).sp,
+                ),
+                modifier = modifier,
             )
         }
 
