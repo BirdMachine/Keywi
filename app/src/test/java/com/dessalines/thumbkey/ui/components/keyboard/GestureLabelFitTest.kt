@@ -43,7 +43,12 @@ class GestureLabelFitTest {
         compose.setContent {
             MaterialTheme {
                 Box(Modifier.size(100.dp).background(Color.Black).testTag("key")) {
-                    listOf(Alignment.CenterStart to "a", Alignment.Center to "(｡•̀ᴗ-)✧", Alignment.CenterEnd to "b").forEach { (alignment, label) ->
+                    val labels = listOf(
+                        Alignment.CenterStart to "a",
+                        Alignment.Center to "(｡•̀ᴗ-)✧",
+                        Alignment.CenterEnd to "b",
+                    )
+                    labels.forEach { (alignment, label) ->
                         GestureLabelSlot(alignment) {
                             CompositionLocalProvider(LocalKeyGlyphColor provides if (label == "a" || label == "b") Color.Green else Color.Red) {
                                 KeyText(KeyC(KeyAction.CommitText(label), size = FontSizeVariant.SMALL), 100.dp, false, false, false)
