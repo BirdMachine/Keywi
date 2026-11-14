@@ -1,0 +1,25 @@
+{
+  "unicode_version": "18.0.0",
+  "entries": 172873,
+  "compressed_bytes": 1029574,
+  "uncompressed_bytes": 10771978,
+  "sources": {
+    "UnicodeData.txt": {
+      "url": "https://www.unicode.org/Public/18.0.0/ucd/UnicodeData.txt",
+      "sha256": "0736451de439ae7baf1425136617da495e09ee5afbe6e394374db7009ea08950"
+    },
+    "Blocks.txt": {
+      "url": "https://www.unicode.org/Public/18.0.0/ucd/Blocks.txt",
+      "sha256": "a58f8d322f3c5e254f9f97b1cbf76a454a7e02de6ac35619a5e4f27aaabfd553"
+    },
+    "NameAliases.txt": {
+      "url": "https://www.unicode.org/Public/18.0.0/ucd/NameAliases.txt",
+      "sha256": "3d5cf5e468901b080cd99adf2230061b748083705fe633db43ac8b73ec7a13da"
+    },
+    "extracted/DerivedName.txt": {
+      "url": "https://www.unicode.org/Public/18.0.0/ucd/extracted/DerivedName.txt",
+      "sha256": "ac6cf808ea4ee29323031d5ba9449de13da51398a3f5ce401546d8fceb976df7"
+    }
+  },
+  "catalog_sha256": "b1376ff1cec4f6480c9cf537e4dff06df85793fff55b55458c2a7dc40e6d6035"
+}

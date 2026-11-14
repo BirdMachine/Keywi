@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="unicode_library_title">Unicode %1$s · Offline</string>
+    <string name="unicode_library_loading">Loading offline Unicode library…</string>
+    <string name="unicode_library_error">Could not load the offline library.</string>
+    <string name="unicode_library_retry">Retry</string>
+    <string name="unicode_library_keyboard">Keyboard</string>
+    <string name="unicode_library_help">Why boxes?</string>
+    <string name="unicode_library_search">Search names, aliases, blocks, or U+ codes…</string>
+    <string name="unicode_library_search_active">Type on the keyboard below to search…</string>
+    <string name="unicode_library_clear">Clear</string>
+    <string name="unicode_library_done">Done</string>
+    <string name="unicode_library_all_blocks">All blocks</string>
+    <string name="unicode_library_empty">No matching characters. Try a name such as “bird” or a code such as U+232C.</string>
+    <string name="unicode_library_previous">Previous</string>
+    <string name="unicode_library_next">Next</string>
+    <string name="unicode_library_page">Page %1$d</string>
+    <string name="unicode_library_results">%1$d shown · hold a character for details</string>
+    <string name="unicode_library_missing">Preview unavailable</string>
+    <string name="unicode_library_invisible">Invisible</string>
+    <string name="unicode_library_close">Close</string>
+    <string name="unicode_library_insert">Insert character</string>
+    <string name="unicode_library_details">%1$s\n%2$s\nBlock: %3$s\nCategory: %4$s</string>
+    <string name="unicode_library_aliases">Aliases: %1$s</string>
+    <string name="unicode_library_special">This character is intentionally invisible or context-dependent. It may affect nearby characters or change text layout when inserted.</string>
+    <string name="unicode_library_mark">The dotted circle is only a preview aid. Insertion sends the original combining mark, which may attach to adjacent text.</string>
+    <string name="unicode_library_help_title">Missing glyphs &amp; invisible characters</string>
+    <string name="unicode_library_help_body">A box (sometimes called “tofu”) usually means the text renderer has no glyph for that character. Keywi checks Android’s sans-serif preview and its fallback fonts; this is an estimate for this preview, not an inventory of every installed font. Another app or recipient may render the same character differently.\n\nSome characters are intentionally invisible. Combining marks need surrounding text, so Keywi does not classify their standalone glyphs as missing. The dotted circle is only a preview aid. This catalog lists individual Unicode characters, not every multi-character emoji sequence.\n\nDownloading a font does not automatically install it system-wide on Android or make other apps use it. Apps that support custom fonts may be able to use a downloaded font. The offline library and search do not require any download.</string>
+    <string name="unicode_library_missing_count">Missing in preview: %1$d of %2$d characters on this page. Other pages have not been checked.</string>
+    <string name="unicode_library_support_checking">Checking preview support…</string>
+    <string name="unicode_library_no_missing">No missing glyphs detected in the loaded results. Invisible characters and rendering differences may still occur.</string>
+    <string name="unicode_library_missing_item">%1$s — %2$s</string>
+    <string name="unicode_library_noto">Browse Noto fonts ↗</string>
+    <string name="unicode_library_font_downloads">Noto font downloads ↗</string>
+    <string name="unicode_library_link_error">Could not open the font website.</string>
+</resources>

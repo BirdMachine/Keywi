@@ -13,8 +13,16 @@ import org.robolectric.annotation.Config
 @RunWith(RobolectricTestRunner::class)
 @Config(sdk = [34], application = Application::class)
 class ToolPagePreferencesTest {
-    @Test fun defaultRotationPreservesTheExistingFourPages() {
-        assertEquals(listOf(ToolbarPage.CHARACTERS, ToolbarPage.FORMATTING, ToolbarPage.KAOMOJI, ToolbarPage.QUICK_SETTINGS), ToolPageConfig().visiblePages())
+    @Test fun defaultRotationIncludesUnicodeBeforeQuickSettings() {
+        assertEquals(listOf(ToolbarPage.CHARACTERS, ToolbarPage.FORMATTING, ToolbarPage.KAOMOJI, ToolbarPage.UNICODE, ToolbarPage.QUICK_SETTINGS), ToolPageConfig().visiblePages())
+    }
+
+    @Test fun olderSavedPageOrderKeepsExistingOrderAndAppendsUnicode() {
+        val old = ToolPagePreferences.decode("""{"pages":["KAOMOJI","CHARACTERS","FORMATTING","QUICK_SETTINGS","SNIPPETS"],"hiddenPages":["SNIPPETS"]}""")
+        assertEquals(
+            listOf(ToolbarPage.KAOMOJI, ToolbarPage.CHARACTERS, ToolbarPage.FORMATTING, ToolbarPage.QUICK_SETTINGS, ToolbarPage.UNICODE),
+            old.visiblePages(),
+        )
     }
 
     @Test fun editedCollectionsAndOptionsPersistAndRestoreIndependently() {
