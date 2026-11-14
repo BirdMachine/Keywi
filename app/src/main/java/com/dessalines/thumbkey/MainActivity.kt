@@ -136,6 +136,11 @@ class MainActivity : AppCompatActivity() {
                     gemSettingsDestination("advancedLookAndFeel") { ThemeManagerScreen(navController) }
                     gemSettingsDestination("taskerThemeUpdates") { TaskerThemeSettingsScreen(navController) }
                     gemSettingsDestination("advancedLookAndFeelEditor") { AdvancedLookAndFeelScreen(navController) }
+                    com.dessalines.thumbkey.ui.components.settings.lookandfeel.ThemeEditorPage.entries.forEach { page ->
+                        gemSettingsDestination(page.route) {
+                            com.dessalines.thumbkey.ui.components.settings.lookandfeel.ThemeEditorPageScreen(navController, page)
+                        }
+                    }
                     composable("advancedKeyWordSelection") { AdvancedKeyWordSelectionScreen(navController, appSettingsViewModel) }
                     gemSettingsDestination("behavior") { BehaviorScreen(navController, appSettingsViewModel) }
                     gemSettingsDestination("advancedInput") { AdvancedInputScreen(navController) }

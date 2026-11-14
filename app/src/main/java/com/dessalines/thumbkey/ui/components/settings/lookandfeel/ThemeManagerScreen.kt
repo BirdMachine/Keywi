@@ -92,7 +92,7 @@ fun AdvancedThemeEditorEntry(navController: NavController) {
     val context = LocalContext.current
     GemNavigationPreference(
         title = { Text("Advanced theme editor") },
-        summary = { Text("Edit gradients, GIFs, images, key surfaces, borders, toolbar and fonts.") },
+        summary = { Text("Open pages for backgrounds, suggestion bar, keys, typography and tap effects.") },
         onClick = {
             val active = ThemeEngine.loadActive(context)
             if (active.id != CUSTOM_THEME_ID) ThemeEngine.beginEditing(context, active)

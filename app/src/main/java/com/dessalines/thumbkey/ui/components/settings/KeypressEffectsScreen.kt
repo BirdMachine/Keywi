@@ -26,6 +26,7 @@ import com.dessalines.thumbkey.ui.components.settings.lookandfeel.KeywiThemeTest
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun KeypressEffectsScreen(navController: NavController) {
+    val context = androidx.compose.ui.platform.LocalContext.current
     Scaffold(
         containerColor = if (LocalSettingsDrip.current != null) Color.Transparent else MaterialTheme.colorScheme.background,
         topBar = { GemSettingsTopAppBar("Keypress effects", navController) },
@@ -35,7 +36,6 @@ fun KeypressEffectsScreen(navController: NavController) {
             verticalArrangement = Arrangement.spacedBy(8.dp),
         ) {
             com.dessalines.thumbkey.effects.FeedbackModeControl()
-            AccentFeedbackEditor()
             GemSettingsGroupLabel("✦ ACTION FEEDBACK", "Give taps, swipes and holds their own character")
             GemNavigationPreference(
                 title = { Text("Sounds & sound packs") },
@@ -44,10 +44,14 @@ fun KeypressEffectsScreen(navController: NavController) {
                 onClick = { navController.navigate("keypressSounds") },
             )
             GemNavigationPreference(
-                title = { Text("GIF / PNG overlays") },
-                summary = { Text("Animated action accents, key or center placement, layers and playback rules") },
+                title = { Text("Tap effects") },
+                summary = { Text("Tap colors, fade frames, drag trails and GIF / PNG overlays in Advanced themes") },
                 icon = { Icon(Icons.Outlined.AutoAwesome, contentDescription = null) },
-                onClick = { navController.navigate("typingOverlay") },
+                onClick = {
+                    com.dessalines.thumbkey.ui.components.settings.lookandfeel.openThemeEditorPage(
+                        context, navController, com.dessalines.thumbkey.ui.components.settings.lookandfeel.ThemeEditorPage.TAP_EFFECTS,
+                    )
+                },
             )
             KeywiThemeTestBench()
         }

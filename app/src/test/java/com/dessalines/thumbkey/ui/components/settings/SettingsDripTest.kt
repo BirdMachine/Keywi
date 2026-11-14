@@ -51,6 +51,9 @@ class SettingsDripTest {
         assertTrue(usesSettingsDrip("advancedLookAndFeel"))
         assertTrue(usesSettingsDrip("settings"))
         assertTrue(usesSettingsDrip("advancedLookAndFeelEditor"))
+        com.dessalines.thumbkey.ui.components.settings.lookandfeel.ThemeEditorPage.entries.forEach {
+            assertTrue(usesSettingsDrip(it.route))
+        }
         for (mode in KeywiPowerMode.entries) {
             for (api in listOf(24, 30, 31, 33, 34)) {
                 assertEquals(mode == KeywiPowerMode.UNBRIDLED && api >= 31, settingsOpticsEnabled(mode, api))
