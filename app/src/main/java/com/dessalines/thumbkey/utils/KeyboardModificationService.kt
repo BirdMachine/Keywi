@@ -11,6 +11,7 @@ import com.charleskorn.kaml.Yaml
 import com.charleskorn.kaml.YamlConfiguration
 import com.dessalines.thumbkey.keyboards.BACKSPACE_KEYC
 import com.dessalines.thumbkey.keyboards.BACKSPACE_TEXT_MANIPULATION_KEYC
+import com.dessalines.thumbkey.keyboards.COMPOSE_COMBO_KEYC
 import com.dessalines.thumbkey.keyboards.COPY_KEYC
 import com.dessalines.thumbkey.keyboards.CUT_KEYC
 import com.dessalines.thumbkey.keyboards.DELETE_CHARACTER_AFTER_CURSOR_KEYC
@@ -195,6 +196,7 @@ fun modifyKeyC(
         keyCSerializable.text?.let {
             KeyC.action.set(CommitText(it))
             KeyC.display.set(TextDisplay(it))
+            KeyC.capsModeDisplay.set(null)
         }
 
         keyActionKeyC?.let {
@@ -214,6 +216,7 @@ fun modifyKeyC(
 
         keyCSerializable.displayText?.let {
             KeyC.display.set(TextDisplay(it))
+            KeyC.capsModeDisplay.set(null)
         }
         keyCSerializable.color?.let {
             KeyC.color.set(it)
@@ -284,6 +287,7 @@ fun getCommonKeyCFromKeyAction(keyActionSerializable: KeyActionSerializable?): K
         KeyActionSerializable.ToggleABCMode -> TOGGLE_NUMERIC_MODE_FALSE_KEYC
         KeyActionSerializable.ToggleEmojiMode -> TOGGLE_EMOJI_MODE_TRUE_KEYC
         KeyActionSerializable.ToggleClipboardMode -> TOGGLE_CLIPBOARD_MODE_TRUE_KEYC
+        KeyActionSerializable.StartComposeCombo -> COMPOSE_COMBO_KEYC
         KeyActionSerializable.ToggleCapsLock -> TOGGLE_CAPS_KEYC
         KeyActionSerializable.ToggleShiftModeTrue -> TOGGLE_SHIFT_TRUE_KEYC
         KeyActionSerializable.ToggleShiftModeFalse -> TOGGLE_SHIFT_FALSE_KEYC
@@ -486,6 +490,7 @@ enum class KeyActionSerializable {
     ToggleEmojiMode,
     ToggleClipboardMode,
     ToggleCapsLock,
+    StartComposeCombo,
     ToggleShiftModeFalse,
     ToggleShiftModeTrue,
     ToggleCtrlModeTrue,
