@@ -11,3 +11,10 @@ Export produces one `.keywi-theme.zip` containing `theme.json` and all reference
 Legacy JSON themes without assets continue to import. Legacy JSON containing readable external content URIs is copied into Custom; an asset-backed JSON containing relative references requires its ZIP package. Existing flat theme JSON files migrate into per-theme directories. Original flat files remain as migration backups. Because fonts were previously global, migration snapshots the currently selected font for legacy themes; it cannot reconstruct historical font choices.
 
 Unreadable legacy media references are retained and reported in Theme Manager. Opening the editor still works so a missing image/GIF/font can be replaced. Missing assets prevent exporting an incomplete package. Keywi cannot recover a source file that was already deleted or whose provider permission was revoked before migration.
+
+
+## File-picker and feedback scope (Dev, 8 November 2026)
+
+Theme manager exports through `ActivityResultContracts.CreateDocument("application/zip")` and imports through `OpenDocument`. The user chooses a document location; providers such as Drive are supplied by Android and installed apps. This is provider access, not cloud sync. Export currently reports success without a destination label or an immediate share action.
+
+`ThemeDocument` schema 3 does not serialize `AccentFeedbackPreferences`, `ActionSoundPreferences`, typing-overlay preferences or geometry/layout. A portable visual theme therefore does not capture a complete keyboard setup. Keep custom flash/fade and sound demonstrations labeled as separately configured until a versioned feedback-package design exists.
