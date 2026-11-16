@@ -1,3 +1,5 @@
+> **Architecture reference / earlier phase plan.** Contracts below remain useful, but phase order and feature statuses are not the active queue. See the [current workbench](planning/README.md), including schema 3 versus pending schema 4. Later reviewed Gem Cut vocabulary takes precedence over the older “Facet” product wording.
+
 # Keywi appearance & geometry roadmap
 
 This document is the durable design reference for the customization architecture. Keep structural decisions here rather than relying on chat history.

@@ -1,0 +1,62 @@
+branch	sha	classification	open_pr	ahead_of_baseline	behind_baseline
+Dev	02e47ab8fe300337c460b4f6300446d0477bb2ab	keep-integration		0	0
+Keywi-Fishwi	f272b928001850c4181c773d767e1a7038965316	keep-unmerged		15	422
+Keywi-Penguin	98e349f81367993281e43b713622cabeeaf3645b	keep-unmerged		8	377
+birdie/gradient-backgrounds	d87546152330a9aeacbc14291bad0f329545bf68	keep-unmerged		1	408
+birdie/stable-updates-advanced-selection	c228f2c1676faad10ac847614e92d8b06cbfeed4	keep-unmerged		2	422
+docs/settings-architecture-exploration-63	d33380db537e5e9d53de2fb1ca0dac575f10b6e3	keep-open-pr	65	1	9
+docs/slyk-theme-roundtrip-20261108	6324d17e969a30681b036eb62d22cc9406cb489d	keep-open-pr	61	4	9
+docs/svg-guide-laboratory	7b06255186eb0289158f8984dce5b9dc38af0d4b	keep-open-pr	50	5	22
+docs/theme-roundtrip-showcase	9f8f1f5cafe9c535ecfb42ae303fbd9e374eaf6d	keep-open-pr	60	3	9
+feature/advanced-input-foundation	2c93a6c4c8b7ba0ab28fcb5605e8a12cc7f353c1	eligible-merged		0	336
+feature/advanced-settings-20260924	92ad62e6adbf4720649bb234b218ff9fd04701c2	eligible-merged		0	311
+feature/advanced-settings-current	92ad62e6adbf4720649bb234b218ff9fd04701c2	eligible-merged		0	311
+feature/advanced-settings-dark	92ad62e6adbf4720649bb234b218ff9fd04701c2	eligible-merged		0	311
+feature/advanced-settings-dark-pass	92ad62e6adbf4720649bb234b218ff9fd04701c2	eligible-merged		0	311
+feature/advanced-settings-dark-refresh	92ad62e6adbf4720649bb234b218ff9fd04701c2	eligible-merged		0	311
+feature/advanced-settings-dark-ui	92ad62e6adbf4720649bb234b218ff9fd04701c2	eligible-merged		0	311
+feature/advanced-settings-darkmode	92ad62e6adbf4720649bb234b218ff9fd04701c2	eligible-merged		0	311
+feature/advanced-settings-design	92ad62e6adbf4720649bb234b218ff9fd04701c2	eligible-merged		0	311
+feature/advanced-settings-implementation	92ad62e6adbf4720649bb234b218ff9fd04701c2	eligible-merged		0	311
+feature/advanced-settings-pass	92ad62e6adbf4720649bb234b218ff9fd04701c2	eligible-merged		0	311
+feature/advanced-settings-rebuild	92ad62e6adbf4720649bb234b218ff9fd04701c2	eligible-merged		0	311
+feature/advanced-settings-refresh	92ad62e6adbf4720649bb234b218ff9fd04701c2	eligible-merged		0	311
+feature/advanced-settings-ui	92ad62e6adbf4720649bb234b218ff9fd04701c2	eligible-merged		0	311
+feature/advanced-settings-ui-clean	92ad62e6adbf4720649bb234b218ff9fd04701c2	eligible-merged		0	311
+feature/advanced-settings-ui-final	92ad62e6adbf4720649bb234b218ff9fd04701c2	eligible-merged		0	311
+feature/advanced-settings-ui-impl	92ad62e6adbf4720649bb234b218ff9fd04701c2	eligible-merged		0	311
+feature/advanced-settings-ui-main	92ad62e6adbf4720649bb234b218ff9fd04701c2	eligible-merged		0	311
+feature/advanced-settings-ui-new	92ad62e6adbf4720649bb234b218ff9fd04701c2	eligible-merged		0	311
+feature/advanced-settings-ui-refresh	92ad62e6adbf4720649bb234b218ff9fd04701c2	eligible-merged		0	311
+feature/advanced-settings-ui-v2	92ad62e6adbf4720649bb234b218ff9fd04701c2	eligible-merged		0	311
+feature/advanced-settings-v2	92ad62e6adbf4720649bb234b218ff9fd04701c2	eligible-merged		0	311
+feature/advanced-settings-visual-refresh	92ad62e6adbf4720649bb234b218ff9fd04701c2	eligible-merged		0	311
+feature/advanced-settings-visual-system	92ad62e6adbf4720649bb234b218ff9fd04701c2	eligible-merged		0	311
+feature/advanced-settings-visuals	92ad62e6adbf4720649bb234b218ff9fd04701c2	eligible-merged		0	311
+feature/advanced-sound-dark-ui	9524ffe7dfeca99a132953d1cd44eddd917dfd3f	eligible-merged		0	314
+feature/advanced-sound-engine	0817d6eeac0e2ebaa7992ccbbc352df675fb268a	keep-unmerged		2	228
+feature/chromatic-ui-lab-2026-10-27	385967c40ff19e45f9c13b88e2419296f0324d8a	keep-open-pr	57	38	9
+feature/gem-cuts	4459f2272f536ffd2bbcfd90263d9af44a5b0db9	eligible-merged		0	166
+feature/keywi-advanced-settings	92ad62e6adbf4720649bb234b218ff9fd04701c2	eligible-merged		0	311
+feature/keywi-settings-dark	92ad62e6adbf4720649bb234b218ff9fd04701c2	eligible-merged		0	311
+feature/keywi-settings-ui	92ad62e6adbf4720649bb234b218ff9fd04701c2	eligible-merged		0	311
+feature/offline-unicode-library	544c131205fd37fa7baac1fe4d1e8308b1239389	keep-open-pr	58	2	9
+feature/palette-search-capture	fdc8c25218a3baae2b490ec5cd1dbcf178209654	eligible-merged		0	326
+feature/settings-dark-ui	92ad62e6adbf4720649bb234b218ff9fd04701c2	eligible-merged		0	311
+feature/settings-header-copy	c71ceff1538ee81ab981e8be00db45397de286e8	keep-open-pr	48	1	23
+feature/settings-redesign	92ad62e6adbf4720649bb234b218ff9fd04701c2	eligible-merged		0	311
+feature/settings-redesign-dark	92ad62e6adbf4720649bb234b218ff9fd04701c2	eligible-merged		0	311
+feature/settings-ui	92ad62e6adbf4720649bb234b218ff9fd04701c2	eligible-merged		0	311
+feature/settings-ui-dark	92ad62e6adbf4720649bb234b218ff9fd04701c2	eligible-merged		0	311
+feature/settings-v2	92ad62e6adbf4720649bb234b218ff9fd04701c2	eligible-merged		0	311
+feature/settings-visual-system	92ad62e6adbf4720649bb234b218ff9fd04701c2	eligible-merged		0	311
+feature/shadertoy-renderer-layers	17b02d3fbcc412b96f1886a9bc4a5a1be560be23	keep-unmerged		57	22
+feature/theme-gallery	8ef014017a020346da3d3e2f8922bb184a51688b	keep-active-gallery		0	9
+feature/theme-library-management	733dc84fb97e1b186fa3df60fd7fc28a27c5a374	keep-open-pr	56	2	9
+feature/thumbkey-upstream-harvest-2026-10	4f377370287c96ac2a6aef78b1ee1e1cdfe3a43f	keep-open-pr	51	22	22
+integration/keywi-feature-recovery	d13e2675df0c56891f875fad37312eb7364104d7	eligible-merged		0	356
+main	02e47ab8fe300337c460b4f6300446d0477bb2ab	keep-integration		0	0
+recovery/final-keywi-polish	1b1792e574ca0dd2396ab3b7ac69e5b2749d9581	eligible-merged		0	333
+sync/upstream-2026-09-21	26de433a26a769c9a4338b775a4f228f6f0c8159	eligible-merged		0	365
+sync/upstream-green-2026-09-21	c2f6ddbed679a0c8516db366f02e8eedeea4eba0	eligible-merged		0	374
+waitonme-chroma-overdrive	78d7eba9c099fa23b0f344538927252bac2abdef	keep-unmerged		3	314

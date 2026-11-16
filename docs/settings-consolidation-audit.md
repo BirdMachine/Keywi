@@ -1,3 +1,5 @@
+> **October 12 checkpoint.** In particular, the “Advanced Sound is still a settings shell” finding is historical. Use the [current workbench](planning/README.md) and linked #63/#65 exploration before proposing further settings changes. Preserve the compatibility findings below.
+
 # Settings consolidation audit — October 12
 
 ## Implemented

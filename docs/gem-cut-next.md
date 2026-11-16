@@ -1,3 +1,5 @@
+> **Earlier Gem Cut milestone plan.** These “next” items describe that branch checkpoint, not the current implementation queue. Recheck current source and the [workbench](planning/README.md) before implementing them.
+
 # Gem Cut — next slice
 
 1. Add persisted `FacetId`, defaulting/migrating to `ME_LIKE`.
