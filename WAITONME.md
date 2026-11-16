@@ -1,3 +1,5 @@
+> **Historical introduction.** Future-tense feature labels below describe an early snapshot. Use the [current workbench](docs/planning/README.md) for status and the [wishlist](docs/planning/ideas.md) for ideas. Original text and artwork are preserved.
+
 <div align="center">
 
 # 🌈✨🩷 ＫＥＹＷＩ 🩷✨🌈
