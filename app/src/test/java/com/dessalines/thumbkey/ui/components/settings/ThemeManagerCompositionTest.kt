@@ -9,6 +9,7 @@ import androidx.compose.ui.test.onAllNodesWithText
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performScrollTo
+import androidx.compose.ui.test.performTextInput
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
@@ -21,6 +22,7 @@ import com.dessalines.thumbkey.ui.components.settings.lookandfeel.AdvancedLookAn
 import com.dessalines.thumbkey.ui.components.settings.lookandfeel.ThemeManagerScreen
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
+import org.junit.Assert.assertNull
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -34,6 +36,68 @@ import org.robolectric.annotation.GraphicsMode
 class ThemeManagerCompositionTest {
     @get:Rule
     val compose = createComposeRule()
+
+    private fun showManager() {
+        compose.setContent {
+            MaterialTheme {
+                GemSettingsTheme(true) {
+                    val navController = rememberNavController()
+                    ThemeManagerScreen(navController)
+                }
+            }
+        }
+    }
+
+    @Test
+    fun savedThemeDeletionRequiresConfirmationAndPreservesCustom() {
+        val context = androidx.test.core.app.ApplicationProvider.getApplicationContext<Application>()
+        ThemeEngine.ensureMigrated(context)
+        val saved = ThemeEngine.saveCustomAs(context, "Delete confirmation")
+        val custom = ThemeEngine.export(ThemeEngine.loadCustom(context))
+        showManager()
+        compose.onNodeWithText("Delete theme…").performScrollTo().performClick()
+        compose.onNodeWithText("Delete saved theme?").assertIsDisplayed()
+        compose.onNodeWithText("Cancel").performClick()
+        compose.runOnIdle { assertEquals(saved, ThemeEngine.loadTheme(context, saved.id)) }
+        compose.onNodeWithText("Delete theme…").performScrollTo().performClick()
+        compose.onNodeWithText("Delete").performClick()
+        compose.waitUntil(10000) {
+            ThemeEngine.loadTheme(context, saved.id) == null && ThemeEngine.activeThemeId(context) == CUSTOM_THEME_ID
+        }
+        compose.runOnIdle {
+            assertNull(ThemeEngine.loadTheme(context, saved.id))
+            assertEquals(custom, ThemeEngine.export(ThemeEngine.loadCustom(context)))
+        }
+    }
+
+    @Test
+    fun saveAsExistingNameOffersCancelThenExplicitOverwrite() {
+        val context = androidx.test.core.app.ApplicationProvider.getApplicationContext<Application>()
+        ThemeEngine.ensureMigrated(context)
+        val saved = ThemeEngine.saveCustomAs(context, "Existing theme")
+        ThemeEngine.beginEditing(context, saved)
+        val changedKeys = saved.keys.copy(shadowElevation = 10f)
+        com.dessalines.thumbkey.ui.components.keyboard.KeyThemePreferences.save(context, changedKeys)
+        showManager()
+        compose.onNodeWithText("Save as…").performScrollTo().performClick()
+        compose.onNodeWithText("Theme name").performTextInput(" existing THEME ")
+        compose.onNodeWithText("Save").performClick()
+        compose.onNodeWithText("Name exists — overwrite?").assertIsDisplayed()
+        compose.onNodeWithText("Cancel").performClick()
+        compose.runOnIdle {
+            assertEquals(saved, ThemeEngine.loadTheme(context, saved.id))
+            assertEquals(CUSTOM_THEME_ID, ThemeEngine.activeThemeId(context))
+        }
+        compose.onNodeWithText("Save").performClick()
+        compose.onNodeWithText("Overwrite").performClick()
+        compose.waitUntil(10000) {
+            ThemeEngine.loadTheme(context, saved.id)?.keys == changedKeys && ThemeEngine.activeThemeId(context) == saved.id
+        }
+        compose.runOnIdle {
+            assertEquals(saved.id, ThemeEngine.activeThemeId(context))
+            assertEquals(1, ThemeEngine.themesNamed(context, "existing theme").size)
+        }
+    }
 
     @Test
     fun navigationPreferenceComposesWithoutACallerPreferenceProvider() {
