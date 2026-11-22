@@ -1,16 +1,16 @@
 <div align="center">
 
-<img width="768" alt="Keywi mascot" src="./assets/keywi-mascot-20260925.jpg" />
+<img width="384" alt="Keywi mascot" src="./assets/keywi-mascot-20260925.jpg" />
 
 # 🥝 KEYWI
 
-### 🌈 A violently chromatic keyboard mutated for me 🩷✨
+**🌈 A violently chromatic keyboard mutated for me 🩷✨**
 
 Choose a gem cut, tune your theme, build a board, and make the keyboard yours.
 
 An Android keyboard for swipe typing, custom key actions, and an unreasonable amount of color. A personal fork of [Thumb-Key](https://github.com/dessalines/thumb-key).
 
-### [⬇️ Download Keywi for Android](https://github.com/BirdMachine/Keywi/releases/latest)
+**[⬇️ Download Keywi for Android](https://github.com/BirdMachine/Keywi/releases/latest)**
 
 [Settings guide & handbook](docs/guide/README.md) · [Troubleshooting](docs/guide/troubleshooting.md) · [Release history](https://github.com/BirdMachine/Keywi/releases)
 

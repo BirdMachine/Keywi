@@ -9,7 +9,8 @@ Requested for the night flight on **2026-11-21**: make Keywi presentable and che
 
 - [x] Give the README a clear Android introduction, upstream credit, download path and setup steps while keeping Keywi's mascot and voice.
 - [x] Check README file links, heading anchors and artwork against the source tree; verify the release destination and APK asset through GitHub.
-- [ ] Review the rendered README on GitHub at narrow and wide widths; check heading hierarchy, image sizing and useful link labels.
+- [x] Review the rendered README on GitHub at desktop width; check heading hierarchy, image sizing and useful link labels. Keep the mascot at its native 384px width rather than upscaling it.
+- [ ] Review the README at narrow/mobile widths and check wrapping, image sizing and navigation.
 - [ ] Refresh real keyboard screenshots/GIFs after integrations settle, with build/source provenance and useful alt text. Fix the HK live-showcase assertion before claiming current live captures.
 - [ ] Reconcile handbook instructions with the shipped settings and theme schema, then build the site and check its links/assets. Track #50/#60/#61 overlaps in the workbench.
 - [ ] Recheck README downloads, relative links, screenshots and release claims before each main promotion; keep proposals clearly separate from shipped behavior.
