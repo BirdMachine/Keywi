@@ -1,9 +1,10 @@
-# Contributing to Thumb-Key
+# Contributing to Keywi
 
 <!-- prettier-ignore-start -->
 <!-- toc -->
 
 - [Keywi integration and releases](#keywi-integration-and-releases)
+- [Planning and maintenance](#planning-and-maintenance)
 - [Ways to contribute](#ways-to-contribute)
 - [How do I add my language or layout?](#how-do-i-add-my-language-or-layout)
 - [Theming guide](#theming-guide)
@@ -21,11 +22,17 @@
 Keywi uses `Dev` (capital D) as its integration branch and `main` as its release branch.
 
 1. Start feature and fix branches from `Dev`, and target their pull requests at `Dev`.
-2. Merge reviewed work into `Dev` to test features together. CI validates the combined code and uploads a signed test APK as the `keywi-debug` workflow artifact.
+2. Merge reviewed work into `Dev` to test features together. CI validates the combined code and uploads a signed test APK as the `keywi-dev` workflow artifact (`keywi-dev.apk`), with the installed label **Keywi-dev**.
 3. When the integrated changes are ready for release, open a pull request from `Dev` to `main`.
-4. A successful push to `main` publishes the verified APK as a GitHub Release. `Dev` builds do not publish releases.
+4. A successful push to `main` publishes the verified APK as a GitHub Release (`Keywi-latest.apk`, installed label **Keywi**). `Dev` builds do not publish releases.
 
 Keep the integration history when promoting `Dev` to `main` (use a merge commit rather than squashing the whole integration branch). If a fix lands directly on `main`, merge `main` back into `Dev` before continuing development. Documentation and emulator publishing remain limited to `main`.
+
+## Planning and maintenance
+
+Start at [the workbench](docs/planning/README.md) before opening another implementation branch. Check overlapping PRs, preserve their unique work, and record the exact source/CI/device evidence. Add new ideas to [the idea incubator](docs/planning/ideas.md); older roadmap files are reference/history.
+
+Retire topic branches only after checking their current tips are ancestors of `Dev`/`main` and that no open PR uses them. Keep `main`, `Dev`, the active theme-gallery branch and all unmerged experiments. Preserve the name and SHA in a dated audit before deletion. Recheck after a release promotion that `Dev` still exists and no active work PR was silently retargeted to `main`.
 
 ## Ways to contribute
 
@@ -86,9 +93,9 @@ where feasibe.
 
 ## Code contributions
 
-You can open Thumb-Key in AndroidStudio, version 2022.3.1 or later (Giraffe).
+Open Keywi in an Android Studio version compatible with the checked-in Android Gradle plugin and Gradle wrapper.
 
-Use Java 11+, preferably Java 17
+Use JDK 21 to match Keywi CI. The app currently targets Java/Kotlin JVM 17 bytecode; use the checked-in Gradle wrapper.
 
 ### Kotlin
 

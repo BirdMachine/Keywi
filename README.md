@@ -17,3 +17,11 @@ Choose a gem cut, tune your theme, build a board, and make the keyboard yours.
 [Browse all releases](https://github.com/BirdMachine/Keywi/releases)
 
 </div>
+
+## Project workbench 🥝
+
+[Documentation index](docs/README.md) · [Current work and integration order](docs/planning/README.md) · [Design choices for Birdie](docs/planning/decisions.md) · [Contributing](CONTRIBUTING.md)
+
+## Added by AI here: some next goals! 🥝✨
+
+[Birdie's consolidated wishlist and Someday / Idea Incubator](docs/planning/ideas.md) keeps the release LED, theme sharing, Tasker scene pages and other experiments together. Ideas stay distinct from implemented features and the active work queue.

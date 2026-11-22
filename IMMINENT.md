@@ -1,3 +1,5 @@
+> **Historical roadmap.** “Live”, “active” and “imminent” below are labels from this earlier snapshot, not current release claims. Start with the [current workbench](docs/planning/README.md); preserve this page as project history.
+
 # 🥝💖🌈 KEYWI // IMMINENT
 
 > **THE WAITONME MACHINE HAS MUTATED.** This is the near-future / currently-breeding map for Keywi: what already escaped the lab, what is actively being wired in, and what is immediately next.
@@ -189,7 +191,7 @@ This is not a contractual roadmap. It is a **live specimen tray** for the things
 <tr>
 <td width="70%"><img src="https://raw.githubusercontent.com/BirdMachine/Scratch/non-euclidean-geocities/furniture/46-release-dock.svg" width="100%">
 
-### [GET THE LATEST KEYWI →](../../releases/latest)
+### [GET THE LATEST KEYWI →](https://github.com/BirdMachine/Keywi/releases/latest)
 
 Builds are where the experiments become something you can actually poke with your thumbs.
 </td>

@@ -1,3 +1,5 @@
+> **Historical milestone note.** This documents the first architecture slice, not current release capabilities. Consult the [handbook](guide/cuts-and-layouts.md) and [workbench](planning/README.md) before treating its limitations as current.
+
 # Gem Cut milestone 1
 
 The branch now has a compile-time vocabulary for Theme / Facet / Layout, explicit `ME_LIKE` and `MACHINE_CUT` facet identities, a typed Machine Cut layout skeleton, and a Compose renderer that inherits the ambient theme instead of defining facet-specific colors.
