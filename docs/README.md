@@ -5,7 +5,7 @@
 | Use and customize Keywi | [Settings guide and handbook](guide/README.md) |
 | Fix an everyday problem | [Troubleshooting](guide/troubleshooting.md) |
 | See what to work on next | [Current work and integration order](planning/README.md) |
-| Find Birdie's ideas | [Wishlist and idea incubator](planning/ideas.md) |
+| Find Birdie's feature plans | [Eventuals and idea incubator](planning/ideas.md) |
 | Review choices awaiting Birdie | [Design decisions](planning/decisions.md) |
 | Contribute or release a build | [Contributing](../CONTRIBUTING.md) |
 | Understand geometry boundaries | [Gem Cut architecture](gem-cut-architecture.md) and [vocabulary](gem-cut-glossary.md) |
