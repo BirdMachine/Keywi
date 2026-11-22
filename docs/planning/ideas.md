@@ -1,7 +1,18 @@
-# Added by AI here: some next goals! 🥝✨
+# Eventuals 🥝✨
 
 
-Birdie's consolidated wishlist and 🌱 **Someday / Idea Incubator**. These are goals and experiments; listing an idea does not mean it has shipped or entered the active implementation queue.
+Birdie's feature plans, consolidated wishlist and 🌱 **Someday / Idea Incubator**. These are goals and experiments; listing an idea does not mean it has shipped or entered the active implementation queue.
+
+## Presentation & polish
+
+Requested for the night flight on **2026-11-21**: make Keywi presentable and check the README links. Keep this as an ongoing release-readiness goal.
+
+- [x] Give the README a clear Android introduction, upstream credit, download path and setup steps while keeping Keywi's mascot and voice.
+- [x] Check README file links, heading anchors and artwork against the source tree; verify the release destination and APK asset through GitHub.
+- [ ] Review the rendered README on GitHub at narrow and wide widths; check heading hierarchy, image sizing and useful link labels.
+- [ ] Refresh real keyboard screenshots/GIFs after integrations settle, with build/source provenance and useful alt text. Fix the HK live-showcase assertion before claiming current live captures.
+- [ ] Reconcile handbook instructions with the shipped settings and theme schema, then build the site and check its links/assets. Track #50/#60/#61 overlaps in the workbench.
+- [ ] Recheck README downloads, relative links, screenshots and release claims before each main promotion; keep proposals clearly separate from shipped behavior.
 
 ## Themes, sharing and everyday use
 

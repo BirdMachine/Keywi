@@ -1,8 +1,10 @@
 # Keywi workbench 🥝
 
-One place to choose the next task. This is the current coordination plan; issues and PRs keep their detailed acceptance criteria and evidence. [Ideas](ideas.md) are separate from this queue. [Birdie's design choices](decisions.md) remain open until she chooses.
+One place to choose the next task. This is the current coordination plan; issues and PRs keep their detailed acceptance criteria and evidence. [Eventuals](ideas.md) holds feature plans and ideas separately from this queue. [Birdie's design choices](decisions.md) remain open until she chooses.
 
 Reviewed **2026-11-16** against `main` and `Dev` at [`02e47ab8`](https://github.com/BirdMachine/Keywi/tree/02e47ab8fe300337c460b4f6300446d0477bb2ab). Both branches match. This document proposes an integration order; it does not authorize merging pending UI work or publishing a release.
+
+**Night flight · 2026-11-21:** housekeeping #68 is merged into Dev at `74d78c58`; main remains at `02e47ab8`. All 42 audited merged branch names were retired after current-tip, ancestry and open-PR checks; the 19 retained branches survived unchanged except for Dev's housekeeping merge. #48 was closed because its requested header copy already exists in `SettingsHomeHeader()`. The next feature review is #56. [Tonight's audit](2026-11-21-night-flight.md) records the evidence; [presentation polish](ideas.md#presentation--polish) is now an Eventual.
 
 ## What is already there
 
@@ -22,7 +24,7 @@ All nine existing work PRs were retargeted to **Dev** on 2026-11-16. A green che
 
 | Order / lane | Work | Next concrete action |
 | --- | --- | --- |
-| 1 · Small independent polish | [#48 — settings header copy](https://github.com/BirdMachine/Keywi/pull/48) | Existing three-string request; review current diff and integrate independently when ready. No need to fold it into a settings rewrite. |
+| Complete · redundant PR closed | [#48 — settings header copy](https://github.com/BirdMachine/Keywi/pull/48) | All three strings already exist in `SettingsHomeHeader()` on current Dev/main. Closed 2026-11-21 without restoring the obsolete component; unmerged branch retained. |
 | 2 · Persistence first | [#56 — theme library + schema 4](https://github.com/BirdMachine/Keywi/pull/56) | Review delete/overwrite behavior and legacy theme/feedback compatibility. Run combined tests on Dev and verify a real export/import before calling portability done. Historical Android CI passed. |
 | 3 · Theme navigation | [#60 — subpages + Tap effects](https://github.com/BirdMachine/Keywi/pull/60) | Resolve the [ownership decision](decisions.md), then reconcile with #56's ThemeManagerCompositionTest and package docs. Preserve the original session snapshot/Revert across pages. Head CI passed in run 42499517406; device checks remain open. |
 | 4 · Documentation follows behavior | [#61 — round trips + guide](https://github.com/BirdMachine/Keywi/pull/61) | Keep its real-package test and provider/capture evidence. Reconcile schema-3 statements if #56 lands; update routes if #60 lands. Use [ideas.md](ideas.md) as the canonical wishlist instead of restoring its older README list. Head CI passed in run 43599113449; Drive/Samsung Files/live captures remain unverified. |
@@ -38,7 +40,8 @@ All nine existing work PRs were retargeted to **Dev** on 2026-11-16. A green che
 
 | Task | Definition of done |
 | --- | --- |
-| Retire merged branch clutter | [Dated audit](2026-11-16-repo-audit.md) records 42 eligible names and their SHAs. Recheck remote tips and open PR heads before deletion; keep `main`, `Dev`, theme-gallery and all unmerged work. Remote deletion is still blocked by missing write authentication. |
+| Retire merged branch clutter · complete | All 42 names in the [original manifest](2026-11-16-branches.tsv) were retired on 2026-11-21 after fresh tip/ancestry/open-PR checks. All 19 retained branches remain; commits stay reachable through main/Dev. See [night-flight evidence](2026-11-21-night-flight.md). |
+| Make Keywi presentable | [Eventuals checklist](ideas.md#presentation--polish): README introduction/setup/download navigation and link audit first; rendered review, fresh captures and handbook alignment follow. |
 | Repair live HK showcase | Diagnose `HK settings shortcut missing in live IME` at capture script line 95; inspect the captured UI and actual selected geometry. Keep the assertion until behavior or its selector/setup is verified. Rerun the showcase with an actual emulator. |
 | Establish a clean Kotlin formatting baseline | Separate format-only change, followed by format/lint/tests/lint/APK. Only then remove CI's temporary runner-side formatting step. Do not mix this into editor or schema changes. |
 | Refresh the handbook once integrations settle | Preserve dated screenshot/source provenance; reconcile #50/#60/#61 rather than maintaining competing guide versions. Generate the site and run its link/anchor/asset checker. |
